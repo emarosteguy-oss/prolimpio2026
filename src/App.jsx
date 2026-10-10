@@ -364,7 +364,7 @@ const COSTOS_PROGRAMADOS = {9:1790206, 10:1250330, 11:590720};
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
 const MES_EN_CURSO = { idx:9, desde:"2026-10-10", ventasYa:603744, pagadoYa:754365 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 + alquiler + sueldos $140.460 + correcaminata $10.000
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T12:20:00.000Z", brou:50212, santUyu:-593734 };
+const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T22:33:00.000Z", brou:50212, santUyu:-571734 }; // 10/10 19:33: Santander −593.734 + depósito $22.000
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -547,9 +547,10 @@ const proyectarCaja = (cfg) => {
   }
   return out;
 };
+const refEsMasNuevo = (fecha,ts) => { const f=fecha||""; return f<SALDO_REF.fecha || (f===SALDO_REF.fecha && (ts||"")<SALDO_REF.ts); };
 // Si el saldo guardado es anterior a SALDO_REF, toma los saldos reales de SALDO_REF (conserva USD y TC)
 const conSaldoRef = (c) => {
-  if((c.saldoFecha||"")>=SALDO_REF.fecha) return c;
+  if(!refEsMasNuevo(c.saldoFecha,c.saldoTs)) return c;
   const n={...c,brou:SALDO_REF.brou,santUyu:SALDO_REF.santUyu,saldoFecha:SALDO_REF.fecha,saldoTs:SALDO_REF.ts};
   n.saldo=Math.round((+n.brou||0)+(+n.santUyu||0)+(+n.santUsd||0)*(+n.tc||0)); return n;
 };
@@ -962,10 +963,11 @@ export default function App(){
         gapi_read(tk, "Tickets!A2:F200"),
       ]);
       try{ const ss = await gapi_read(tk, "Saldos!A2:G500");
-        const lst = ss.map(r=>({fecha:r[0],brou:Number(r[1])||0,santUyu:Number(r[2])||0,santUsd:Number(r[3])||0,tc:Number(r[4])||0,neto:Number(r[5])||0,ts:r[6]||""})).filter(r=>r.fecha);
+        const isoF=(x)=>{const t=String(x||"").trim();const m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:t;};
+        const lst = ss.map(r=>({fecha:isoF(r[0]),brou:Number(r[1])||0,santUyu:Number(r[2])||0,santUsd:Number(r[3])||0,tc:Number(r[4])||0,neto:Number(r[5])||0,ts:r[6]||""})).filter(r=>r.fecha);
         setSheetSaldos(lst);
         const u=lst.length?[...lst].sort((a,b)=>a.fecha!==b.fecha?(a.fecha<b.fecha?1:-1):(a.ts<b.ts?1:-1))[0]:null;
-        if(!u || u.fecha<SALDO_REF.fecha){
+        if(!u || refEsMasNuevo(u.fecha,u.ts)){
           // el saldo real informado es más nuevo que el último de la hoja: se registra en el historial
           const base=u?{santUsd:u.santUsd,tc:u.tc||40}:{santUsd:0,tc:40};
           const neto=Math.round(SALDO_REF.brou+SALDO_REF.santUyu+(base.santUsd||0)*(base.tc||0));
