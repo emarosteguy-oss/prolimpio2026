@@ -320,6 +320,7 @@ const DEUDA_PAGOS = {
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
 const PENDIENTES_FECHA = "10/10/2026";
 const PENDIENTES = [
+  {mes:"2026-10",prov:"Unimed (giro hecho, falta que lo debite el banco)",monto:30578,tipo:"prov"},
   {mes:"2026-10",prov:"Pontyn",monto:52694,tipo:"prov"},
   {mes:"2026-10",prov:"Alido Valiero",monto:23892,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:149960,tipo:"cheque"},
@@ -362,9 +363,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1790206, 10:1250330, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-10", ventasYa:603744, pagadoYa:754365 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 + alquiler + sueldos $140.460 + correcaminata $10.000
+const MES_EN_CURSO = { idx:9, desde:"2026-10-10", ventasYa:603744, pagadoYa:723787 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 − Unimed $30.578 (giro hecho, sin debitar al 10/10) + alquiler + sueldos $140.460 + correcaminata $10.000
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T22:33:00.000Z", brou:50212, santUyu:-571734 }; // 10/10 19:33: Santander −593.734 + depósito $22.000
+const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T22:37:00.000Z", brou:50212, santUyu:-541156 }; // 10/10 19:37, saldo real del banco (el giro a Unimed $30.578 todavía no se debitó)
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
