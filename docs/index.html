@@ -6,10 +6,33 @@
     <title>PROlimpio · Durazno</title>
     <link rel="manifest" href="/prolimpio2026/manifest.json" />
     <link rel="apple-touch-icon" href="/prolimpio2026/icon.png" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <script>
+      // Pantalla en blanco: si el programa no carga (versión vieja guardada en el celular) recarga una vez sin caché;
+      // si igual no arranca, muestra el error.
+      (function(){
+        var errs=[];
+        window.addEventListener('error',function(e){
+          var t=e.target;
+          if(t&&t.tagName==='SCRIPT'&&t.src&&t.src.indexOf('/assets/')>-1){
+            if(!sessionStorage.getItem('pl_recarga')){sessionStorage.setItem('pl_recarga','1');location.replace(location.pathname+'?v='+Date.now());return;}
+            errs.push('No se pudo cargar '+t.src);
+          } else if(e.message){ errs.push(e.message+' ('+(e.filename||'')+':'+(e.lineno||'')+')'); }
+        },true);
+        window.addEventListener('unhandledrejection',function(e){errs.push('Promesa: '+(e.reason&&e.reason.message||e.reason));});
+        setTimeout(function(){
+          var r=document.getElementById('root');
+          if(r&&!r.children.length){
+            r.innerHTML='<div style="padding:16px;font-family:system-ui,sans-serif;background:#fff;color:#222;min-height:100vh"><h2>La app no arrancó</h2><p>Mandale una captura a Claude.</p><pre style="white-space:pre-wrap;font-size:12px;background:#f4f4f4;padding:10px;border-radius:8px"></pre><button style="padding:12px 16px;border:none;border-radius:8px;background:#e84400;color:#fff;font-size:15px" onclick="sessionStorage.removeItem(\'pl_recarga\');location.replace(location.pathname+\'?v=\'+Date.now())">Recargar</button></div>';
+            r.querySelector('pre').textContent=(errs.join('\n')||'Sin mensaje de error')+'\n'+navigator.userAgent;
+          } else sessionStorage.removeItem('pl_recarga');
+        },6000);
+      })();
+    </script>
     <meta name="theme-color" content="#e84400" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="PROlimpio" />
-    <script type="module" crossorigin src="/prolimpio2026/assets/index-Ca3XMeev.js"></script>
+    <script type="module" crossorigin src="/prolimpio2026/assets/index-B5JzWZpH.js"></script>
   </head>
   <body>
     <div id="root"></div>
