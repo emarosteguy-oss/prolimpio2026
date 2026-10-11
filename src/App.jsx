@@ -363,7 +363,7 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1790206, 10:1250330, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-10", ventasYa:603744, pagadoYa:723787 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 − Unimed $30.578 (giro hecho, sin debitar al 10/10) + alquiler + sueldos $140.460 + correcaminata $10.000
+const MES_EN_CURSO = { idx:9, desde:"2026-10-10", diasYa:8, ventasYa:603744, pagadoYa:723787 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 − Unimed $30.578 (giro hecho, sin debitar al 10/10) + alquiler + sueldos $140.460 + correcaminata $10.000
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
 const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T22:37:00.000Z", brou:50212, santUyu:-541156 }; // 10/10 19:37, saldo real del banco (el giro a Unimed $30.578 todavía no se debitó)
 
@@ -514,28 +514,49 @@ const HEAD_CIERRES = ["Fecha","Cajero",...CIERRE_CAMPOS.map(c=>c[1]),"Ventas cre
 
 // ── Proyección de caja ───────────────────────────────────────────────────────
 const MES3 = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
-const proyectarCaja = (cfg) => {
-  const v25 = VM.map(r=>r["2025"]||0);
-  const n26 = VM.filter(r=>r["2026"]!=null).length;
-  const g26 = VM.slice(0,n26).reduce((s,r)=>s+r["2026"],0) / v25.slice(0,n26).reduce((s,x)=>s+x,0);
-  const s26 = VM.map((r,i)=> r["2026"]!=null ? r["2026"] : Math.round(v25[i]*g26));
-  const s27 = s26.map(x=>Math.round(x*(1+cfg.crec27/100)));
-  const op25 = TG_REAL["2025"].map((g,i)=>(g||0)-(DEUDA_PAGOS["2025"][i]||0));
-  const op25tot = op25.reduce((s,x)=>s+x,0);
-  const costShare = op25.map(x=>x/op25tot);
-  const anual = { "2026": s26.reduce((s,x)=>s+x,0), "2027": s27.reduce((s,x)=>s+x,0) };
+// Crecimiento real de ventas mes a mes (2026 vs 2025) y tendencia de los últimos 3 meses cerrados
+const crecimientoReal = () => {
+  const meses=[]; ["2026","2027"].forEach(y=>{const p=String(+y-1); VM.forEach((r,i)=>{ if(r[y]!=null&&r[p]) meses.push({mes:`${MES3[i]} ${y.slice(2)}`,y,i,v:r[y],vPrev:r[p],pct:(r[y]/r[p]-1)*100}); });});
+  const u3=meses.slice(-3); const tend=u3.length? (u3.reduce((s,x)=>s+x.v,0)/u3.reduce((s,x)=>s+x.vPrev,0)-1)*100 : 0;
+  const anio=meses.length?meses[meses.length-1].y:"2026"; const ya=meses.filter(x=>x.y===anio);
+  const ytd=ya.length?(ya.reduce((s,x)=>s+x.v,0)/ya.reduce((s,x)=>s+x.vPrev,0)-1)*100:0;
+  // mes en curso: promedio por día hábil contra el mismo mes del año anterior
+  let curso=null; const mc=MES_EN_CURSO; const yc=2026+Math.floor(mc.idx/12), ic=mc.idx%12;
+  const vPrevMes=VM[ic]?.[String(yc-1)], dPrev=DIAS_HABILES[String(yc-1)]?.[MES3[ic]];
+  if(VM[ic]?.[String(yc)]==null && vPrevMes && dPrev && mc.diasYa){ const pdA=mc.ventasYa/mc.diasYa, pdP=vPrevMes/dPrev; curso={mes:`${MES3[ic]} ${String(yc).slice(2)}`,dias:mc.diasYa,v:mc.ventasYa,pdA,pdP,pct:(pdA/pdP-1)*100}; }
+  return {meses,tend,ytd,anio,curso,u3:u3.map(x=>x.mes)};
+};
+const ESCENARIOS = [
+  {k:"bajo",n:"Bajo",campo:"crecBajo",color:"#B45309"},
+  {k:"medio",n:"Medio",campo:"crecMedio",color:"#e84400"},
+  {k:"alto",n:"Alto",campo:"crecAlto",color:"#15803D"},
+  {k:"tend",n:"Tendencia real",campo:null,color:"#1D4ED8"},
+];
+const crecEscenario = (cfg,k) => { const e=ESCENARIOS.find(x=>x.k===k)||ESCENARIOS[1]; return e.campo? Number(cfg[e.campo])||0 : Math.round(crecimientoReal().tend*10)/10; };
+// Costos = gastos fijos (suben con la inflación desde enero) + variables (mercadería + IVA, % de las ventas)
+// + comisión de bancos. La mercadería se paga mitad en el mes y mitad el mes siguiente (plazos de 30 a 60 días).
+// Oct–dic 2026: como mínimo, los gastos ya programados en la planilla.
+const proyectarCaja = (cfg, crecIn) => {
+  const crec = (crecIn==null? crecEscenario(cfg,cfg.escSel||"medio") : crecIn)/100;
+  const varP=(Number(cfg.varPct)||68)/100, fijos=Number(cfg.fijosMes)||370000, inf=(Number(cfg.infFijos)||0)/100;
+  const cache={};
+  const ventasDe=(y,m)=>{ const r=VM[m]; if(r[String(y)]!=null) return r[String(y)]; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key];
+    const prev= y>2025 ? ventasDe(y-1,m) : 0; return (cache[key]=Math.round((prev||0)*(1+crec))); };
   const out = [];
   let saldo = cfg.saldo;
   const start = new Date(); let y = start.getFullYear(), m = start.getMonth();
   for(let k=0;k<15;k++){
-    const yy=String(y);
-    const ventas = yy==="2026" ? s26[m] : s27[m];
+    const ventas = ventasDe(y,m);
+    const pm=m===0?11:m-1, py=m===0?y-1:y; const ventasAnt = ventasDe(py,pm);
     const idx = (y-2026)*12+m;                 // 9 = Oct 2026
-    const costoEst = Math.round((anual[yy]||anual["2027"]) * (cfg.ratio/100) * costShare[m]);
+    const fijoMes = Math.round(fijos*Math.pow(1+inf, Math.max(0,y-2026)));
+    const variable = Math.round(varP*(ventas*0.5+ventasAnt*0.5));
+    const costoEst = fijoMes + variable;
     const enCurso = k===0 && idx===MES_EN_CURSO.idx && (cfg.saldoFecha||"")>=MES_EN_CURSO.desde && String(cfg.saldoFecha).slice(0,7)===`${y}-${String(m+1).padStart(2,"0")}`;
     const costoMes = Math.max(costoEst, COSTOS_PROGRAMADOS[idx]||0);
     const ventasMes = enCurso ? Math.max(0, ventas-MES_EN_CURSO.ventasYa) : ventas;
-    const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa) : costoMes) + Math.round(ventasMes*comisionPctEfectiva()/100);
+    const comision = Math.round(ventasMes*comisionPctEfectiva()/100);
+    const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa) : costoMes) + comision;
     let deuda = 0;
     if(idx>=9 && idx<=29) deuda += cfg.candela;        // Candela: Oct-26 a Jun-28
     if(idx>=9 && idx<=11) deuda += cfg.santander;      // Santander: hasta Dic-26
@@ -543,7 +564,7 @@ const proyectarCaja = (cfg) => {
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
     saldo = saldo + ventasMes - costos - deuda + cobros - retiro;
-    out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, deuda, retiro, saldo:Math.round(saldo) });
+    out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, fijos:fijoMes, deuda, retiro, saldo:Math.round(saldo) });
     m++; if(m>11){m=0;y++;}
   }
   return out;
@@ -556,9 +577,16 @@ const conSaldoRef = (c) => {
   n.saldo=Math.round((+n.brou||0)+(+n.santUyu||0)+(+n.santUsd||0)*(+n.tc||0)); return n;
 };
 const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:200000, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
-  ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000, cfgVer:2 };
+  ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000,
+  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", cfgVer:3 };
 // 11/10/2026: costos 89% de las ventas (2026 sin el stock comprado de más) y retiro fijo $80.000/mes. Se aplica una vez sobre lo guardado en cada equipo.
-const migrarCfg = (c) => (c.cfgVer||0)>=2 ? c : {...c, ratio:89, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, cfgVer:2};
+// 11/10/2026 (v72): proyección con gastos fijos + variables y tres escenarios de crecimiento.
+const migrarCfg = (c) => {
+  let n=c;
+  if((n.cfgVer||0)<2) n={...n, ratio:89, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, cfgVer:2};
+  if((n.cfgVer||0)<3) n={...n, varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", cfgVer:3};
+  return n;
+};
 
 // ── Métricas del mes y análisis automático (sin IA) ─────────────────────────
 const INF_ANUAL = {"2022":9.95,"2023":8.26,"2024":5.11,"2025":6.36,"2026":6.0,"2027":6.0};
@@ -679,7 +707,9 @@ const generarInforme = (tipo, mIdx, anio, ctx) => {
     seccion("Saldo proyectado — próximos 15 meses");
     const pr=proyectarCaja(c);
     tabla(["Mes","Ventas est.","Costos est.","Deudas","Retiro","Saldo"],pr.map(p=>[p.mes,P$(p.ventas),P$(p.costos),P$(p.deuda),P$(p.retiro),P$(p.saldo)]),{cols:{1:der,2:der,3:der,4:der,5:der},extra:{didParseCell:(d)=>{if(d.section==="body"&&d.column.index===5){const v=pr[d.row.index].saldo;d.cell.styles.textColor=v<c.limite?[185,28,28]:v<c.alerta?[180,83,9]:v<0?[146,64,14]:[20,83,45];d.cell.styles.fontStyle="bold";}}}});
-    parrafos([`Supuestos: costos operativos ${PN(c.ratio,1)}% de las ventas (para oct–dic 2026 se usan los gastos ya programados) más comisión de bancos ${PN(comisionPctEfectiva(),1)}% de las ventas, crecimiento de ventas 2027 ${PN(c.crec27)}%, retiro de ${P$(c.retiroFijo)} hasta enero y luego ${P$(c.retiroFijo2)} + ${PN(c.retiroPct,1)}% de las ventas. Plazo fijo de diciembre: ${c.pagaPF?"se paga":"se renueva"}.`]);
+    { const CRp=crecimientoReal(); const esc=ESCENARIOS.find(e=>e.k===(c.escSel||"medio"))||ESCENARIOS[1];
+      parrafos([`Escenario: ${esc.n}, ventas +${PN(crecEscenario(c,esc.k),1)}% contra el mismo mes del año anterior (tendencia real de los últimos 3 meses: ${PN(CRp.tend,1)}%). Al final del período: ${ESCENARIOS.map(e=>`${e.n} (${PN(crecEscenario(c,e.k),1)}%) ${P$(proyectarCaja(c,crecEscenario(c,e.k)).slice(-1)[0].saldo)}`).join(" · ")}.`,
+        `Supuestos: gastos fijos ${P$(c.fijosMes)} por mes (+${PN(c.infFijos,1)}% desde enero), mercadería e IVA ${PN(c.varPct,1)}% de las ventas (mitad se paga el mes siguiente), comisión de bancos ${PN(comisionPctEfectiva(),1)}% de las ventas; para oct–dic 2026 se usan los gastos ya programados si son mayores. Retiro de ${P$(c.retiroFijo)} hasta enero y luego ${P$(c.retiroFijo2)}${+c.retiroPct?` + ${PN(c.retiroPct,1)}% de las ventas`:""}. Plazo fijo de diciembre: ${c.pagaPF?"se paga":"se renueva"}.`]); }
   }
   const np=doc.getNumberOfPages();
   for(let i=1;i<=np;i++){doc.setPage(i);doc.setFillColor(...NAR);doc.rect(0,0,W,20,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("PROlimpio Durazno",M,13);doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.text(`Generado el ${fHoy}`,W-M,13,{align:"right"});doc.setFontSize(8.5);doc.setTextColor(...MAR);doc.text(`PROlimpio Durazno - ${titulos[tipo]}`,M,292);doc.text(`Página ${i} de ${np}`,W-M,292,{align:"right"});}
@@ -2153,6 +2183,9 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             const delMes=sheetRetiros.map((r,i)=>({...r,_i:i})).filter(r=>{const d=new Date(r.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;});
             const retiradoMes=delMes.reduce((s,r)=>s+(Number(r.monto)||0),0);
             const proy=proyectarCaja(caja);
+            const CR=crecimientoReal(); const escSel=caja.escSel||"medio";
+            const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(caja,crecEscenario(caja,e.k))}));
+            const chartEsc=proy.map((r,i)=>{const o={mes:r.mes}; escProy.forEach(e=>{o[e.k]=e.p[i].saldo;}); return o;});
             const sugerido=proy[0]?.retiro||0;
             const minimo=proy.reduce((a,b)=>b.saldo<a.saldo?b:a,proy[0]);
             const enLimite=proy.find(p=>p.saldo<caja.limite);
@@ -2287,10 +2320,25 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="tsm" style={{padding:"0 4px"}}>Noviembre todavía tiene un SUBATIR sin cargar y diciembre no tiene pedidos SUBATIR. Estos montos no incluyen los fijos del mes (alquiler, sueldos, IVA, etc.); la proyección de abajo sí los incluye.</div>
               </>;
             })()}
-            <div className="sh"><span className="st">Saldo proyectado</span><span className="ss">Próximos 15 meses</span></div>
-            <div className="card"><div className="ch">
+            <div className="sh"><span className="st">Crecimiento real de ventas</span><span className="ss">Cada mes contra el mismo mes del año anterior</span></div>
+            <div className="grid4">
+              <div className="card" style={{borderLeft:"4px solid #1D4ED8"}}><div className="ctitle">Tendencia (últimos 3 meses)</div><div className="cval" style={{color:"#1D4ED8"}}>{(CR.tend>=0?"+":"")+fmt(CR.tend,1)}%</div><div className="csub">{CR.u3.join(", ")} · es el escenario "Tendencia real"</div></div>
+              <div className="card"><div className="ctitle">Acumulado {CR.anio}</div><div className="cval">{(CR.ytd>=0?"+":"")+fmt(CR.ytd,1)}%</div><div className="csub">Meses cerrados del año</div></div>
+              {CR.curso&&<div className="card"><div className="ctitle">{CR.curso.mes} en curso</div><div className="cval">{(CR.curso.pct>=0?"+":"")+fmt(CR.curso.pct,1)}%</div><div className="csub">{CR.curso.dias} días: {fmtM(CR.curso.pdA)}/día vs {fmtM(CR.curso.pdP)}/día el año pasado</div></div>}
+            </div>
+            <div className="card tw"><table><thead><tr><th>Mes</th><th>Año anterior</th><th>Este año</th><th>Crecimiento</th></tr></thead>
+              <tbody>{[...CR.meses].reverse().slice(0,12).map((x,i)=><tr key={i}><td style={{fontWeight:600}}>{x.mes}</td><td>{fmtM(x.vPrev)}</td><td>{fmtM(x.v)}</td>
+                <td><span className={`tag ${x.pct>=10?"tg":x.pct>=0?"ty":"tr"}`}>{(x.pct>=0?"+":"")+fmt(x.pct,1)}%</span></td></tr>)}</tbody></table></div>
+
+            <div className="sh"><span className="st">Saldo proyectado</span><span className="ss">Próximos 15 meses · 4 escenarios de crecimiento</span></div>
+            <div className="card">
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:10}}>
+                {escProy.map(e=><button key={e.k} onClick={()=>setCaja({escSel:e.k})} style={{border:`2px solid ${e.color}`,background:escSel===e.k?e.color:"transparent",color:escSel===e.k?"#fff":e.color,borderRadius:20,padding:"6px 12px",fontWeight:600,fontSize:"0.85rem",cursor:"pointer"}}>
+                  {e.n} {(e.crec>=0?"+":"")+fmt(e.crec,1)}% · {fmtM(e.p[e.p.length-1].saldo)}</button>)}
+              </div>
+              <div className="ch">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={proy}>
+                <LineChart data={chartEsc}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
                   <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
                   <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
@@ -2298,13 +2346,15 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                   <ReferenceLine y={0} stroke="#7A2E0A"/>
                   <ReferenceLine y={caja.alerta} stroke="#B45309" strokeDasharray="4 4" label={{value:"Alerta",fill:"#B45309",fontSize:10,position:"insideTopLeft"}}/>
                   <ReferenceLine y={caja.limite} stroke="#B91C1C" strokeDasharray="4 4" label={{value:"Límite sobregiro",fill:"#B91C1C",fontSize:10,position:"insideTopLeft"}}/>
-                  <Line type="monotone" dataKey="saldo" name="Saldo" stroke="#e84400" strokeWidth={2.5} dot={{r:3}}/>
+                  {escProy.map(e=><Line key={e.k} type="monotone" dataKey={e.k} name={`${e.n} (${fmt(e.crec,1)}%)`} stroke={e.color} strokeWidth={escSel===e.k?3:1.5} strokeDasharray={e.k==="tend"?"5 3":undefined} dot={escSel===e.k?{r:3}:false}/>)}
                 </LineChart>
               </ResponsiveContainer>
-            </div></div>
-            <div className="card tw"><table><thead><tr><th>Mes</th><th>Ventas est.</th><th>Costos est.</th><th>Deudas</th><th>Retiro</th><th>Saldo</th></tr></thead>
+            </div>
+              <div className="tsm" style={{marginTop:6}}>Tocá un escenario para ver su detalle abajo. El elegido también se usa para el retiro sugerido, las alertas y el informe PDF.</div>
+            </div>
+            <div className="card tw"><table><thead><tr><th>Mes</th><th>Ventas est.</th><th>Costos est.</th><th>de ellos fijos</th><th>Deudas</th><th>Retiro</th><th>Saldo</th></tr></thead>
               <tbody>{proy.map((p,i)=><tr key={i}>
-                <td style={{fontWeight:600}}>{p.mes}</td><td>{fmtM(p.ventas)}</td><td>{fmtM(p.costos)}</td><td>{fmtM(p.deuda)}</td><td>{fmtM(p.retiro)}</td>
+                <td style={{fontWeight:600}}>{p.mes}</td><td>{fmtM(p.ventas)}</td><td>{fmtM(p.costos)}</td><td className="tsm">{fmtM(p.fijos)}</td><td>{fmtM(p.deuda)}</td><td>{fmtM(p.retiro)}</td>
                 <td><span className={`tag ${p.saldo>=0?"tg":p.saldo>=caja.alerta?"ty":"tr"}`}>{fmtM(p.saldo)}</span></td>
               </tr>)}</tbody></table></div>
 
@@ -2340,13 +2390,17 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="fl"><label className="flabel">Retiro fijo hasta enero</label><input type="number" className="finput" value={caja.retiroFijo} onChange={num("retiroFijo")}/></div>
               <div className="fl"><label className="flabel">Retiro fijo desde febrero</label><input type="number" className="finput" value={caja.retiroFijo2} onChange={num("retiroFijo2")}/></div>
               <div className="fl"><label className="flabel">+ % de ventas desde febrero</label><input type="number" className="finput" value={caja.retiroPct} onChange={num("retiroPct")}/></div>
-              <div className="fl"><label className="flabel">Costos operativos (% ventas)</label><input type="number" className="finput" value={caja.ratio} onChange={num("ratio")}/></div>
+              <div className="fl"><label className="flabel">Gastos fijos por mes ($, sueldos+BPS, alquiler, luz, publicidad, otros)</label><input type="number" className="finput" value={caja.fijosMes} onChange={num("fijosMes")}/></div>
+              <div className="fl"><label className="flabel">Aumento de gastos fijos desde enero (% inflación)</label><input type="number" step="0.5" className="finput" value={caja.infFijos} onChange={num("infFijos")}/></div>
+              <div className="fl"><label className="flabel">Costo variable: mercadería + IVA (% ventas)</label><input type="number" step="0.5" className="finput" value={caja.varPct} onChange={num("varPct")}/></div>
               <div className="fl"><label className="flabel">Comisión bancos (% ventas, si no hay medición)</label><input type="number" step="0.1" className="finput" value={caja.comisionPct} onChange={num("comisionPct")}/></div>
-              <div className="fl"><label className="flabel">Crecimiento ventas 2027 (%)</label><input type="number" className="finput" value={caja.crec27} onChange={num("crec27")}/></div>
+              <div className="fl"><label className="flabel">Crecimiento escenario Bajo (%)</label><input type="number" step="0.5" className="finput" value={caja.crecBajo} onChange={num("crecBajo")}/></div>
+              <div className="fl"><label className="flabel">Crecimiento escenario Medio (%)</label><input type="number" step="0.5" className="finput" value={caja.crecMedio} onChange={num("crecMedio")}/></div>
+              <div className="fl"><label className="flabel">Crecimiento escenario Alto (%)</label><input type="number" step="0.5" className="finput" value={caja.crecAlto} onChange={num("crecAlto")}/></div>
               <div className="fl"><label className="flabel">Límite de alerta ($)</label><input type="number" className="finput" value={caja.alerta} onChange={num("alerta")}/></div>
               <div className="fl"><label className="flabel">Límite sobregiro ($)</label><input type="number" className="finput" value={caja.limite} onChange={num("limite")}/></div>
             </div>
-            <div className="tsm" style={{marginTop:10}}>El saldo de partida es el neto de las tres cuentas guardado arriba. Incluye cuota Candela (~$19.600 hasta jun-28) y Santander ($53.347 hasta dic-26). Los costos siguen el patrón mensual real de 2025; para octubre a diciembre 2026 se usan los gastos ya programados en la planilla cuando son mayores que el estimado. A los costos se suma la comisión de los bancos por tarjetas: la real medida en Caja si hay meses cerrados con datos, si no el % configurado. Estos datos se guardan en este dispositivo.</div>
+            <div className="tsm" style={{marginTop:10}}>El saldo de partida es el neto de las tres cuentas guardado arriba. Incluye cuota Candela (~$19.600 hasta jun-28) y Santander ($53.347 hasta dic-26). Ventas de cada mes = el mismo mes del año anterior más el crecimiento del escenario. Costos = gastos fijos (suben con la inflación desde enero) + mercadería e IVA como % de las ventas, pagados mitad en el mes y mitad el mes siguiente; para octubre a diciembre 2026 se usan los gastos ya programados en la planilla cuando son mayores que el estimado. Últimos 12 meses reales: fijos ~$366.000/mes y variable 67,7% (2025: 65,3%; 2026 con el stock de más: 71,6%). A los costos se suma la comisión de los bancos por tarjetas: la real medida en Caja si hay meses cerrados con datos, si no el % configurado. Estos datos se guardan en este dispositivo.</div>
             <button className="btn" style={{marginTop:10,background:"var(--bg3)"}} onClick={()=>setCaja(CAJA_DEFAULT)}>Restablecer valores</button>
             </div>
             </>;
