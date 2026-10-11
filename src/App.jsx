@@ -556,7 +556,9 @@ const conSaldoRef = (c) => {
   n.saldo=Math.round((+n.brou||0)+(+n.santUyu||0)+(+n.santUsd||0)*(+n.tc||0)); return n;
 };
 const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:200000, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
-  ratio:92.6, crec27:10, comisionPct:3, retiroFijo:100000, retiroFijo2:80000, retiroPct:2, alerta:-600000, limite:-1000000 };
+  ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000, cfgVer:2 };
+// 11/10/2026: costos 89% de las ventas (2026 sin el stock comprado de más) y retiro fijo $80.000/mes. Se aplica una vez sobre lo guardado en cada equipo.
+const migrarCfg = (c) => (c.cfgVer||0)>=2 ? c : {...c, ratio:89, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, cfgVer:2};
 
 // ── Métricas del mes y análisis automático (sin IA) ─────────────────────────
 const INF_ANUAL = {"2022":9.95,"2023":8.26,"2024":5.11,"2025":6.36,"2026":6.0,"2027":6.0};
@@ -796,7 +798,7 @@ export default function App(){
   const [sheetSaldos,setSheetSaldos]=useState([]);
   const [sheetRetiros,setSheetRetiros]=useState([]);
   const [rF,setRF]=useState({fecha:new Date().toISOString().slice(0,10),monto:"",tipo:"Fijo",obs:""});
-  const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(c);});
+  const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(migrarCfg(c));});
   const setCaja=(patch)=>setCajaState(p=>{const n={...p,...patch};try{localStorage.setItem("prolimpio_caja",JSON.stringify(n));}catch(e){}return n;});
   // datos de control (cierres + depósitos) compartidos por la pestaña Caja y por la comisión de bancos
   const ctlCierres=useMemo(()=>[...sheetCierres2.map(c=>({_i:"n"+c._i,fecha:c.fecha,venta:(c.ventaPos||0)+(c.tarjetaErp||0),efectivo:c.efectivoPos||0,tarjetas:(c.tarjetasPos||0)+(c.tarjetaErp||0),ventaErp:c.ventasErp||0,gastosEf:c.gastosEf||0,saldoErp:c.saldoErp})),
