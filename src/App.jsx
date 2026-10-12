@@ -136,6 +136,8 @@ const VM=[
   {mes:"Nov","2022":962003,"2023":973259,"2024":1530793,"2025":1632615,"2026":null},
   {mes:"Dic","2022":1486388,"2023":1303555,"2024":1635557,"2025":2726949,"2026":null},
 ];
+// Tickets del mes en curso (planilla "Analisis tickets")
+const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
 const TK=[
   {mes:"Ene",c23:1858,p23:632,c24:1754,p24:651.1,c25:2333,p25:727,c26:2695,p26:699},
   {mes:"Feb",c23:1448,p23:583,c24:1533,p24:645.6,c25:1974,p25:676,c26:1985,p26:689},
@@ -318,10 +320,10 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "10/10/2026";
+const PENDIENTES_FECHA = "12/10/2026";
 const PENDIENTES = [
   {mes:"2026-10",prov:"Unimed (giro hecho, falta que lo debite el banco)",monto:30578,tipo:"prov"},
-  {mes:"2026-10",prov:"Pontyn",monto:52694,tipo:"prov"},
+  {mes:"2026-10",prov:"Pontyn (giro hecho, falta que lo debite el banco)",monto:50641,tipo:"prov"},
   {mes:"2026-10",prov:"Alido Valiero",monto:23892,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:149960,tipo:"cheque"},
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
@@ -342,12 +344,17 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Atersa",monto:24520,tipo:"prov"},
   {mes:"2026-11",prov:"Solsire",monto:18516,tipo:"prov"},
   {mes:"2026-11",prov:"Aymi",monto:9934,tipo:"prov"},
+  {mes:"2026-11",prov:"Palmisol",monto:17116,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari",monto:11624,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 23/09)",monto:149691,tipo:"cheque"}, // planilla: "Mirar wasap, falta un cheque $19.303"
   {mes:"2026-11",prov:"Estuario Platino",monto:72156,tipo:"prov"},
   {mes:"2026-11",prov:"Cuota Candela (468 USD)",monto:19618,tipo:"credito"},
   {mes:"2026-11",prov:"SUBATIR",monto:193210,tipo:"cheque"},
   {mes:"2026-11",prov:"Estuario Platino",monto:72116,tipo:"prov"},
   {mes:"2026-11",prov:"Jaspe",monto:19768,tipo:"prov"},
+  {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg, sin facturar)",monto:159478,tipo:"cheque"},
+  {mes:"2026-11",prov:"SUBATIR",monto:6303,tipo:"cheque"},
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,tipo:"credito"},
   {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,tipo:"prov"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,tipo:"prov"},
@@ -360,12 +367,12 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"SUBATIR Intex (3/3)",monto:95819,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1790206, 10:1250330, 11:590720};
+const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-10", diasYa:8, ventasYa:603744, pagadoYa:723787 }; // ventas 01–09/10; pagado = proveedores en verde $541.457 − Unimed $30.578 (giro hecho, sin debitar al 10/10) + alquiler + sueldos $140.460 + correcaminata $10.000
+const MES_EN_CURSO = { idx:9, desde:"2026-10-12", diasYa:10, ventasMes:727960, ventasYa:553141, pagadoYa:723787 }; // ventasMes = vendido 01–12/10 (10 días); ventasYa = lo que ya entró al banco (ventas hasta 08/10 + depósito de efectivo $16.000 del 12/10; tarjetas de vie, sáb y lun todavía no acreditadas por el feriado); pagado = proveedores en verde $592.098 − giros sin debitar (Pontyn $50.641, Unimed $30.578) + alquiler + sueldos $140.460 + correcaminata $10.000
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-10", ts:"2026-10-10T22:37:00.000Z", brou:50212, santUyu:-541156 }; // 10/10 19:37, saldo real del banco (el giro a Unimed $30.578 todavía no se debitó)
+const SALDO_REF = { fecha:"2026-10-12", ts:"2026-10-12T22:31:00.000Z", brou:50814, santUyu:-526463 }; // 12/10 19:31, saldo real del banco (faltan debitar los giros a Pontyn $50.641 y Unimed $30.578)
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -523,7 +530,7 @@ const crecimientoReal = () => {
   // mes en curso: promedio por día hábil contra el mismo mes del año anterior
   let curso=null; const mc=MES_EN_CURSO; const yc=2026+Math.floor(mc.idx/12), ic=mc.idx%12;
   const vPrevMes=VM[ic]?.[String(yc-1)], dPrev=DIAS_HABILES[String(yc-1)]?.[MES3[ic]];
-  if(VM[ic]?.[String(yc)]==null && vPrevMes && dPrev && mc.diasYa){ const pdA=mc.ventasYa/mc.diasYa, pdP=vPrevMes/dPrev; curso={mes:`${MES3[ic]} ${String(yc).slice(2)}`,dias:mc.diasYa,v:mc.ventasYa,pdA,pdP,pct:(pdA/pdP-1)*100}; }
+  if(VM[ic]?.[String(yc)]==null && vPrevMes && dPrev && mc.diasYa){ const pdA=(mc.ventasMes||mc.ventasYa)/mc.diasYa, pdP=vPrevMes/dPrev; curso={mes:`${MES3[ic]} ${String(yc).slice(2)}`,dias:mc.diasYa,v:mc.ventasMes||mc.ventasYa,pdA,pdP,pct:(pdA/pdP-1)*100}; }
   return {meses,tend,ytd,anio,curso,u3:u3.map(x=>x.mes)};
 };
 const ESCENARIOS = [
@@ -1563,6 +1570,14 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="card"><div className="ctitle">Tickets Ene–Set 2026</div><div className="cval ac">{fmt(tk26)}</div><div className="csub">vs {fmt(tk25)} en 2025</div><div className={`delta ${cTk>=0?"up":"dn"}`}>{cTk>=0?"▲":"▼"} {fmt(Math.abs(cTk),1)}%</div></div>
             <div className="card"><div className="ctitle">Valor prom. ticket 2026</div><div className="cval">${fmt(pvTk,0)}</div><div className="csub">Prom Ene–Set 2026</div><div className="delta wr">Inflación ~7%</div></div>
           </div>
+          {(()=>{const t=TK_CURSO, r=TK[t.mes]||{}, k=String(t.anio-1).slice(2), cPrev=r["c"+k], pPrev=r["p"+k], dPrev=DIAS_HABILES[String(t.anio-1)]?.[MES3[t.mes]];
+            if(!cPrev||!dPrev||r["c"+String(t.anio).slice(2)]!=null) return null;
+            const xd=t.cantidad/t.dias, xdPrev=cPrev/dPrev, dC=pct(xd,xdPrev), dP=pct(t.promedio,pPrev);
+            return <div className="card" style={{borderLeft:"4px solid #E84400"}}><div className="ctitle">{MESES[t.mes]} {t.anio} en curso (al {t.hasta}, {t.dias} días)</div>
+              <div className="grid2" style={{marginTop:8}}>
+                <div><div className="cval ac">{fmt(xd,1)}</div><div className="csub">tickets por día ({fmt(t.cantidad)} en total) vs {fmt(xdPrev,1)} en {t.anio-1}</div><div className={`delta ${dC>=0?"up":"dn"}`}>{dC>=0?"▲":"▼"} {fmt(Math.abs(dC),1)}%</div></div>
+                <div><div className="cval">${fmt(t.promedio,0)}</div><div className="csub">ticket promedio vs ${fmt(pPrev,0)} en {t.anio-1}</div><div className={`delta ${dP>=0?"up":"dn"}`}>{dP>=0?"▲":"▼"} {fmt(Math.abs(dP),1)}%</div></div>
+              </div></div>;})()}
           <div className="card"><div className="ctitle" style={{marginBottom:12}}>Comparativa 2025 vs 2026</div>
           <div className="tw"><table><thead><tr><th>Mes</th><th>Cant 2025</th><th>Prom 2025</th><th>Cant 2026</th><th>Prom 2026</th><th>Δ cant</th><th>Δ prom</th></tr></thead>
           <tbody>{TK.map((r,i)=>{
