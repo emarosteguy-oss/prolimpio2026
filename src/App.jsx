@@ -72,6 +72,9 @@ const CSS = `
   .btn-s:hover{color:var(--text);border-color:#E84400}
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .tw{overflow-x:auto}
+  .tcomp th,.tcomp td{padding:8px 5px}
+  .tcomp td{font-size:.88rem}
+  .tcomp .tag{padding:2px 6px;white-space:nowrap}
   table{width:100%;border-collapse:collapse;font-size:.83rem}
   th{text-align:left;padding:10px 12px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-bottom:1px solid var(--border);font-weight:700;white-space:nowrap}
   td{padding:11px 12px;font-size:.98rem;color:var(--text);border-bottom:1px solid #F6DCC2;vertical-align:middle}
@@ -576,6 +579,43 @@ const proyectarCaja = (cfg, crecIn) => {
   }
   return out;
 };
+// ── Pedido semanal SUBATIR ───────────────────────────────────────────────────
+// Se pide el lunes y llega el miércoles; cada pedido cubre las ventas de miércoles a martes.
+// Lo que se repone en SUBATIR ≈ pctSub % de las ventas (38,3% en 2025 y 38,9% en 2026). Tope de kg por pedido.
+const LOCAL_CERRADO = new Set(["2026-12-25","2027-01-01","2027-02-08","2027-02-09","2027-03-25","2027-03-26","2027-03-27","2027-05-01","2027-07-18","2027-08-25","2027-12-25"]);
+const ventasMesProy = (crec) => { const cache={}; const f=(y,m)=>{ const r=VM[m]; if(r[String(y)]!=null) return r[String(y)]; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key]; return (cache[key]=Math.round((y>2025?f(y-1,m):0)*(1+crec/100))); }; return f; };
+const planSubatir = (cfg, semanas=14) => {
+  const crec=crecEscenario(cfg,cfg.escSel||"medio"); const vm=ventasMesProy(crec);
+  const pKg=Number(cfg.precioKg)||59, tope=Number(cfg.topeKg)||2500, pct=(Number(cfg.pctSub)||38.5)/100;
+  const ventaDia=(d)=>{ if(d.getDay()===0||LOCAL_CERRADO.has(isoDe(d))) return 0; const y=d.getFullYear(),m=d.getMonth(); const dh=DIAS_HABILES[String(y)]?.[MES3[m]]||26; return vm(y,m)/dh; };
+  const hoy=new Date(); hoy.setHours(12,0,0,0); const lun=new Date(hoy); do{ lun.setDate(lun.getDate()+1); }while(lun.getDay()!==1);
+  const filas=[];
+  for(let k=0;k<semanas;k++){
+    const L=new Date(lun); L.setDate(lun.getDate()+7*k); const llega=new Date(L); llega.setDate(L.getDate()+2);
+    let ventas=0; for(let j=0;j<7;j++){ const d=new Date(llega); d.setDate(llega.getDate()+j); ventas+=ventaDia(d); }
+    const necesario=Math.round(ventas*pct), kgNec=Math.round(necesario/pKg);
+    const kgPed=Math.min(kgNec,tope); const paga=new Date(llega); paga.setDate(llega.getDate()+45);
+    filas.push({lunes:isoDe(L),llega:isoDe(llega),paga:isoDe(paga),ventas:Math.round(ventas),necesario,kgNec,kgPed,montoPed:Math.round(kgPed*pKg),faltaKg:Math.max(0,kgNec-tope)});
+  }
+  // Pedido extra de inicio de temporada: cubre el faltante de las primeras semanas fuertes (faltan más del 20% del tope),
+  // hasta 4 semanas seguidas; se pide el lunes anterior a la primera de ellas para no adelantar stock (y el pago) de más.
+  const grande=f=>f.faltaKg>tope*0.2;
+  const iF=filas.findIndex(grande);
+  let extra=null;
+  filas.forEach(f=>{ f.cubreExtra=0; f.faltaFinal=f.faltaKg; f.enTemporada=false; });
+  if(iF>=0){
+    let n=0; for(let k=iF;k<filas.length&&n<4&&grande(filas[k]);k++,n++) filas[k].enTemporada=true;
+    const faltaTot=filas.filter(f=>f.enTemporada).reduce((s,f)=>s+f.faltaKg,0);
+    const kg=Number(cfg.extraKg)>0?Number(cfg.extraKg):Math.ceil(faltaTot/50)*50;
+    const lunesSug=filas[Math.max(0,iF-1)].lunes;
+    const fecha=cfg.extraFecha&&cfg.extraFecha>=filas[0].lunes?cfg.extraFecha:lunesSug;
+    const llega=new Date(fecha+"T12:00:00"); llega.setDate(llega.getDate()+2); const paga=new Date(llega); paga.setDate(llega.getDate()+45);
+    extra={kg,monto:Math.round(kg*pKg),fecha,sugerida:lunesSug,llega:isoDe(llega),paga:isoDe(paga),faltaTot,primera:filas[iF].lunes,semanas:n};
+    let stock=0, entro=false;
+    filas.forEach(f=>{ if(!entro&&f.llega>=extra.llega){ stock=kg; entro=true; } if(!f.enTemporada) return; const usa=Math.min(stock,f.faltaKg); stock-=usa; f.cubreExtra=usa; f.faltaFinal=f.faltaKg-usa; });
+  }
+  return {filas,extra,pKg,tope,pct:pct*100,crec};
+};
 const refEsMasNuevo = (fecha,ts) => { const f=fecha||""; return f<SALDO_REF.fecha || (f===SALDO_REF.fecha && (ts||"")<SALDO_REF.ts); };
 // Si el saldo guardado es anterior a SALDO_REF, toma los saldos reales de SALDO_REF (conserva USD y TC)
 const conSaldoRef = (c) => {
@@ -585,13 +625,14 @@ const conSaldoRef = (c) => {
 };
 const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:200000, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
   ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000,
-  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", cfgVer:3 };
+  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:4 };
 // 11/10/2026: costos 89% de las ventas (2026 sin el stock comprado de más) y retiro fijo $80.000/mes. Se aplica una vez sobre lo guardado en cada equipo.
 // 11/10/2026 (v72): proyección con gastos fijos + variables y tres escenarios de crecimiento.
 const migrarCfg = (c) => {
   let n=c;
   if((n.cfgVer||0)<2) n={...n, ratio:89, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, cfgVer:2};
   if((n.cfgVer||0)<3) n={...n, varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", cfgVer:3};
+  if((n.cfgVer||0)<4) n={...n, precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:4};
   return n;
 };
 
@@ -2200,6 +2241,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             const proy=proyectarCaja(caja);
             const CR=crecimientoReal(); const escSel=caja.escSel||"medio";
             const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(caja,crecEscenario(caja,e.k))}));
+            const PS=planSubatir(caja); const fD=iso=>{const p=iso.split("-");return `${p[2]}/${p[1]}`;}; const DSEM=["dom","lun","mar","mié","jue","vie","sáb"];
             const chartEsc=proy.map((r,i)=>{const o={mes:r.mes}; escProy.forEach(e=>{o[e.k]=e.p[i].saldo;}); return o;});
             const sugerido=proy[0]?.retiro||0;
             const minimo=proy.reduce((a,b)=>b.saldo<a.saldo?b:a,proy[0]);
@@ -2335,6 +2377,32 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="tsm" style={{padding:"0 4px"}}>Noviembre todavía tiene un SUBATIR sin cargar y diciembre no tiene pedidos SUBATIR. Estos montos no incluyen los fijos del mes (alquiler, sueldos, IVA, etc.); la proyección de abajo sí los incluye.</div>
               </>;
             })()}
+            <div className="sh"><span className="st">Pedido semanal SUBATIR</span><span className="ss">Se pide el lunes, llega el miércoles · escenario {(ESCENARIOS.find(e=>e.k===escSel)||{}).n} ({(PS.crec>=0?"+":"")+fmt(PS.crec,1)}%)</span></div>
+            {(()=>{const f0=PS.filas[0]; const E=PS.extra; return <>
+            <div className="grid4">
+              <div className="card" style={{borderLeft:"4px solid #E84400"}}><div className="ctitle">Pedido del lunes {fD(f0.lunes)}</div><div className="cval ac">{fmt(f0.kgPed)} kg</div><div className="csub">≈ {fmtM(f0.montoPed)} · cubre ventas del {fD(f0.llega)} al martes (est. {fmtM(f0.ventas)}) · se paga ~{fD(f0.paga)}</div>
+                {f0.faltaKg>0&&<div className={`delta ${f0.faltaKg<=PS.tope*0.2?"wr":"dn"}`}>Necesitaría {fmt(f0.kgNec)} kg: {f0.faltaKg<=PS.tope*0.2?`pedí unos ${fmt(f0.kgNec)} kg si te lo aceptan`:`faltan ${fmt(f0.faltaKg)} kg`}</div>}</div>
+              {E?<div className="card" style={{borderLeft:"4px solid #15803D"}}><div className="ctitle">Pedido extra de inicio de temporada</div><div className="cval" style={{color:"#15803D"}}>{fmt(E.kg)} kg</div>
+                <div className="csub">≈ {fmtM(E.monto)} · pedir el lunes {fD(E.fecha)}{E.fecha!==E.sugerida?` (sugerido ${fD(E.sugerida)})`:""}, llega {fD(E.llega)}, se paga ~{fD(E.paga)}. Cubre los {fmt(E.faltaTot)} kg que no entran en el tope en las {E.semanas} semanas fuertes desde el {fD(E.primera)}.</div></div>
+               :<div className="card"><div className="ctitle">Pedido extra de temporada</div><div className="cval">No hace falta</div><div className="csub">En las próximas {PS.filas.length} semanas todo entra en el tope de {fmt(PS.tope)} kg.</div></div>}
+            </div>
+            <div className="card tw"><table className="tcomp"><thead><tr><th>Lunes</th><th>Necesario</th><th>Pedir</th><th>Falta</th></tr></thead>
+              <tbody>{PS.filas.map((f,i)=><tr key={i}>
+                <td style={{fontWeight:600,whiteSpace:"nowrap"}}>{fD(f.lunes)}<div className="tsm" style={{fontWeight:400}}>vende ${fmt(f.ventas/1000)}k</div></td>
+                <td style={{whiteSpace:"nowrap"}}>{fmt(f.kgNec)} kg<div className="tsm">${fmt(f.necesario/1000)}k</div></td>
+                <td style={{whiteSpace:"nowrap"}}><span className={`tag ${f.kgPed>=PS.tope?"ty":"tg"}`}>{fmt(f.kgPed)} kg</span><div className="tsm">paga ~{fD(f.paga)}</div></td>
+                <td>{f.faltaKg>0?<span className={`tag ${f.cubreExtra>0&&f.faltaFinal===0?"tg":f.faltaKg<=PS.tope*0.2?"ty":"tr"}`}>{fmt(f.faltaKg)} kg</span>:"—"}
+                  <div className="tsm">{f.cubreExtra>0?(f.faltaFinal>0?`extra cubre ${fmt(f.cubreExtra)}; faltan ${fmt(f.faltaFinal)}`:"lo cubre el extra"):f.faltaKg>0&&f.faltaKg<=PS.tope*0.2?"pedir +":f.faltaKg>0?"2º pedido":""}</div></td></tr>)}</tbody></table></div>
+            <div className="card"><div className="fg">
+              <div className="fl"><label className="flabel">Precio promedio SUBATIR ($/kg)</label><input type="number" step="0.5" className="finput" value={caja.precioKg} onChange={num("precioKg")}/></div>
+              <div className="fl"><label className="flabel">Tope por pedido (kg)</label><input type="number" className="finput" value={caja.topeKg} onChange={num("topeKg")}/></div>
+              <div className="fl"><label className="flabel">SUBATIR como % de las ventas</label><input type="number" step="0.1" className="finput" value={caja.pctSub} onChange={num("pctSub")}/></div>
+              <div className="fl"><label className="flabel">Pedido extra: kg (0 = sugerido)</label><input type="number" className="finput" value={caja.extraKg} onChange={num("extraKg")}/></div>
+              <div className="fl"><label className="flabel">Pedido extra: lunes (vacío = sugerido)</label><input type="date" className="finput" value={caja.extraFecha||""} onChange={e=>setCaja({extraFecha:e.target.value})}/></div>
+            </div>
+            <div className="tsm" style={{marginTop:8}}>Ventas de cada día = venta proyectada del mes (escenario elegido abajo) ÷ días hábiles. Lo necesario es el % de SUBATIR sobre esas ventas, a costo. Si una semana necesita menos que el tope, pedí solo lo necesario para no subir el stock. El precio por kg sale del pedido del 12/10 (2.650 kg ≈ $157.000); actualizalo cuando cambie. Diciembre se reparte parejo en el mes; en la práctica las últimas dos semanas venden más. Faltante en amarillo: es poco, alcanza con pedir un poco más del tope (como los 2.650 kg del 12/10). En rojo: hace falta un segundo pedido esa semana o ampliar el tope.</div></div>
+            </>;})()}
+
             <div className="sh"><span className="st">Crecimiento real de ventas</span><span className="ss">Cada mes contra el mismo mes del año anterior</span></div>
             <div className="grid4">
               <div className="card" style={{borderLeft:"4px solid #1D4ED8"}}><div className="ctitle">Tendencia (últimos 3 meses)</div><div className="cval" style={{color:"#1D4ED8"}}>{(CR.tend>=0?"+":"")+fmt(CR.tend,1)}%</div><div className="csub">{CR.u3.join(", ")} · es el escenario "Tendencia real"</div></div>
