@@ -139,6 +139,12 @@ const VM=[
   {mes:"Nov","2022":962003,"2023":973259,"2024":1530793,"2025":1632615,"2026":null},
   {mes:"Dic","2022":1486388,"2023":1303555,"2024":1635557,"2025":2726949,"2026":null},
 ];
+// Ventas diarias del mes en curso según la planilla Excel (Ventas Diarias). Se muestran en Cargar datos junto con las cargadas en la app.
+const VENTAS_DIA_PLANILLA = [
+  {fecha:"2026-10-01",monto:66662},{fecha:"2026-10-02",monto:94263},{fecha:"2026-10-03",monto:28146,obs:"Mucha lluvia"},
+  {fecha:"2026-10-05",monto:105429},{fecha:"2026-10-06",monto:84882},{fecha:"2026-10-07",monto:75023},{fecha:"2026-10-08",monto:82736},
+  {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},
+];
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
 const TK=[
@@ -1516,18 +1522,17 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           <div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Obs.</th></tr></thead>
           <tbody>{sheetVentas.slice(0,20).map((v,i)=><tr key={i}><td>{v.fecha}</td><td className="tac">${fmt(Number(v.monto))}</td><td className="tsm">{v.obs||"—"}</td><td><button onClick={()=>deleteRow("Ventas",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
           <hr className="div"/>
-          <div className="sh"><span className="st">Ventas del mes en curso</span><span className="ss">Cargadas desde la app</span></div>
+          <div className="sh"><span className="st">Ventas del mes en curso</span><span className="ss">De tu planilla y las cargadas en la app</span></div>
           {(()=>{
             const hoy = new Date();
             const mesActual = hoy.getMonth();
             const anioActual = hoy.getFullYear();
             const nombreMes = MESES[mesActual];
             const nombreMesCorto = nombreMes.slice(0,3);
-            const ventasMesActual = sheetVentas.filter(v=>{
-              if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0) return false;
-              const d = new Date(v.fecha+"T12:00:00");
-              return d.getMonth()===mesActual && d.getFullYear()===anioActual;
-            });
+            const delMes = v=>{ if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0) return false; const d = new Date(v.fecha+"T12:00:00"); return d.getMonth()===mesActual && d.getFullYear()===anioActual; };
+            const dePlanilla = VENTAS_DIA_PLANILLA.filter(delMes).map(v=>({...v,origen:"Planilla"}));
+            const fechasPl = new Set(dePlanilla.map(v=>v.fecha));
+            const ventasMesActual = [...dePlanilla, ...sheetVentas.filter(delMes).filter(v=>!fechasPl.has(v.fecha)).map(v=>({...v,origen:"App"}))];
             const totalMes = ventasMesActual.reduce((s,v)=>s+Number(v.monto),0);
             const diasCargados = ventasMesActual.length;
             const promDiario = diasCargados>0?totalMes/diasCargados:0;
@@ -1568,14 +1573,14 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                 </div>
               </div>
               {ventasMesActual.length>0&&<div className="card tw" style={{marginTop:4}}>
-                <table><thead><tr><th>Fecha</th><th>Monto</th><th>Obs.</th><th>vs promedio</th></tr></thead>
+                <table className="tcomp"><thead><tr><th>Fecha</th><th>Monto</th><th>vs prom.</th><th>Obs.</th></tr></thead>
                 <tbody>{[...ventasMesActual].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)).map((v,i)=>{
                   const diff = promDiario>0?((Number(v.monto)-promDiario)/promDiario*100):0;
                   return<tr key={i}>
-                    <td>{v.fecha}</td>
+                    <td style={{whiteSpace:"nowrap"}}>{fCorta(v.fecha)}</td>
                     <td className="tac">${fmt(Number(v.monto))}</td>
-                    <td className="tsm">{v.obs||"—"}</td>
                     <td><span className={`tag ${diff>=0?"tg":"tr"}`}>{diff>=0?"+":""}{fmt(diff,1)}%</span></td>
+                    <td className="tsm">{v.obs||""}{v.origen==="App"?<span className="tag ty" style={{marginLeft:v.obs?4:0}}>app</span>:null}</td>
                   </tr>;
                 })}</tbody></table>
               </div>}
