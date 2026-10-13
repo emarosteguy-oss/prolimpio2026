@@ -149,6 +149,10 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-05",monto:105429},{fecha:"2026-10-06",monto:84882},{fecha:"2026-10-07",monto:75023},{fecha:"2026-10-08",monto:82736},
   {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},
 ];
+// Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
+const RETIROS_CLAUDE = [
+  {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
+].map(r=>({...r,_claude:true}));
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
 const TK=[
@@ -381,9 +385,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:647954, pagadoYa:808788 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión) + cobro ANDA $1.761 (BROU); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor pagado contado 13/10 $3.782 (BROU)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:647954, pagadoYa:893839, retiradoYa:20953 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión) + cobro ANDA $1.761 (BROU); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor pagado contado 13/10 $3.782 + BPS $76.051 + contador $9.000 (BROU 13/10); retiradoYa = retiros del mes ya hechos (UTE casa, VISA BBVA, Antel y celulares 13/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T16:46:00.000Z", brou:180595, santUyu:-517577 }; // 13/10 13:45: Olkany pagó una venta a crédito $131.801 (BROU). Antes, 10:58: BROU con cobro ANDA $1.761 y pago contado a proveedor $3.782; entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
+const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T18:12:00.000Z", brou:74591, santUyu:-517577 }; // 13/10 15:12 BROU = 180.595 − pagos personales 20.953 (retiro) − BPS 76.051 − contador 9.000; // 13/10 13:45: Olkany pagó una venta a crédito $131.801 (BROU). Antes, 10:58: BROU con cobro ANDA $1.761 y pago contado a proveedor $3.782; entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -424,7 +428,7 @@ const COSTOS_FIJOS = [
   {nombre:"Otros gastos", monto:55000},
 ];
 const COSTOS_FIJOS_MES = {
-  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS",monto:76051},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Otros gastos",monto:45000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
+  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
   "2026-11":[{nombre:"Alquiler",monto:65370},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS",monto:220000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:90000},{nombre:"Otros gastos",monto:45000}],
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
@@ -596,7 +600,8 @@ const proyectarCaja = (cfg, crecIn) => {
     if(idx===11 && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo en Dic-26
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
-    saldo = saldo + ventasMes - costos - deuda + cobros - retiro;
+    const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)) : retiro;
+    saldo = saldo + ventasMes - costos - deuda + cobros - retiroMes;
     out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, fijos:fijoMes, deuda, retiro, saldo:Math.round(saldo) });
     m++; if(m>11){m=0;y++;}
   }
@@ -901,7 +906,8 @@ export default function App(){
   const [orKeyIn,setOrKeyIn]=useState("");
   const [visionPago,setVisionPago]=useState(()=>{try{return localStorage.getItem("prolimpio_vision_pago")!=="no";}catch(e){return true;}});
   const [sheetSaldos,setSheetSaldos]=useState([]);
-  const [sheetRetiros,setSheetRetiros]=useState([]);
+  const [sheetRetirosRaw,setSheetRetiros]=useState([]);
+  const sheetRetiros=useMemo(()=>[...sheetRetirosRaw,...RETIROS_CLAUDE.filter(c=>!sheetRetirosRaw.some(x=>x.fecha===c.fecha&&Number(x.monto)===c.monto))],[sheetRetirosRaw]);
   const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:""});
   const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(migrarCfg(c));});
   const setCaja=(patch)=>setCajaState(p=>{const n={...p,...patch};try{localStorage.setItem("prolimpio_caja",JSON.stringify(n));}catch(e){}return n;});
@@ -2039,7 +2045,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             {sheetRetiros.length>0&&<div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead>
               <tbody>{[...sheetRetiros.map((r,i)=>({...r,_i:i}))].reverse().slice(0,24).map(r=><tr key={r._i}>
                 <td>{r.fecha}</td><td className="tac">{fmtM(Number(r.monto)||0)}</td><td><span className="tag ty">{r.tipo}</span></td><td className="tsm">{r.obs||"—"}</td>
-                <td><button onClick={()=>deleteRow("Retiros",r._i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
+                <td><button onClick={()=>{if(r._claude){showToast("Este retiro lo cargó Claude desde el chat: pedile que lo saque","er");return;}deleteRow("Retiros",r._i);}} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
               </tr>)}</tbody></table></div>}
             <div className="sh"><span className="st">Datos de partida</span><span className="ss">Actualizalos cuando cambien</span></div>
             <div className="card"><div className="fg">
