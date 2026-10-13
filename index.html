@@ -8,25 +8,30 @@
     <link rel="apple-touch-icon" href="/prolimpio2026/icon.png" />
     <meta http-equiv="Cache-Control" content="no-cache" />
     <script>
-      // Pantalla en blanco: si el programa no carga (versión vieja guardada en el celular) recarga una vez sin caché;
-      // si igual no arranca, muestra el error.
+      // Arranque: muestra "Cargando…" mientras baja el programa. Si un archivo no carga, recarga una vez sin caché (conservando el #cierre=…).
+      // Solo dice "no arrancó" si hubo un error, o si a los 30 s el programa todavía no se ejecutó.
       (function(){
-        var errs=[];
+        var errs=[], ses=function(f){try{return f(sessionStorage);}catch(e){return null;}};
+        var recargar=function(){ses(function(s){s.removeItem('pl_recarga');});location.replace(location.pathname+'?v='+Date.now()+location.hash);};
+        window.__plRecargar=recargar;
         window.addEventListener('error',function(e){
           var t=e.target;
           if(t&&t.tagName==='SCRIPT'&&t.src&&t.src.indexOf('/assets/')>-1){
-            if(!sessionStorage.getItem('pl_recarga')){sessionStorage.setItem('pl_recarga','1');location.replace(location.pathname+'?v='+Date.now());return;}
+            if(!ses(function(s){return s.getItem('pl_recarga');})){ses(function(s){s.setItem('pl_recarga','1');});location.replace(location.pathname+'?v='+Date.now()+location.hash);return;}
             errs.push('No se pudo cargar '+t.src);
           } else if(e.message){ errs.push(e.message+' ('+(e.filename||'')+':'+(e.lineno||'')+')'); }
+          mostrar();
         },true);
-        window.addEventListener('unhandledrejection',function(e){errs.push('Promesa: '+(e.reason&&e.reason.message||e.reason));});
-        setTimeout(function(){
-          var r=document.getElementById('root');
-          if(r&&!r.children.length){
-            r.innerHTML='<div style="padding:16px;font-family:system-ui,sans-serif;background:#fff;color:#222;min-height:100vh"><h2>La app no arrancó</h2><p>Mandale una captura a Claude.</p><pre style="white-space:pre-wrap;font-size:12px;background:#f4f4f4;padding:10px;border-radius:8px"></pre><button style="padding:12px 16px;border:none;border-radius:8px;background:#e84400;color:#fff;font-size:15px" onclick="sessionStorage.removeItem(\'pl_recarga\');location.replace(location.pathname+\'?v=\'+Date.now())">Recargar</button></div>';
-            r.querySelector('pre').textContent=(errs.join('\n')||'Sin mensaje de error')+'\n'+navigator.userAgent;
-          } else sessionStorage.removeItem('pl_recarga');
-        },6000);
+        window.addEventListener('unhandledrejection',function(e){errs.push('Promesa: '+(e.reason&&e.reason.message||e.reason)); if(!window.__plOK) mostrar();});
+        function mostrar(lento){
+          if(window.__plOK) return; var r=document.getElementById('root'); if(!r) return;
+          var msg=lento&&!errs.length?'<h2>La app sigue cargando</h2><p>La conexión está lenta. Esperá un poco más o tocá Recargar.</p>':'<h2>La app no arrancó</h2><p>Mandale una captura a Claude.</p>';
+          r.innerHTML='<div style="padding:16px;font-family:system-ui,sans-serif;background:#fff;color:#222;min-height:100vh">'+msg+'<pre style="white-space:pre-wrap;font-size:12px;background:#f4f4f4;padding:10px;border-radius:8px"></pre><button style="padding:12px 16px;border:none;border-radius:8px;background:#e84400;color:#fff;font-size:15px" onclick="window.__plRecargar()">Recargar</button></div>';
+          r.querySelector('pre').textContent=(errs.join('\n')||(lento?'Todavía descargando el programa ('+Math.round((Date.now()-T0)/1000)+' s)':'Sin mensaje de error'))+'\n'+navigator.userAgent;
+        }
+        var T0=Date.now();
+        setTimeout(function(){ if(!window.__plOK) mostrar(true); },12000);
+        setTimeout(function(){ if(!window.__plOK) mostrar(false); else ses(function(s){s.removeItem('pl_recarga');}); },35000);
       })();
     </script>
     <meta name="theme-color" content="#e84400" />
@@ -34,7 +39,7 @@
     <meta name="apple-mobile-web-app-title" content="PROlimpio" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div style="padding:40px 16px;font-family:system-ui,sans-serif;color:#9A3412;text-align:center">Cargando la app…</div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

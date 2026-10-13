@@ -21,7 +21,9 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const rootEl=document.getElementById('root'); rootEl.innerHTML='';
+window.__plOK=true;
+ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
     <ErrorBoundary><App /></ErrorBoundary>
   </React.StrictMode>,
