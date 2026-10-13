@@ -383,7 +383,7 @@ const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
 const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:647954, pagadoYa:808788 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión) + cobro ANDA $1.761 (BROU); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor pagado contado 13/10 $3.782 (BROU)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T13:58:00.000Z", brou:48794, santUyu:-517577 }; // 13/10 10:58: BROU con cobro ANDA $1.761 y pago contado a proveedor $3.782; entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
+const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T16:46:00.000Z", brou:180595, santUyu:-517577 }; // 13/10 13:45: Olkany pagó una venta a crédito $131.801 (BROU). Antes, 10:58: BROU con cobro ANDA $1.761 y pago contado a proveedor $3.782; entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -646,9 +646,9 @@ const conSaldoRef = (c) => {
   const n={...c,brou:SALDO_REF.brou,santUyu:SALDO_REF.santUyu,saldoFecha:SALDO_REF.fecha,saldoTs:SALDO_REF.ts};
   n.saldo=Math.round((+n.brou||0)+(+n.santUyu||0)+(+n.santUsd||0)*(+n.tc||0)); return n;
 };
-const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:200000, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
+const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:68199, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
   ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000,
-  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:4 };
+  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:5 };
 // 11/10/2026: costos 89% de las ventas (2026 sin el stock comprado de más) y retiro fijo $80.000/mes. Se aplica una vez sobre lo guardado en cada equipo.
 // 11/10/2026 (v72): proyección con gastos fijos + variables y tres escenarios de crecimiento.
 const migrarCfg = (c) => {
@@ -656,6 +656,7 @@ const migrarCfg = (c) => {
   if((n.cfgVer||0)<2) n={...n, ratio:89, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, cfgVer:2};
   if((n.cfgVer||0)<3) n={...n, varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", cfgVer:3};
   if((n.cfgVer||0)<4) n={...n, precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:4};
+  if((n.cfgVer||0)<5) n={...n, cobros:Math.max(0,(Number(n.cobros)||0)-131801), cfgVer:5};   // 13/10: Olkany pagó $131.801 de los cobros pendientes
   return n;
 };
 
