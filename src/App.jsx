@@ -495,12 +495,20 @@ const achicarFoto = (url, M) => new Promise(res=>{ const img=new Image(); img.on
 let CANCELAR_LECTURA = null;
 const leerCierreConIA = async (fotos, orKey, onEstado) => {
   let cancelado=false; CANCELAR_LECTURA=()=>{cancelado=true; if(ctrlActual) ctrlActual.abort();}; let ctrlActual=null;
-  let modelos=[], fuente="lista";
+  let modelos=[], fuente="lista", pagos=[];
+  // Modelos pagos muy baratos (menos de 1 centavo de dólar por cierre): se prueban primero; si la cuenta no tiene saldo, fallan al instante y se sigue con los gratuitos.
+  const PREF_PAGO=["google/gemini-2.5-flash","google/gemini-2.5-flash-lite","openai/gpt-4.1-mini","openai/gpt-4o-mini","google/gemini-2.0-flash-001"];
+  let usarPago=true; try{ usarPago=localStorage.getItem("prolimpio_vision_pago")!=="no"; }catch(e){}
   try{ const r=await fetch("https://openrouter.ai/api/v1/models"); if(r.ok){ const j=await r.json();
+    const conImg=new Set((j.data||[]).filter(m=>(m.architecture?.input_modalities||[]).includes("image")).map(m=>m.id));
+    pagos=PREF_PAGO.filter(id=>conImg.has(id)).slice(0,2);
     const pref=["qwen2.5-vl","qwen-2.5-vl","qwen3-vl","llama-4-maverick","llama-4-scout","gemma-3-27b","mistral-small-3","kimi-vl","gemma-3"]; const sc=id=>{const i=pref.findIndex(p=>id.includes(p));return i<0?99:i;};
-    modelos=(j.data||[]).filter(m=>m.id.endsWith(":free")&&(m.architecture?.input_modalities||[]).includes("image")).map(m=>m.id).sort((a,b)=>{const ra=/reason|think|r1\b|-r1/i.test(a)?1:0,rb=/reason|think|r1\b|-r1/i.test(b)?1:0;return ra-rb||sc(a)-sc(b);}).slice(0,8);
+    modelos=(j.data||[]).filter(m=>m.id.endsWith(":free")&&(m.architecture?.input_modalities||[]).includes("image")&&!/safety|guard|inkling|embed|moderat/i.test(m.id)).map(m=>m.id).sort((a,b)=>{const ra=/reason|think|r1\b|-r1/i.test(a)?1:0,rb=/reason|think|r1\b|-r1/i.test(b)?1:0;return ra-rb||sc(a)-sc(b);}).slice(0,8);
     fuente="openrouter"; } }catch(e){}
   if(!modelos.length) modelos=["qwen/qwen2.5-vl-72b-instruct:free","meta-llama/llama-4-maverick:free","google/gemma-3-27b-it:free","mistralai/mistral-small-3.2-24b-instruct:free"];
+  if(!pagos.length) pagos=PREF_PAGO.slice(0,2);
+  if(usarPago) modelos=[...pagos,...modelos];
+  let sinSaldo=false;
   const errores=[];
   const pedir=async(model,imgs)=>{
     if(cancelado) throw new Error("cancelado");
@@ -517,17 +525,20 @@ const leerCierreConIA = async (fotos, orKey, onEstado) => {
   };
   let chicas=null;
   for(const model of modelos){
-    const nom=model.replace(":free","");
+    const nom=model.replace(":free",""); const esPago=!model.endsWith(":free");
+    if(esPago&&sinSaldo) continue;
     try{ onEstado&&onEstado(`Leyendo con ${nom}…`); return {ok:true,datos:await pedir(model,fotos),modelo:model,errores}; }
     catch(e1){
       if(cancelado) return {ok:false,error:"Lectura cancelada",errores:[...errores,"Cancelada por el usuario"]};
-      if(/45 segundos/.test(String(e1.message))){ errores.push(`${nom}: ${e1.message}`); continue; }
+      const m1=String(e1.message||e1);
+      if(esPago&&/credit|insufficient|402|balance|payment/i.test(m1)){ sinSaldo=true; errores.push(`${nom}: la cuenta de OpenRouter no tiene saldo para modelos pagos`); continue; }
+      if(/45 segundos|rate-limit|rate limit|agentic|ResourceExhausted|limit reached|429|not a valid model|No endpoints/i.test(m1)){ errores.push(`${nom}: ${m1}`); continue; }
       try{ onEstado&&onEstado(`Reintentando ${nom} con foto más chica…`); if(!chicas) chicas=await Promise.all(fotos.map(u=>achicarFoto(u,1100)));
         return {ok:true,datos:await pedir(model,chicas),modelo:model,errores}; }
       catch(e2){ if(cancelado) return {ok:false,error:"Lectura cancelada",errores:[...errores,"Cancelada por el usuario"]}; errores.push(`${nom}: ${String(e2.message||e2)}`); }
     }
   }
-  return {ok:false,error:errores.length?errores[errores.length-1]:"sin modelos",errores,fuente,modelos};
+  return {ok:false,error:errores.length?errores[errores.length-1]:"sin modelos",errores,fuente,modelos,sinSaldo};
 };
 const sha256 = async (s) => { const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""); };
 const HEAD_CIERRES = ["Fecha","Cajero",...CIERRE_CAMPOS.map(c=>c[1]),"Ventas credito","Ventas transferencia","Detalle gastos","Observacion","Timestamp"];
@@ -884,6 +895,7 @@ export default function App(){
   const [metaCob,setMetaCob]=useState(()=>{try{return Number(localStorage.getItem("prolimpio_meta_cob"))||3;}catch(e){return 3;}});
   const [orKey,setOrKey]=useState(()=>{try{return localStorage.getItem("prolimpio_or_key")||"";}catch(e){return "";}});
   const [orKeyIn,setOrKeyIn]=useState("");
+  const [visionPago,setVisionPago]=useState(()=>{try{return localStorage.getItem("prolimpio_vision_pago")!=="no";}catch(e){return true;}});
   const [sheetSaldos,setSheetSaldos]=useState([]);
   const [sheetRetiros,setSheetRetiros]=useState([]);
   const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:""});
@@ -1641,7 +1653,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               {leido&&leido.modelo&&<div className="tsm" style={{marginTop:8}}>Leído con {leido.modelo.replace(":free","")}. Revisá que los números coincidan con el papel.</div>}
               {leido&&leido.error&&<div className="tsm" style={{marginTop:8,color:"#B91C1C"}}>No se pudo leer automáticamente. Completá los números a mano.
                 <details style={{marginTop:6}}><summary style={{cursor:"pointer"}}>Ver detalle ({(leido.errores||[]).length} modelos probados)</summary>
-                  <div style={{marginTop:6,fontSize:".82rem",color:"#7A2E0A",wordBreak:"break-word"}}>{(leido.errores||[leido.error]).map((x,i)=><div key={i} style={{marginBottom:4}}>• {x}</div>)}{leido.fuente?<div>Lista de modelos: {leido.fuente}</div>:null}</div></details></div>}
+                  <div style={{marginTop:6,fontSize:".82rem",color:"#7A2E0A",wordBreak:"break-word"}}>{(leido.errores||[leido.error]).map((x,i)=><div key={i} style={{marginBottom:4}}>• {x}</div>)}{leido.fuente?<div>Lista de modelos: {leido.fuente}</div>:null}</div></details>
+                {leido.sinSaldo&&<div style={{marginTop:8,color:"#92400E"}}>💡 Los modelos gratuitos fallan seguido (saturados). Para que lea siempre: entrá a openrouter.ai → Credits con la cuenta de esta clave y cargá USD 5. La app usa primero Gemini Flash, que cuesta menos de 1 centavo de dólar por cierre.</div>}</div>}
             </div>
 
             <div className="sh"><span className="st">2 · Ventas que no están en la caja</span><span className="ss">Esto lo completás vos</span></div>
@@ -1726,6 +1739,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
 
             <div className="sh"><span className="st">⚙️ Configuración de este equipo</span><span className="ss">Planilla de cierres y modo caja</span></div>
             <div className="card">
+              <label style={{display:"flex",gap:8,alignItems:"center",marginBottom:12,fontSize:".95rem"}}><input type="checkbox" checked={visionPago} onChange={e=>{const v=e.target.checked;setVisionPago(v);try{localStorage.setItem("prolimpio_vision_pago",v?"si":"no");}catch(x){}}}/> Leer fotos primero con modelo pago (Gemini Flash, menos de 1 centavo por cierre; solo cobra si cargaste saldo en OpenRouter)</label>
               <div className="fg">
                 <div className="fl"><label className="flabel">ID de la planilla de cierres (ya viene cargado)</label><input type="text" className="finput" value={sidCierres} onChange={e=>setSidCierres(e.target.value.trim())} placeholder={SHEET_CIERRES}/></div>
               </div>
