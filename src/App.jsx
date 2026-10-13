@@ -464,6 +464,10 @@ const CIERRE_CAMPOS = [
   ["aperturaErp","Apertura caja ERP"],["ventasErp","Ventas contado en ERP (efectivo)"],["tarjetaErp","Ventas con tarjeta en ERP (POS manual)"],
   ["gastosEf","Gastos pagados en efectivo (ERP)"],["deposito","Depósito al banco"],["saldoErp","Saldo final caja ERP"],
 ];
+// Cierres que Esteban mandó por el chat y leyó Claude (se suman a los de la planilla de cierres si esa fecha no está)
+const CIERRES_CLAUDE = [
+  {fecha:"2026-10-12",cajero:"Natalia Pereira",ventaPos:42633,efectivoPos:12756,tarjetasPos:29877,visa:9033,mastercard:20010,oca:null,maestro:null,otrasTj:834,aperturaPos:9839,salidaPos:13000,saldoSistema:9595,efectivoContado:9593,diferencia:-2,aperturaErp:18050,ventasErp:3409,tarjetaErp:5835,gastosEf:0,deposito:16000,saldoErp:18459,credito:0,transferencia:0,gastosDetalle:"",obs:"Leído por Claude (chat)",ts:"2026-10-12T21:30:00.000Z"},
+].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
@@ -885,7 +889,8 @@ export default function App(){
   const [leyendo,setLeyendo]=useState("");
   const [leido,setLeido]=useState(null);
   const [ultimoCierre,setUltimoCierre]=useState(null);
-  const [sheetCierres2,setSheetCierres2]=useState([]);
+  const [sheetCierresRaw,setSheetCierres2]=useState([]);
+  const sheetCierres2=useMemo(()=>[...sheetCierresRaw,...CIERRES_CLAUDE.filter(c=>!sheetCierresRaw.some(x=>x.fecha===c.fecha))],[sheetCierresRaw]);
   const [sidCierres,setSidCierres]=useState(()=>{try{return localStorage.getItem("prolimpio_sheet_cierres")||SHEET_CIERRES;}catch(e){return SHEET_CIERRES;}});
   const [modoCaja,setModoCaja]=useState(()=>{try{return localStorage.getItem("prolimpio_modo_caja")||"";}catch(e){return "";}});
   const [pinIn,setPinIn]=useState("");
@@ -1163,6 +1168,7 @@ export default function App(){
 
   useEffect(()=>{ if(!token||tab!=="control") return; const id=setInterval(()=>{ loadCierres2(token); },180000); return ()=>clearInterval(id); },[token,tab,sidCierres]);
   const borrarCierre2 = async (idx) => {
+    if(typeof idx!=="number"||isNaN(idx)){ showToast("Este cierre lo cargó Claude desde el chat: pedile que lo saque","er"); return; }
     if(!token||!window.confirm("¿Borrar este cierre?")) return;
     const sid=sidCierres||SHEET_ID;
     const meta=await (await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties`,{headers:{Authorization:`Bearer ${token}`}})).json();
@@ -1184,6 +1190,20 @@ export default function App(){
     if(d.gastosDetalle) n.gastosDetalle=String(d.gastosDetalle);
     setCjF(n); setLeido({modelo:r.modelo}); showToast("✓ Foto leída: revisá los números");
   };
+  // Datos que vienen del "Lector de cierres" (página de Claude): link #cierre=CODIGO o código pegado
+  const aplicarCodigoLector = (code) => {
+    try{
+      const b=String(code||"").trim().replace(/^.*#cierre=/,"").replace(/-/g,"+").replace(/_/g,"/");
+      const d=JSON.parse(decodeURIComponent(escape(atob(b+"===".slice((b.length+3)%4)))));
+      const n={...CIERRE_VACIO()};
+      [...CIERRE_CAMPOS.map(([k])=>k),"credito","transferencia"].forEach(k=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Number(d[k])); });
+      if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=d.fecha;
+      if(d.cajero) n.cajero=String(d.cajero); if(d.gastosDetalle) n.gastosDetalle=String(d.gastosDetalle);
+      setCjF(n); setLeido({modelo:"Claude (lector de cierres)"}); setTab("control"); showToast("✓ Números del lector cargados: revisá y guardá"); return true;
+    }catch(e){ showToast("El código no es válido. Copialo de nuevo desde el lector","er"); return false; }
+  };
+  useEffect(()=>{ if(location.hash.startsWith("#cierre=")){ const c=location.hash; try{history.replaceState(null,"",location.pathname+location.search);}catch(e){} aplicarCodigoLector(c); } },[]);
+  const [codLector,setCodLector]=useState("");
   const guardarCierre2 = async () => {
     if(!token){showToast("Conectate a Google primero","er");return;}
     if(!cjF.fecha||nC(cjF.ventaPos)==null){showToast("Falta la fecha o la venta total","er");return;}
@@ -1643,6 +1663,9 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
 
             <div className="sh"><span className="st">1 · Foto del cierre</span><span className="ss">Y de Caja, Z de Caja, desglose del ERP y boleta de depósito</span></div>
             <div className="card">
+              <details style={{marginBottom:12}}><summary style={{cursor:"pointer",color:"#9A3412",fontWeight:600}}>¿Lo leyó Claude en el lector de cierres? Pegar código del lector</summary>
+                <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}><textarea className="ftxt" style={{minHeight:60,flex:"1 1 220px"}} placeholder="Pegá acá el código" value={codLector} onChange={e=>setCodLector(e.target.value)}/>
+                <button className="btn btn-p" onClick={()=>{if(aplicarCodigoLector(codLector))setCodLector("");}}>Cargar números</button></div></details>
               <label style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"18px",border:"2px dashed #E84400",borderRadius:12,cursor:"pointer",color:"#9A3412",fontWeight:700,fontSize:"1.05rem"}}>
                 📷 {fotos.length?`${fotos.length} foto(s) — agregar otra`:"Sacar o elegir foto"}
                 <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={async e=>{const fs=[...e.target.files];e.target.value="";try{const urls=await Promise.all(fs.map(reducirFoto));setFotos(p=>[...p,...urls].slice(0,4));}catch(x){showToast("No se pudo abrir la foto","er");}}}/>
