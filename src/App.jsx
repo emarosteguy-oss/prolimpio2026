@@ -75,6 +75,9 @@ const CSS = `
   .tcomp th,.tcomp td{padding:8px 5px}
   .tcomp td{font-size:.88rem}
   .tcomp .tag{padding:2px 6px;white-space:nowrap}
+  .thist th,.thist td{padding:7px 3px;font-size:.82rem}
+  .thist th{font-size:.7rem;letter-spacing:0}
+  .thist .tsm{font-size:.72rem}
   table{width:100%;border-collapse:collapse;font-size:.83rem}
   th{text-align:left;padding:10px 12px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-bottom:1px solid var(--border);font-weight:700;white-space:nowrap}
   td{padding:11px 12px;font-size:.98rem;color:var(--text);border-bottom:1px solid #F6DCC2;vertical-align:middle}
@@ -113,6 +116,7 @@ const CSS = `
   .sheet-row span{color:var(--text3);font-size:.75rem}
 `;
 
+const cM=v=>{if(v==null||isNaN(v))return"—";const a=Math.abs(v),sg=v<0?"-":"";return a>=1e6?`${sg}$${fmt(a/1e6,2)}M`:`${sg}$${fmt(a/1e3,0)}k`;};
 const fmt=(n,d=0)=>{if(n==null||isNaN(n))return"—";return new Intl.NumberFormat("es-UY",{maximumFractionDigits:d,minimumFractionDigits:d}).format(n)};
 const fmtM=n=>{if(n==null||isNaN(n))return"—";if(n>=1e6)return`$${(n/1e6).toFixed(2)}M`;return`$${fmt(n)}`};
 const pct=(a,b)=>{if(!b)return null;return(a-b)/b*100};
@@ -847,12 +851,13 @@ const gapi_delete_row = async (token, sheetGid, rowIndex) => {
 };
 
 export default function App(){
-  const [tab,setTab]=useState("dashboard");
+  const [tab,setTab]=useState("hoy");
   const [toast,setToast]=useState(null);
   const [gastosAnio,setGastosAnio]=useState("2026");
   const [vvgAnio,setVvgAnio]=useState("2026");
   const [tabAnio,setTabAnio]=useState("2026");
   const [resAnio,setResAnio]=useState("2026");
+  const [histAnio,setHistAnio]=useState(String(new Date().getFullYear()));
   const [rTipo,setRTipo]=useState("mensual");
   const [rMes,setRMes]=useState(()=>{const m=new Date().getMonth();return m===0?11:m-1;});
   const [rAnio,setRAnio]=useState(()=>{const d=new Date();return d.getMonth()===0?d.getFullYear()-1:d.getFullYear();});
@@ -875,13 +880,13 @@ export default function App(){
   const [pinIn,setPinIn]=useState("");
   const [actCierres,setActCierres]=useState("");
   useEffect(()=>{ if(modoCaja&&tab!=="control") setTab("control"); },[modoCaja,tab]);
-  const [stF,setStF]=useState({fecha:new Date().toISOString().slice(0,10),valor:"",obs:""});
+  const [stF,setStF]=useState({fecha:hoyISO(),valor:"",obs:""});
   const [metaCob,setMetaCob]=useState(()=>{try{return Number(localStorage.getItem("prolimpio_meta_cob"))||3;}catch(e){return 3;}});
   const [orKey,setOrKey]=useState(()=>{try{return localStorage.getItem("prolimpio_or_key")||"";}catch(e){return "";}});
   const [orKeyIn,setOrKeyIn]=useState("");
   const [sheetSaldos,setSheetSaldos]=useState([]);
   const [sheetRetiros,setSheetRetiros]=useState([]);
-  const [rF,setRF]=useState({fecha:new Date().toISOString().slice(0,10),monto:"",tipo:"Fijo",obs:""});
+  const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:""});
   const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(migrarCfg(c));});
   const setCaja=(patch)=>setCajaState(p=>{const n={...p,...patch};try{localStorage.setItem("prolimpio_caja",JSON.stringify(n));}catch(e){}return n;});
   // datos de control (cierres + depósitos) compartidos por la pestaña Caja y por la comisión de bancos
@@ -899,8 +904,8 @@ export default function App(){
   const [sheetCompras,setSheetCompras]=useState([]);
   const [sheetTickets,setSheetTickets]=useState([]);
   const [sheetGids,setSheetGids]=useState({Ventas:0,Compras:1,Tickets:2});
-  const [vF,setVF]=useState({fecha:new Date().toISOString().split("T")[0],monto:"",obs:""});
-  const [cF,setCF]=useState({fecha:new Date().toISOString().split("T")[0],factura:"",proveedor:"",monto:"",obs:""});
+  const [vF,setVF]=useState({fecha:hoyISO(),monto:"",obs:""});
+  const [cF,setCF]=useState({fecha:hoyISO(),factura:"",proveedor:"",monto:"",obs:""});
   const [tkF,setTkF]=useState({mes:new Date().getMonth(),anio:2026,cantidad:"",promedio:"",dias:""});
   const [aMes,setAMes]=useState(new Date().getMonth());
   const [aAnio,setAAnio]=useState(2026);
@@ -1108,7 +1113,7 @@ export default function App(){
     } else {
       showToast("Conectate a Google Sheets primero","er");
     }
-    setVF({fecha:new Date().toISOString().split("T")[0],monto:"",obs:""});
+    setVF({fecha:hoyISO(),monto:"",obs:""});
   };
 
   const saveCompra = async () => {
@@ -1127,7 +1132,7 @@ export default function App(){
     } else {
       showToast("Conectate a Google Sheets primero","er");
     }
-    setCF({fecha:new Date().toISOString().split("T")[0],factura:"",proveedor:"",monto:"",obs:""});
+    setCF({fecha:hoyISO(),factura:"",proveedor:"",monto:"",obs:""});
   };
 
   const hacerInforme = async (modo) => {
@@ -1355,7 +1360,40 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
     setAiLoading(false);
   };
 
-  const TABS=[{id:"dashboard",label:"📊 Dashboard"},{id:"carga",label:"✏️ Cargar datos"},{id:"tickets",label:"🎫 Tickets"},{id:"historial",label:"📋 Historial"},{id:"gastos",label:"💰 Gastos"},{id:"control",label:"🧾 Caja"},{id:"caja",label:"🏦 Saldos"},{id:"informes",label:"📄 Informes"},{id:"ai",label:"✦ Análisis IA"}];
+
+  // ── Datos compartidos entre pestañas ─────────────────────────────────────
+  const hoyD=new Date(); const mIdx=hoyD.getMonth(); const yAct=hoyD.getFullYear();
+  const mesKey=`${yAct}-${String(mIdx+1).padStart(2,"0")}`;
+  const delMes=sheetRetiros.map((r,i)=>({...r,_i:i})).filter(r=>{const d=new Date(r.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;});
+  const retiradoMes=delMes.reduce((s,r)=>s+(Number(r.monto)||0),0);
+  const proy=proyectarCaja(caja);
+  const CR=crecimientoReal(); const escSel=caja.escSel||"medio";
+  const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(caja,crecEscenario(caja,e.k))}));
+  const PS=planSubatir(caja); const fD=iso=>{const p=iso.split("-");return `${p[2]}/${p[1]}`;};
+  const chartEsc=proy.map((r,i)=>{const o={mes:r.mes}; escProy.forEach(e=>{o[e.k]=e.p[i].saldo;}); return o;});
+  const sugerido=proy[0]?.retiro||0;
+  const minimo=proy.reduce((a,b)=>b.saldo<a.saldo?b:a,proy[0]);
+  const enLimite=proy.find(p=>p.saldo<caja.limite);
+  const enAlerta=proy.find(p=>p.saldo<caja.alerta);
+  const anioRet=sheetRetiros.filter(r=>String(r.fecha).startsWith(String(yAct))).reduce((s,r)=>s+(Number(r.monto)||0),0);
+  const num=(k)=>e=>setCaja({[k]:Number(e.target.value)});
+  // saldo estimado de hoy
+  const saldoHoy=(()=>{const desde=caja.saldoFecha||"0000"; const dTs=caja.saldoTs||""; const posterior=x=>dTs&&x.ts?x.ts>dTs:x.fecha>desde;
+    const dep=sheetDepositos.filter(posterior).reduce((s,d)=>s+d.monto,0)+sheetCierres2.filter(c=>c.deposito&&posterior(c)).reduce((s,c)=>s+c.deposito,0);
+    const pag=sheetPagos.filter(posterior).reduce((s,p)=>s+p.monto,0); return {dep,pag,est:(Number(caja.saldo)||0)+dep-pag};})();
+  // ventas del mes en curso (planilla + app)
+  const RMC=(()=>{const delM=v=>{if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0)return false;const d=new Date(v.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;};
+    const pl=VENTAS_DIA_PLANILLA.filter(delM); const fs=new Set(pl.map(v=>v.fecha)); const todas=[...pl,...sheetVentas.filter(delM).filter(v=>!fs.has(v.fecha))];
+    const total=todas.reduce((s,v)=>s+Number(v.monto),0), dias=todas.length, prom=dias?total/dias:0;
+    const dh=DIAS_HABILES[String(yAct)]?.[MES3[mIdx]]||26, vPrev=VM[mIdx]?.[String(yAct-1)], dhP=DIAS_HABILES[String(yAct-1)]?.[MES3[mIdx]]||26;
+    const promPrev=vPrev?vPrev/dhP:null; return {total,dias,prom,dh,proyeccion:total+prom*Math.max(0,dh-dias),promPrev,var:promPrev&&prom?(prom/promPrev-1)*100:null};})();
+  // pendientes del mes
+  const pagadasK=new Set(sheetPagos.map(x=>x.clave));
+  const pendMes=PENDIENTES.filter(p=>p.mes===mesKey&&!pagadasK.has(clavePend(p)));
+  const fijosMesLista=(COSTOS_FIJOS_MES[mesKey]||COSTOS_FIJOS).filter(c=>!c.planilla&&!sheetPagos.find(p=>p.clave===claveFijo(mesKey,c.nombre)));
+  const girosSinDebitar=PENDIENTES.filter(p=>/giro hecho/i.test(p.prov)&&!pagadasK.has(clavePend(p)));
+  const TABS=[{id:"hoy",label:"🏠 Hoy"},{id:"ventas",label:"📈 Ventas"},{id:"control",label:"🧾 Caja"},{id:"pagos",label:"💳 Pagos"},{id:"compras",label:"📦 Compras"},{id:"proy",label:"🔮 Proyección"},{id:"carga",label:"✏️ Cargar"},{id:"informes",label:"📄 Informes"},{id:"historial",label:"📚 Historial"}];
+
 
   return<>
     <style>{CSS}</style>
@@ -1377,151 +1415,51 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
       </nav>}
       <main style={{paddingBottom:48,paddingTop:6}}>
 
-        {tab==="dashboard"&&<div className="gap">
+        {tab==="hoy"&&<div className="gap">
           <div className="abar"/>
-          {!token&&<div className="banner">🔗 <span>Tocá <strong style={{color:"#C2410C",cursor:"pointer"}} onClick={handleLogin}>"Conectar Sheets"</strong> arriba para sincronizar datos con Google Sheets</span></div>}
-          {token&&sheetVentas.length<10&&<div className="banner">📥 <span>El Sheet está casi vacío. <strong style={{color:"#C2410C",cursor:"pointer"}} onClick={cargarHistorico}>Tocá acá para cargar todos los datos históricos 2022–2025</strong> de una sola vez.</span></div>}
-          <div><div className="sh"><span className="st">Ejercicio 2025 completo</span><span className="ss">12 meses cerrados</span></div>
-          <div className="grid4">
-            <div className="card"><div className="ctitle">Ventas totales 2025</div><div className="cval ac">{fmtM(t25)}</div><div className="csub">Suma 12 meses</div><div className="delta up">▲ {fmt(pct(t25,t24),1)}% vs 2024</div></div>
-            <div className="card"><div className="ctitle">Mejor mes 2025</div><div className="cval">{fmtM(Math.max(...VM.map(r=>r["2025"])))}</div><div className="csub">Diciembre</div><div className="delta up">🚀 Récord</div></div>
-            <div className="card"><div className="ctitle">Tickets totales 2025</div><div className="cval">{fmt(TK.reduce((s,r)=>s+(r.c25||0),0))}</div><div className="csub">Emitidos en el año</div><div className="delta up">▲ vs 2024</div></div>
-            <div className="card"><div className="ctitle">Crecimiento real 2025</div><div className="cval ac">+30.3%</div><div className="csub">Nominal 36.7% − infl. 6.4%</div><div className="delta up">🚀 Excelente</div></div>
-          </div></div>
-          <div>
-            <div className="sh"><span className="st">Comparativa 2026 vs 2025</span><span className="ss">Ene–May disponibles</span></div>
-            <div className="grid4">
-              {[
-                {mes:"Ene",v25:2003181,v26:2373579,tk25:2333,tk26:2695},
-                {mes:"Feb",v25:1615840,v26:1710114,tk25:1974,tk26:1985},
-                {mes:"Mar",v25:1488874,v26:1884301,tk25:1684,tk26:2117},
-                {mes:"Abr",v25:1281569,v26:1620824,tk25:1617,tk26:2042},
-                {mes:"May",v25:1435910,v26:1572417,tk25:1709,tk26:1677},
-                {mes:"Jun",v25:1478792,v26:1660029,tk25:1746,tk26:1835},
-                {mes:"Jul",v25:1545618,v26:1713093,tk25:1818,tk26:1859},
-                {mes:"Ago",v25:1519419,v26:1597281,tk25:1775,tk26:1787},
-                {mes:"Set",v25:1590065,v26:1910798,tk25:1831,tk26:1937},
-              ].map((r,i)=>{
-                const crecV = r.v26?((r.v26-r.v25)/r.v25*100):null;
-                const crecTk = ((r.tk26-r.tk25)/r.tk25*100);
-                return <div key={i} className="card">
-                  <div className="ctitle">{r.mes} 2026</div>
-                  <div className="cval ac" style={{fontSize:"1.3rem"}}>{r.v26?fmtM(r.v26):`${fmt(r.tk26)} tk`}</div>
-                  <div className="csub">{r.v26?`vs ${fmtM(r.v25)} en 2025`:`${fmt(r.tk25)} tickets en 2025`}</div>
-                  <div className={`delta ${(crecV??crecTk)>=0?"up":"dn"}`}>
-                    {(crecV??crecTk)>=0?"▲":"▼"} {fmt(Math.abs(crecV??crecTk),1)}% {r.v26?"ventas":"tickets"}
-                  </div>
-                </div>;
-              })}
-            </div>
+          {!token&&<div className="banner">🔗 <span>Tocá <strong style={{color:"#C2410C",cursor:"pointer"}} onClick={handleLogin}>"Conectar Sheets"</strong> arriba para ver tus pagos, retiros y saldos guardados.</span></div>}
+          <div className="card" style={{borderLeft:"5px solid #E84400"}}>
+            <div className="ctitle">Saldo estimado de hoy</div>
+            <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
+            <div className="csub">BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""} al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"}{saldoHoy.dep||saldoHoy.pag?` · + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} registrados después`:""}</div>
+            {girosSinDebitar.length>0&&<div className="delta wr" style={{marginTop:8}}>Falta que el banco debite {girosSinDebitar.map(g=>g.prov.split(" (")[0]).join(" y ")}: {fmtM(girosSinDebitar.reduce((s,g)=>s+g.monto,0))}</div>}
           </div>
-
-          <div>
-            <div className="sh"><span className="st">Proyección 2026</span><span className="ss">Basada en crecimiento Ene–May vs 2025</span></div>
-            <div className="grid4">
-              {(()=>{
-                const set26_proy = 1910798; // setiembre cerrado
-                const acum26_real = 2373579+1710114+1884301+1620824+1572417+1660029+1713093+1597281+set26_proy; // Ene-Set real
-                const acum25_enemai = 2003181+1615840+1488874+1281569+1435910+1478792+1545618+1519419+1590065; // Ene-Set 2025
-                const acum25_eneabr = 2003181+1615840+1488874+1281569+1435910+1478792+1545618+1519419+1590065;
-                const crecReal = (acum26_real - acum25_eneabr) / acum25_eneabr;
-                const total25 = 2003181+1615840+1488874+1281569+1435910+1478792+1545618+1519419+1590065+1830397+1632615+2726949;
-                const proj_base = Math.round(total25 * (1 + crecReal));
-                const proj_opt  = Math.round(total25 * (1 + crecReal + 0.05));
-                const proj_pes  = Math.round(total25 * (1 + crecReal - 0.05));
-                const acum26_enemai = acum26_real; // usamos real Ene-Set
-                return <>
-                  <div className="card">
-                    <div className="ctitle">Acumulado Ene–Set 2026</div>
-                    <div className="cval ac">{fmtM(acum26_enemai)}</div>
-                    <div className="csub">vs {fmtM(acum25_enemai)} en 2025</div>
-                    <div className="delta up">▲ ~14.7%</div>
-                  </div>
-                  <div className="card">
-                    <div className="ctitle">Proyección base 2026</div>
-                    <div className="cval">{fmtM(proj_base)}</div>
-                    <div className="csub">Crec. ~14.7% vs 2025</div>
-                    <div className="delta up">📈 Escenario base</div>
-                  </div>
-                  <div className="card">
-                    <div className="ctitle">Escenario optimista</div>
-                    <div className="cval ac">{fmtM(proj_opt)}</div>
-                    <div className="csub">Crec. ~19.7% vs 2025</div>
-                    <div className="delta up">🚀 Si mejora tendencia</div>
-                  </div>
-                  <div className="card">
-                    <div className="ctitle">Escenario pesimista</div>
-                    <div className="cval" style={{color:"#B45309"}}>{fmtM(proj_pes)}</div>
-                    <div className="csub">Crec. ~9.7% vs 2025</div>
-                    <div className="delta wr">⚠️ Si desacelera</div>
-                  </div>
-                </>;
-              })()}
-            </div>
-          </div>
-
-          <div><div className="sh"><span className="st">Registros en Google Sheets</span><span className="ss">{token?"Datos en tiempo real":"Conectate para ver"}</span></div>
-          <div className="grid4">
-            <div className="card"><div className="ctitle">Ventas cargadas</div><div className="cval ac">{fmt(sheetVentas.length)}</div><div className="csub">Registros en Sheets</div></div>
-            <div className="card"><div className="ctitle">Compras cargadas</div><div className="cval">{fmt(sheetCompras.length)}</div><div className="csub">Facturas registradas</div></div>
-            <div className="card"><div className="ctitle">Tickets cargados</div><div className="cval">{fmt(sheetTickets.length)}</div><div className="csub">Períodos registrados</div></div>
-            <div className="card"><div className="ctitle">Último registro</div><div className="cval" style={{fontSize:"1.2rem"}}>{sheetVentas[0]?.fecha||"—"}</div><div className="csub">Fecha última venta</div></div>
-          </div></div>
-          <div><div className="sh"><span className="st">Ventas mensuales</span><span className="ss">2024 vs 2025 — en miles $</span></div>
-          <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
-            <BarChart data={cvM} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-              <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
-              <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${v}k`}/>
-              <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-              <Bar dataKey="2024" fill="#7a3800" radius={[3,3,0,0]}/>
-              <Bar dataKey="2025" fill="#e84400" radius={[3,3,0,0]}/>
-              <Bar dataKey="2026" fill="#B91C1C" radius={[3,3,0,0]}/>
-            </BarChart>
-          </ResponsiveContainer></div></div></div>
           <div className="grid2">
-            <div><div className="sh"><span className="st">Promedio diario</span></div>
-            <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
-              <LineChart data={PD}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
-                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
-                <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                <Line type="monotone" dataKey="2024" stroke="#d4956a" dot={false} strokeWidth={2}/>
-                <Line type="monotone" dataKey="2025" stroke="#e84400" dot={false} strokeWidth={2.5}/>
-                <Line type="monotone" dataKey="2026" stroke="#B91C1C" dot={false} strokeWidth={2.5} strokeDasharray="5 3"/>
-              </LineChart>
-            </ResponsiveContainer></div></div></div>
-            <div><div className="sh"><span className="st">Tickets emitidos</span></div>
-            <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cvT}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
-                <YAxis stroke="#7A2E0A" fontSize={12}/>
-                <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                <Bar dataKey="Cant 25" fill="#d4956a" radius={[3,3,0,0]}/>
-                <Bar dataKey="Cant 26" fill="#e84400" radius={[3,3,0,0]}/>
-              </BarChart>
-            </ResponsiveContainer></div></div></div>
+            <div className="card" onClick={()=>setTab("ventas")} style={{cursor:"pointer"}}>
+              <div className="ctitle">Ventas de {MESES[mIdx]}</div>
+              <div className="cval ac">{RMC.total?fmtM(RMC.total):"Sin datos"}</div>
+              <div className="csub">{RMC.dias} de {RMC.dh} días · {fmtM(RMC.prom)}/día · proyección del mes {fmtM(RMC.proyeccion)}</div>
+              {RMC.var!=null&&<div className={`delta ${RMC.var>=0?"up":"dn"}`}>{RMC.var>=0?"▲":"▼"} {fmt(Math.abs(RMC.var),1)}% por día vs {yAct-1}</div>}
+            </div>
+            <div className="card" onClick={()=>setTab("pagos")} style={{cursor:"pointer"}}>
+              <div className="ctitle">Falta pagar en {MESES[mIdx]}</div>
+              <div className="cval">{fmtM(pendMes.reduce((s,p)=>s+p.monto,0)+fijosMesLista.reduce((s,c)=>s+c.monto,0))}</div>
+              <div className="csub">Proveedores {fmtM(pendMes.filter(p=>p.tipo==="prov").reduce((s,p)=>s+p.monto,0))} · cheques SUBATIR {fmtM(pendMes.filter(p=>p.tipo==="cheque").reduce((s,p)=>s+p.monto,0))} · créditos {fmtM(pendMes.filter(p=>p.tipo==="credito"||p.tipo==="plazo").reduce((s,p)=>s+p.monto,0))} · fijos {fmtM(fijosMesLista.reduce((s,c)=>s+c.monto,0))}</div>
+              {fijosMesLista.length>0&&<div className="delta wr">Fijos sin marcar: {fijosMesLista.map(c=>c.nombre.split(" (")[0]).join(", ")}</div>}
+            </div>
+            {PS.filas[0]&&<div className="card" onClick={()=>setTab("compras")} style={{cursor:"pointer"}}>
+              <div className="ctitle">Pedido SUBATIR del lunes {fD(PS.filas[0].lunes)}</div>
+              <div className="cval">{fmt(PS.filas[0].kgPed)} kg</div>
+              <div className="csub">≈ {fmtM(PS.filas[0].montoPed)}{PS.filas[0].faltaKg>0?` · harían falta ${fmt(PS.filas[0].kgNec)} kg`:""}</div>
+              {PS.extra&&<div className="delta up">Pedido extra de temporada: {fmt(PS.extra.kg)} kg el lunes {fD(PS.extra.fecha)}</div>}
+            </div>}
+            <div className="card" onClick={()=>setTab("proy")} style={{cursor:"pointer"}}>
+              <div className="ctitle">Retiro de {MESES[mIdx]}</div>
+              <div className="cval">{fmtM(retiradoMes)} <span className="tsm">de {fmtM(sugerido)}</span></div>
+              <div className="csub">Saldo más bajo proyectado: {minimo?`${fmtM(minimo.saldo)} en ${minimo.mes}`:"—"}</div>
+              <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div>
+            </div>
           </div>
+          {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 En {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro.</div>
+           :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}).</div>
+           :<div className="banner">✓ En los próximos 15 meses el saldo proyectado no baja de tu límite de alerta ({fmtM(caja.alerta)}), escenario {(ESCENARIOS.find(e=>e.k===escSel)||{}).n}.</div>}
+          {pendMes.length>0&&<details className="card"><summary style={{cursor:"pointer",color:"var(--text2)",fontSize:".95rem",fontWeight:600}}>Pendientes de {MESES[mIdx]} ({pendMes.length}) · {fmtM(pendMes.reduce((s,p)=>s+p.monto,0))}</summary>
+            <div className="tw" style={{marginTop:6}}><table className="tcomp"><tbody>{pendMes.map((p,i)=><tr key={i}><td>{p.prov}</td><td className="tac" style={{whiteSpace:"nowrap"}}>{fmtM(p.monto)}</td></tr>)}</tbody></table></div>
+            <div className="tsm" style={{marginTop:6}}>Para marcarlos pagados, andá a 💳 Pagos.</div></details>}
         </div>}
 
-        {tab==="carga"&&<div className="gap">
+        {tab==="ventas"&&<div className="gap">
           <div className="abar"/>
-          {!token&&<div className="banner">🔗 <span>Para guardar datos en Google Sheets, <strong style={{color:"#C2410C",cursor:"pointer"}} onClick={handleLogin}>conectate primero</strong> tocando el botón arriba.</span></div>}
-          <div className="sh"><span className="st">Registrar venta diaria</span></div>
-          <div className="card">
-            <div className="fg">
-              <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={vF.fecha} onChange={e=>setVF(p=>({...p,fecha:e.target.value}))}/></div>
-              <div className="fl"><label className="flabel">Monto del día ($)</label><input type="number" className="finput" placeholder="ej: 85000" value={vF.monto} onChange={e=>setVF(p=>({...p,monto:e.target.value}))}/></div>
-              <div className="fl" style={{gridColumn:"1/-1"}}><label className="flabel">Observación (opcional)</label><input type="text" className="finput" placeholder="ej: lluvia, feriado, Olkany..." value={vF.obs} onChange={e=>setVF(p=>({...p,obs:e.target.value}))}/></div>
-            </div>
-            <div className="factions"><button className="btn btn-p" onClick={saveVenta}>✓ Guardar en Sheets</button><span className="tsm">{token?"Se guarda directo en tu Google Sheet":"Conectate a Sheets primero"}</span></div>
-          </div>
-          {sheetVentas.length>0&&<><div className="sh"><span className="st">Ventas en Google Sheets</span><span className="ss">{sheetVentas.length} registros</span></div>
-          <div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Obs.</th></tr></thead>
-          <tbody>{sheetVentas.slice(0,20).map((v,i)=><tr key={i}><td>{v.fecha}</td><td className="tac">${fmt(Number(v.monto))}</td><td className="tsm">{v.obs||"—"}</td><td><button onClick={()=>deleteRow("Ventas",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
-          <hr className="div"/>
           <div className="sh"><span className="st">Ventas del mes en curso</span><span className="ss">De tu planilla y las cargadas en la app</span></div>
           {(()=>{
             const hoy = new Date();
@@ -1587,31 +1525,17 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               {ventasMesActual.length===0&&token&&<div className="banner">📅 Cargá ventas de {nombreMes} {anioActual} arriba para ver la proyección del mes.</div>}
             </>;
           })()}
-          <hr className="div"/>
-          <div className="sh"><span className="st">Registrar compra / deuda</span></div>
-          <div className="card">
-            <div className="fg">
-              <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={cF.fecha} onChange={e=>setCF(p=>({...p,fecha:e.target.value}))}/></div>
-              <div className="fl"><label className="flabel">Nº de factura</label><input type="text" className="finput" placeholder="ej: A12345" value={cF.factura} onChange={e=>setCF(p=>({...p,factura:e.target.value}))}/></div>
-              <div className="fl"><label className="flabel">Proveedor</label>
-                <select className="fsel" value={cF.proveedor} onChange={e=>setCF(p=>({...p,proveedor:e.target.value}))}>
-                  <option value="">— Seleccioná —</option>
-                  {PROVEEDORES.map(p=><option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 150000" value={cF.monto} onChange={e=>setCF(p=>({...p,monto:e.target.value}))}/></div>
-              <div className="fl" style={{gridColumn:"1/-1"}}><label className="flabel">Observación</label><input type="text" className="finput" placeholder="ej: vence 15/06, USD 350..." value={cF.obs} onChange={e=>setCF(p=>({...p,obs:e.target.value}))}/></div>
+            <div className="sh"><span className="st">Crecimiento real de ventas</span><span className="ss">Cada mes contra el mismo mes del año anterior</span></div>
+            <div className="grid4">
+              <div className="card" style={{borderLeft:"4px solid #1D4ED8"}}><div className="ctitle">Tendencia (últimos 3 meses)</div><div className="cval" style={{color:"#1D4ED8"}}>{(CR.tend>=0?"+":"")+fmt(CR.tend,1)}%</div><div className="csub">{CR.u3.join(", ")} · es el escenario "Tendencia real"</div></div>
+              <div className="card"><div className="ctitle">Acumulado {CR.anio}</div><div className="cval">{(CR.ytd>=0?"+":"")+fmt(CR.ytd,1)}%</div><div className="csub">Meses cerrados del año</div></div>
+              {CR.curso&&<div className="card"><div className="ctitle">{CR.curso.mes} en curso</div><div className="cval">{(CR.curso.pct>=0?"+":"")+fmt(CR.curso.pct,1)}%</div><div className="csub">{CR.curso.dias} días: {fmtM(CR.curso.pdA)}/día vs {fmtM(CR.curso.pdP)}/día el año pasado</div></div>}
             </div>
-            <div className="factions"><button className="btn btn-p" onClick={saveCompra}>✓ Guardar en Sheets</button></div>
-          </div>
-          {sheetCompras.length>0&&<><div className="sh"><span className="st">Compras en Google Sheets</span><span className="ss">{sheetCompras.length} registros</span></div>
-          <div className="card tw"><table><thead><tr><th>Fecha</th><th>Factura</th><th>Proveedor</th><th>Monto</th><th>Obs.</th></tr></thead>
-          <tbody>{sheetCompras.slice(0,20).map((c,i)=><tr key={i}><td>{c.fecha}</td><td className="tsm">{c.factura||"—"}</td><td>{c.proveedor}</td><td className="tac">${fmt(Number(c.monto))}</td><td className="tsm">{c.obs||"—"}</td><td><button onClick={()=>deleteRow("Compras",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
-        </div>}
-
-        {tab==="tickets"&&<div className="gap">
-          <div className="abar"/>
-          <div className="sh"><span className="st">Análisis de tickets</span></div>
+            <div className="card tw"><table><thead><tr><th>Mes</th><th>Año anterior</th><th>Este año</th><th>Crecimiento</th></tr></thead>
+              <tbody>{[...CR.meses].reverse().slice(0,12).map((x,i)=><tr key={i}><td style={{fontWeight:600}}>{x.mes}</td><td>{fmtM(x.vPrev)}</td><td>{fmtM(x.v)}</td>
+                <td><span className={`tag ${x.pct>=10?"tg":x.pct>=0?"ty":"tr"}`}>{(x.pct>=0?"+":"")+fmt(x.pct,1)}%</span></td></tr>)}</tbody></table></div>
+          <div className="sh"><span className="st">Tickets</span></div>
+          
           <div className="grid2">
             <div className="card"><div className="ctitle">Tickets Ene–Set 2026</div><div className="cval ac">{fmt(tk26)}</div><div className="csub">vs {fmt(tk25)} en 2025</div><div className={`delta ${cTk>=0?"up":"dn"}`}>{cTk>=0?"▲":"▼"} {fmt(Math.abs(cTk),1)}%</div></div>
             <div className="card"><div className="ctitle">Valor prom. ticket 2026</div><div className="cval">${fmt(pvTk,0)}</div><div className="csub">Prom Ene–Set 2026</div><div className="delta wr">Inflación ~7%</div></div>
@@ -1636,466 +1560,46 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <td>{dp!=null?<span className={`tag ${dp>=0?"tg":"tr"}`}>{dp>=0?"+":""}{fmt(dp,1)}%</span>:"—"}</td>
             </tr>;
           })}</tbody></table></div></div>
-          <div className="sh"><span className="st">Registrar tickets del mes</span></div>
-          <div className="card"><div className="fg">
-            <div className="fl"><label className="flabel">Mes</label><select className="fsel" value={tkF.mes} onChange={e=>setTkF(p=>({...p,mes:Number(e.target.value)}))}>
-              {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select></div>
-            <div className="fl"><label className="flabel">Año</label><select className="fsel" value={tkF.anio} onChange={e=>setTkF(p=>({...p,anio:Number(e.target.value)}))}>
-              {[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</select></div>
-            <div className="fl"><label className="flabel">Cantidad emitidos</label><input type="number" className="finput" placeholder="ej: 1750" value={tkF.cantidad} onChange={e=>setTkF(p=>({...p,cantidad:e.target.value}))}/></div>
-            <div className="fl"><label className="flabel">Valor promedio ($)</label><input type="number" className="finput" placeholder="ej: 680" value={tkF.promedio} onChange={e=>setTkF(p=>({...p,promedio:e.target.value}))}/></div>
-            <div className="fl"><label className="flabel">Días trabajados</label><input type="number" className="finput" placeholder="ej: 26" value={tkF.dias} onChange={e=>setTkF(p=>({...p,dias:e.target.value}))}/></div>
-          </div><div className="factions"><button className="btn btn-p" onClick={saveTicket}>✓ Guardar en Sheets</button></div></div>
-          {sheetTickets.length>0&&<><div className="sh"><span className="st">Tickets en Google Sheets</span><span className="ss">{sheetTickets.length} registros</span></div>
-          <div className="card tw"><table><thead><tr><th>Mes</th><th>Año</th><th>Cantidad</th><th>Prom $</th><th>Días</th></tr></thead>
-          <tbody>{sheetTickets.map((t,i)=><tr key={i}><td>{t.mes}</td><td>{t.anio}</td><td>{fmt(Number(t.cantidad))}</td><td>${fmt(Number(t.promedio),0)}</td><td>{t.dias||"—"}</td><td><button onClick={()=>deleteRow("Tickets",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
-        </div>}
-
-        {tab==="historial"&&<div className="gap">
-          <div className="abar"/>
-          <div className="sh"><span className="st">Ventas históricas</span><span className="ss">2022–2025</span>
-            {token&&<button className="btn btn-p" style={{fontSize:"0.8rem",padding:"7px 14px"}} onClick={cargarHistorico}>📥 Cargar histórico a Sheets</button>}
-          </div>
-          <div className="card tw"><table><thead><tr><th>Mes</th><th>2022</th><th>2023</th><th>Δ</th><th>2024</th><th>Δ</th><th>2025</th><th>Δ</th><th>2026</th><th>Δ</th></tr></thead>
-          <tbody>{VM.map((r,i)=>{
-            const tg=v=>v==null?"—":<span className={`tag ${v>=0?"tg":"tr"}`}>{v>=0?"+":""}{fmt(v,1)}%</span>;
-            return<tr key={i}><td style={{fontWeight:600}}>{r.mes}</td>
-              <td>{fmtM(r["2022"])}</td><td>{fmtM(r["2023"])}</td><td>{tg(pct(r["2023"],r["2022"]))}</td>
-              <td>{fmtM(r["2024"])}</td><td>{tg(pct(r["2024"],r["2023"]))}</td>
-              <td>{fmtM(r["2025"])}</td><td>{tg(pct(r["2025"],r["2024"]))}</td>
-              <td>{r["2026"]?fmtM(r["2026"]):<span className="tsm">—</span>}</td>
-              <td>{r["2026"]?tg(pct(r["2026"],r["2025"])):"—"}</td>
-            </tr>;
-          })}</tbody></table></div>
-          <div className="sh"><span className="st">Crecimiento real anual</span></div>
-          <div className="card tw">
-            <div className="tsm" style={{padding:"8px 12px 4px",color:"#7A2E0A"}}>Inflación según datos oficiales INE Uruguay</div>
-            <table><thead><tr><th>Período</th><th>Crec. nominal</th><th>Inflación real INE</th><th>Crec. real</th><th>Resultado</th></tr></thead>
-          <tbody>{[
-            {p:"2022 (apertura)",n:null,i:9.95,src:"INE 2022"},
-            {p:"2023 vs 2022",n:7.6,i:8.26,src:"INE 2023"},
-            {p:"2024 vs 2023",n:24.05,i:5.11,src:"INE 2024"},
-            {p:"2025 vs 2024",n:36.7,i:6.36,src:"INE 2025"},
-            {p:"2026 vs 2025 (Ene–Set)",n:null,i:null,src:"En curso"},
-          ].map((r,i)=>{
-            if(r.n===null) return <tr key={i}>
-              <td style={{fontWeight:600}}>{r.p}</td>
-              <td><span className="tag ty">En curso</span></td>
-              <td className="tsm">~5–7% est.</td>
-              <td><span className="tag ty">Calculando...</span></td>
-              <td>📊 Año en curso</td>
-            </tr>;
-            const real=r.n-r.i;
-            return<tr key={i}><td style={{fontWeight:600}}>{r.p}</td>
-              <td className="tac">+{fmt(r.n,1)}%</td>
-              <td className="tsm">{fmt(r.i,2)}% <span style={{color:"#8A4A2A",fontSize:"0.8rem"}}>({r.src})</span></td>
-              <td><span className={`tag ${real>=0?"tg":"tr"}`}>{real>=0?"+":""}{fmt(real,1)}% real</span></td>
-              <td>{real>=10?"🚀 Excelente":real>=3?"📈 Bueno":real>=0?"➡️ Estable":"⚠️ Caída"}</td>
-            </tr>;
-          })}</tbody></table></div>
-        </div>}
-
-        {tab==="gastos"&&<div className="gap">
-          <div className="abar"/>
-          <div className="sh"><span className="st">Análisis de gastos 2025</span><span className="ss">Datos reales por categoría</span></div>
-
-          {/* KPIs gastos */}
-          <div className="grid4">
-            <div className="card">
-              <div className="ctitle">Total mercadería 2025</div>
-              <div className="cval ac">{fmtM(GASTOS_2025.subatir.reduce((s,v)=>s+v,0)+GASTOS_2025.proveedores.reduce((s,v)=>s+v,0))}</div>
-              <div className="csub">SUBATIR + otros proveedores</div>
-              <div className="delta up">▲ vs 2024</div>
-            </div>
-            <div className="card">
-              <div className="ctitle">SUBATIR % del total</div>
-              <div className="cval">38.1%</div>
-              <div className="csub">Principal proveedor</div>
-              <div className="delta wr">45 días plazo</div>
-            </div>
-            <div className="card">
-              <div className="ctitle">Mercadería total</div>
-              <div className="cval ac">{fmtM(GASTOS_2025.subatir.reduce((s,v)=>s+v,0)+GASTOS_2025.proveedores.reduce((s,v)=>s+v,0))}</div>
-              <div className="csub">SUBATIR + otros proveedores</div>
-              <div className="delta dn">62.5% del gasto</div>
-            </div>
-            {(()=>{const v=VM.reduce((s,r)=>s+(r["2025"]||0),0);const g=TG_REAL["2025"].reduce((s,x,j)=>s+(gastoTotal("2025",j)||0),0);const p=(v-g)/v*100;return <div className="card">
-              <div className="ctitle">Ganancia real 2025</div>
-              <div className="cval ac">{fmtM(v-g)}</div>
-              <div className="csub">Ventas − deudas generadas − comisión bancos</div>
-              <div className={`delta ${p>=0?"up":"dn"}`}>{fmt(p,1)}% de las ventas</div>
-            </div>;})()}
-          </div>
-
-          {/* Grafica gastos por categoria con selector de año */}
-          {(()=>{
-            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
-            return <>
-            <div><div className="sh">
-              <span className="st">Gastos mensuales por categoría</span>
-              <select value={gastosAnio} onChange={e=>setGastosAnio(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",color:"var(--text)",fontFamily:"var(--font)",fontSize:".85rem",padding:"7px 10px",outline:"none"}}>
-                {["2022","2023","2024","2025","2026"].map(y=><option key={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="card"><div className="ch" style={{height:300}}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={meses.map((m,i)=>({
-                mes:m,
-                SUBATIR:COMPRAS_SUBATIR[gastosAnio]?.[i]||null,
-                Estuario:COMPRAS_ESTUARIO[gastosAnio]?.[i]||null,
-                Empleados:GASTOS.empleados[gastosAnio]?.[i]||null,
-                Fijos:(GASTOS.alquiler[gastosAnio]?.[i]||0)+(GASTOS.luz[gastosAnio]?.[i]||0)+(GASTOS.publicidad[gastosAnio]?.[i]||0),
-                IVA:GASTOS.iva[gastosAnio]?.[i]||null,
-                Otros:GASTOS.otros[gastosAnio]?.[i]||null,
-                Bancos:comisionBanco(gastosAnio,i),
-              }))}>
+          <div><div className="sh"><span className="st">Ventas mensuales</span><span className="ss">2024 vs 2025 — en miles $</span></div>
+          <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
+            <BarChart data={cvM} barGap={2}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
+              <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
+              <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${v}k`}/>
+              <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+              <Bar dataKey="2024" fill="#7a3800" radius={[3,3,0,0]}/>
+              <Bar dataKey="2025" fill="#e84400" radius={[3,3,0,0]}/>
+              <Bar dataKey="2026" fill="#B91C1C" radius={[3,3,0,0]}/>
+            </BarChart>
+          </ResponsiveContainer></div></div></div>
+          <div className="grid2">
+            <div><div className="sh"><span className="st">Promedio diario</span></div>
+            <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
+              <LineChart data={PD}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
                 <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
                 <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
-                <Tooltip content={<TT/>}/>
-                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                <Bar dataKey="SUBATIR" stackId="a" fill="#e84400" radius={[0,0,0,0]}/>
-                <Bar dataKey="Estuario" stackId="a" fill="#d4956a" radius={[0,0,0,0]}/>
-                <Bar dataKey="Empleados" stackId="a" fill="#7a3800" radius={[0,0,0,0]}/>
-                <Bar dataKey="Fijos" stackId="a" fill="#4a2000" radius={[0,0,0,0]}/>
-                <Bar dataKey="IVA" stackId="a" fill="#3B1206" radius={[0,0,0,0]}/>
-                <Bar dataKey="Bancos" name="Comisión bancos" stackId="a" fill="#B45309" radius={[3,3,0,0]}/>
-              </BarChart>
-            </ResponsiveContainer>
-          </div></div></div>
-          </>;
-          })()}
-
-          {/* Ventas vs Gastos con selector */}
-          {(()=>{
-            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
-            return <div><div className="sh">
-              <span className="st">Ventas vs Gastos</span>
-              <select value={vvgAnio} onChange={e=>setVvgAnio(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",color:"var(--text)",fontFamily:"var(--font)",fontSize:".85rem",padding:"7px 10px",outline:"none"}}>
-                {["2022","2023","2024","2025","2026"].map(y=><option key={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="card"><div className="ch">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={meses.map((m,i)=>({
-                mes:m,
-                Ventas:VM.find(r=>r.mes===m)?.[vvgAnio]||null,
-                Gastos:gastosMes(vvgAnio,i)||null,
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
-                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
-                <Tooltip content={<TT/>}/>
-                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                <Bar dataKey="Ventas" fill="#e84400" radius={[3,3,0,0]}/>
-                <Bar dataKey="Gastos" fill="#7a3800" radius={[3,3,0,0]}/>
-              </BarChart>
-            </ResponsiveContainer>
-          </div></div></div>;
-          })()}
-
-          {/* Tabla detalle */}
-          {(()=>{
-            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
-            return <>
-            <div className="sh">
-              <span className="st">Detalle mensual</span>
-              <select value={tabAnio} onChange={e=>setTabAnio(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",color:"var(--text)",fontFamily:"var(--font)",fontSize:".85rem",padding:"7px 10px",outline:"none"}}>
-                {["2022","2023","2024","2025","2026"].map(y=><option key={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="card tw"><table><thead>
-              <tr><th>Mes</th><th>Ventas</th><th>SUBATIR</th><th>Estuario</th><th>Empleados</th><th>Alquiler</th><th>Luz/Tel</th><th>Publicidad</th><th>IVA</th><th>Otros</th><th>Comisión bancos</th><th>Total gastos</th><th>Margen</th><th>%</th></tr>
-            </thead><tbody>
-            {meses.map((m,i)=>{
-              const venta = VM.find(r=>r.mes===m)?.[tabAnio]||0;
-              const sub = COMPRAS_SUBATIR[tabAnio]?.[i]||0;
-              const est = COMPRAS_ESTUARIO[tabAnio]?.[i]||0;
-              const emp = GASTOS.empleados[tabAnio]?.[i]||0;
-              const alq = GASTOS.alquiler[tabAnio]?.[i]||0;
-              const luz = GASTOS.luz[tabAnio]?.[i]||0;
-              const pub = GASTOS.publicidad[tabAnio]?.[i]||0;
-              const iva = GASTOS.iva[tabAnio]?.[i]||0;
-              const ot = GASTOS.otros[tabAnio]?.[i]||0;
-              const ban = comisionBanco(tabAnio,i)||0;
-              const banReal = !!COM.real[`${tabAnio}-${String(i+1).padStart(2,"0")}`];
-              const total = gastosMes(tabAnio,i);
-              const margen = venta - total;
-              const pct_margen = venta>0?((margen/venta)*100):0;
-              if(!venta && !total) return null;
-              return <tr key={i}>
-                <td style={{fontWeight:600}}>{m}</td>
-                <td className="tac">{fmtM(venta)}</td>
-                <td>{fmtM(sub)}</td>
-                <td>{fmtM(est)}</td>
-                <td>{fmtM(emp)}</td>
-                <td>{fmtM(alq)}</td>
-                <td>{fmtM(luz)}</td>
-                <td>{fmtM(pub)}</td>
-                <td>{fmtM(iva)}</td>
-                <td>{fmtM(ot)}</td>
-                <td>{fmtM(ban)}{ban?<div className="tsm">{banReal?"real":"est. "+fmt(COM.pct,1)+"%"}</div>:null}</td>
-                <td style={{fontWeight:600}}>{fmtM(total)}</td>
-                <td><span className={`tag ${margen>=0?"tg":"tr"}`}>{fmtM(margen)}</span></td>
-                <td><span className={`tag ${pct_margen>=5?"tg":pct_margen>=0?"ty":"tr"}`}>{fmt(pct_margen,1)}%</span></td>
-              </tr>;
-            })}
-          </tbody></table></div>
-          </>;
-          })()}
-
-          {/* Condiciones de pago */}
-          <div className="sh"><span className="st">Condiciones de pago proveedores</span><span className="ss">Plazos acordados</span></div>
-          <div className="grid4">
-            {[
-              {proveedor:"SUBATIR",plazo:"45 días",pct:"38.1%",color:"#e84400"},
-              {proveedor:"Estuario Platino",plazo:"60 días",pct:"~8%",color:"#9A3412"},
-              {proveedor:"JASPE",plazo:"45 días",pct:"~4%",color:"#9A3412"},
-              {proveedor:"Resto proveedores",plazo:"30 días",pct:"~50%",color:"#7a3800"},
-            ].map((p,i)=><div key={i} className="card">
-              <div className="ctitle">{p.proveedor}</div>
-              <div className="cval" style={{fontSize:"1.4rem",color:p.color}}>{p.plazo}</div>
-              <div className="csub">{p.pct} del total de compras</div>
-            </div>)}
-          </div>
-
-          {/* Evolucion compras SUBATIR por año */}
-          <div><div className="sh"><span className="st">Evolución compras SUBATIR</span><span className="ss">2022–2026 por mes</span></div>
-          <div className="card"><div className="ch">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"].map((m,i)=>({
-                mes:m,
-                "2023":COMPRAS_SUBATIR["2023"][i],
-                "2024":COMPRAS_SUBATIR["2024"][i],
-                "2025":COMPRAS_SUBATIR["2025"][i],
-                "2026":COMPRAS_SUBATIR["2026"][i],
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
-                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
-                <Tooltip content={<TT/>}/>
-                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                <Line type="monotone" dataKey="2023" stroke="#4a2000" dot={false} strokeWidth={2}/>
-                <Line type="monotone" dataKey="2024" stroke="#7a3800" dot={false} strokeWidth={2}/>
-                <Line type="monotone" dataKey="2025" stroke="#d4956a" dot={false} strokeWidth={2}/>
-                <Line type="monotone" dataKey="2026" stroke="#e84400" dot={false} strokeWidth={2.5} strokeDasharray="5 3"/>
+                <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+                <Line type="monotone" dataKey="2024" stroke="#d4956a" dot={false} strokeWidth={2}/>
+                <Line type="monotone" dataKey="2025" stroke="#e84400" dot={false} strokeWidth={2.5}/>
+                <Line type="monotone" dataKey="2026" stroke="#B91C1C" dot={false} strokeWidth={2.5} strokeDasharray="5 3"/>
               </LineChart>
-            </ResponsiveContainer>
-          </div></div></div>
-
-          {/* Tabla comparativa proveedores por año */}
-          <div className="sh"><span className="st">Compras por proveedor — resumen anual</span></div>
-          <div className="card tw"><table><thead>
-            <tr><th>Proveedor</th><th>Plazo</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 (Ene-Jun)</th></tr>
-          </thead><tbody>
-            {[
-              {p:"SUBATIR",plazo:"45 días",data:COMPRAS_SUBATIR},
-              {p:"Estuario Platino",plazo:"60 días",data:COMPRAS_ESTUARIO},
-              {p:"JASPE",plazo:"45 días",data:COMPRAS_JASPE},
-            ].map((r,i)=>{
-              const tot = (yr) => r.data[yr].filter(v=>v!=null).reduce((s,v)=>s+v,0);
-              return <tr key={i}>
-                <td style={{fontWeight:600}}>{r.p}</td>
-                <td><span className="tag ty">{r.plazo}</span></td>
-                <td>{fmtM(tot("2022"))}</td>
-                <td>{fmtM(tot("2023"))}</td>
-                <td>{fmtM(tot("2024"))}</td>
-                <td>{fmtM(tot("2025"))}</td>
-                <td>{fmtM(tot("2026"))}</td>
-              </tr>;
-            })}
-          </tbody></table></div>
-
-
-          {/* Resultado real por año */}
-          <div className="sh"><span className="st">Resultado real por año</span><span className="ss">Ventas diarias − Total gastos (hoja deudas) − comisión bancos</span></div>
-          {(()=>{
-            const anios=["2022","2023","2024","2025","2026"];
-            const datos=anios.map(y=>{
-              const n=TG_REAL[y].filter(x=>x!=null).length;
-              const meses=VM.slice(0,n);
-              const v=meses.reduce((s,r)=>s+(r[y]||0),0);
-              const g=TG_REAL[y].slice(0,n).reduce((s,x,j)=>s+(gastoTotal(y,j)||0),0);
-              const d=DEUDA_PAGOS[y].slice(0,n).reduce((s,x)=>s+(x||0),0);
-              return {anio:y==="2026"?"2026*":y,Ventas:v,Gastos:g,Ganancia:v-g,pct:v>0?(v-g)/v*100:0,Deuda:d,Operativa:v-g+d,pctOp:v>0?(v-g+d)/v*100:0};
-            });
-            return <>
-            <div className="card"><div className="ch">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={datos}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
-                  <XAxis dataKey="anio" stroke="#7A2E0A" fontSize={12}/>
-                  <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${(v/1000000).toFixed(1)}M`}/>
-                  <Tooltip content={<TT/>}/>
-                  <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
-                  <Bar dataKey="Ventas" fill="#e84400" radius={[3,3,0,0]}/>
-                  <Bar dataKey="Gastos" fill="#7a3800" radius={[3,3,0,0]}/>
-                  <Bar dataKey="Operativa" name="Ganancia operativa" fill="#15803D" radius={[3,3,0,0]}/>
-                </BarChart>
-              </ResponsiveContainer>
-            </div></div>
-            <div className="card tw"><table><thead>
-              <tr><th>Año</th><th>Ventas</th><th>Gastos totales</th><th>Ganancia total</th><th>Pagos deuda</th><th>Ganancia operativa</th><th>% operativo</th><th>vs año ant.</th></tr>
-            </thead><tbody>
-              {datos.map((d,i)=>{const prev=i>0?datos[i-1]:null;const dp=prev?d.pctOp-prev.pctOp:null;return <tr key={i}>
-                <td style={{fontWeight:600}}>{d.anio}</td>
-                <td className="tac">{fmtM(d.Ventas)}</td>
-                <td>{fmtM(d.Gastos)}</td>
-                <td><span className={`tag ${d.Ganancia>=0?"tg":"tr"}`}>{fmtM(d.Ganancia)} ({fmt(d.pct,1)}%)</span></td>
-                <td>{fmtM(d.Deuda)}</td>
-                <td><span className={`tag ${d.Operativa>=0?"tg":"tr"}`}>{fmtM(d.Operativa)}</span></td>
-                <td><span className={`tag ${d.pctOp>=10?"tg":d.pctOp>=0?"ty":"tr"}`}>{fmt(d.pctOp,1)}%</span></td>
-                <td>{dp==null?"—":<span className={`tag ${dp>=0?"tg":"tr"}`}>{dp>=0?"+":""}{fmt(dp,1)} pts</span>}</td>
-              </tr>;})}
-            </tbody></table>
-            <div className="tsm" style={{padding:"8px 12px"}}>* 2026: Ene–Set (setiembre cerrado). Pagos de deuda = préstamos familiares (Susana/Candela) y créditos; no son gasto del negocio. Los gastos incluyen la comisión de los bancos por tarjetas (real medida en Caja cuando hay datos; si no, {fmt(COM.pct,1)}% de las ventas).</div></div>
-
-            <div className="sh">
-              <span className="st">Resultado mes a mes</span>
-              <select value={resAnio} onChange={e=>setResAnio(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",color:"var(--text)",fontFamily:"var(--font)",fontSize:".85rem",padding:"7px 10px",outline:"none"}}>
-                {anios.map(y=><option key={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="card tw"><table><thead>
-              <tr><th>Mes</th><th>Ventas</th><th>Gastos</th><th>Ganancia</th><th>Pagos deuda</th><th>Operativa</th><th>% op.</th></tr>
-            </thead><tbody>
-              {VM.map((r,i)=>{const v=r[resAnio];const g=gastoTotal(resAnio,i);if(v==null||g==null)return null;const m=v-g;const d=DEUDA_PAGOS[resAnio][i]||0;const o=m+d;const p=v>0?o/v*100:0;return <tr key={i}>
-                <td style={{fontWeight:600}}>{r.mes}</td>
-                <td className="tac">{fmtM(v)}</td>
-                <td>{fmtM(g)}</td>
-                <td><span className={`tag ${m>=0?"tg":"tr"}`}>{fmtM(m)}</span></td>
-                <td>{fmtM(d)}</td>
-                <td><span className={`tag ${o>=0?"tg":"tr"}`}>{fmtM(o)}</span></td>
-                <td><span className={`tag ${p>=10?"tg":p>=0?"ty":"tr"}`}>{fmt(p,1)}%</span></td>
-              </tr>;})}
-            </tbody></table></div>
-            </>;
-          })()}
-
-
-          {/* Retiro sugerido 2027 */}
-          <div className="sh"><span className="st">Retiro mensual sugerido 2027</span><span className="ss">Sin crédito Santander · ventas +10% · reserva de stock</span></div>
-          <div className="grid4">
-            {[
-              {t:"Conservador",r:"Costos como 2026 (92,6%)",w:119000,c:"#B45309"},
-              {t:"Intermedio",r:"Costos 89,6%",w:182000,c:"#e84400"},
-              {t:"Favorable",r:"Costos como 2025 (86,6%)",w:246000,c:"#16A34A"},
-            ].map((s,i)=><div key={i} className="card">
-              <div className="ctitle">Escenario {s.t}</div>
-              <div className="cval" style={{color:s.c}}>{fmtM(s.w)}/mes</div>
-              <div className="csub">{s.r}</div>
-            </div>)}
-            <div className="card">
-              <div className="ctitle">Colchón necesario</div>
-              <div className="cval">~$1.0M</div>
-              <div className="csub">Saldo en banco al 1° de enero</div>
-              <div className="delta wr">Cubre el bajón mar–set</div>
-            </div>
+            </ResponsiveContainer></div></div></div>
+            <div><div className="sh"><span className="st">Tickets emitidos</span></div>
+            <div className="card"><div className="ch"><ResponsiveContainer width="100%" height="100%">
+              <BarChart data={cvT}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
+                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
+                <YAxis stroke="#7A2E0A" fontSize={12}/>
+                <Tooltip content={<TT/>}/><Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+                <Bar dataKey="Cant 25" fill="#d4956a" radius={[3,3,0,0]}/>
+                <Bar dataKey="Cant 26" fill="#e84400" radius={[3,3,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer></div></div></div>
           </div>
-          <div className="card"><div style={{fontSize:"1rem",color:"var(--text)",lineHeight:1.7}}>
-            Supuestos: ventas 2027 = 2026 estimado ($22,99M) + 10%; sigue la cuota Candela (~$19.600/mes, 21 cuotas restantes); se reservan ~$205.000 en el año para agrandar el stock; el crédito Santander termina en diciembre 2026. El colchón se calcula con el patrón real de 2025: enero y febrero dejan excedente, y de marzo a setiembre las compras de mercadería superan a las ventas.
-          </div></div>
-
-          {/* Resumen del mes actual */}
-          <div className="sh"><span className="st">Resumen del mes actual</span><span className="ss">Ventas vs Gastos</span></div>
-          {(()=>{
-            const hoy = new Date();
-            const mesIdx = hoy.getMonth();
-            const anioActual = String(hoy.getFullYear());
-            const mesCorto = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"][mesIdx];
-            const ventaMes = VM.find(r=>r.mes===mesCorto)?.[anioActual]||0;
-            const subMes = COMPRAS_SUBATIR[anioActual]?.[mesIdx]||0;
-            const estMes = COMPRAS_ESTUARIO[anioActual]?.[mesIdx]||0;
-            const jasMes = COMPRAS_JASPE[anioActual]?.[mesIdx]||0;
-            const empMes = GASTOS.empleados[anioActual]?.[mesIdx]||0;
-            const alqMes = GASTOS.alquiler[anioActual]?.[mesIdx]||0;
-            const luzMes = GASTOS.luz[anioActual]?.[mesIdx]||0;
-            const pubMes = GASTOS.publicidad[anioActual]?.[mesIdx]||0;
-            const ivaMes = GASTOS.iva[anioActual]?.[mesIdx]||0;
-            const otMes  = GASTOS.otros[anioActual]?.[mesIdx]||0;
-            const banMes = comisionBanco(anioActual,mesIdx)||0;
-            const totalGastos = subMes+estMes+jasMes+empMes+alqMes+luzMes+pubMes+ivaMes+otMes+banMes;
-            const margen = ventaMes - totalGastos;
-            const pctMargen = ventaMes>0?(margen/ventaMes*100):0;
-            const pctMercaderia = totalGastos>0?((subMes+estMes+jasMes)/totalGastos*100):0;
-            return <div className="grid4">
-              <div className="card">
-                <div className="ctitle">Ventas {mesCorto} {anioActual}</div>
-                <div className="cval ac">{ventaMes>0?fmtM(ventaMes):"Sin datos"}</div>
-                <div className="csub">Total del mes</div>
-              </div>
-              <div className="card">
-                <div className="ctitle">Total gastos {mesCorto}</div>
-                <div className="cval">{totalGastos>0?fmtM(totalGastos):"Sin datos"}</div>
-                <div className="csub">Todos los rubros</div>
-                <div className={`delta ${pctMercaderia>0?"wr":""}`}>Mercadería: {fmt(pctMercaderia,1)}%</div>
-              </div>
-              <div className="card">
-                <div className="ctitle">Margen {mesCorto}</div>
-                <div className={`cval ${margen>=0?"ac":""}`} style={{color:margen<0?"#B91C1C":""}}>{(ventaMes>0&&totalGastos>0)?fmtM(margen):"—"}</div>
-                <div className="csub">Ventas − Gastos</div>
-                {ventaMes>0&&totalGastos>0&&<div className={`delta ${pctMargen>=5?"up":pctMargen>=0?"wr":"dn"}`}>{fmt(pctMargen,1)}% margen</div>}
-              </div>
-              <div className="card">
-                <div className="ctitle">SUBATIR {mesCorto}</div>
-                <div className="cval">{subMes>0?fmtM(subMes):"—"}</div>
-                <div className="csub">{ventaMes>0&&subMes>0?`${fmt(subMes/ventaMes*100,1)}% de ventas`:""}</div>
-                <div className="delta wr">Pago a 45 días</div>
-              </div>
-            </div>;
-          })()}
-
-          {/* Analisis SUBATIR 45 dias */}
-          <div className="sh"><span className="st">Ciclo SUBATIR — 45 días</span><span className="ss">Relación ventas semana del pedido vs pago</span></div>
-          <div className="card">
-            <div style={{fontSize:".88rem",color:"var(--text2)",lineHeight:1.8}}>
-              <p><strong style={{color:"#C2410C"}}>¿Cómo funciona el ciclo?</strong></p>
-              <p style={{marginTop:8}}>Cada pedido que hacés a SUBATIR genera un pago <strong>45 días después</strong>. La lógica es simple: las ventas de la semana en que pediste deberían cubrir ese pago futuro.</p>
-            </div>
-            <div style={{marginTop:16}}>
-              {(()=>{
-                const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
-                const diasHab = DIAS_HABILES;
-                // Para cada mes de 2026, comparar SUBATIR pagado vs ventas del mes 45 días antes
-                const rows = meses.map((m,i)=>{
-                  const subPago = COMPRAS_SUBATIR["2026"]?.[i];
-                  if(!subPago) return null;
-                  // 45 días antes = mes anterior aprox (30 días) + 15 días
-                  const mesAnteriorIdx = i===0?11:i-1;
-                  const anioAnterior = i===0?"2025":"2026";
-                  const ventasMesAnterior = VM.find(r=>r.mes===meses[mesAnteriorIdx])?.[anioAnterior]||0;
-                  const diasHabMesAnt = diasHab[anioAnterior]?.[meses[mesAnteriorIdx]]||26;
-                  const ventaSemana = ventasMesAnterior>0?Math.round(ventasMesAnterior/diasHabMesAnt*6):0; // semana 6 días
-                  const cobertura = ventaSemana>0?(subPago/ventaSemana*100):0;
-                  return {mes:m, subPago, ventaSemana, cobertura};
-                }).filter(Boolean);
-                return <table style={{width:"100%",fontSize:".82rem",borderCollapse:"collapse"}}>
-                  <thead><tr style={{color:"var(--text2)",borderBottom:"1px solid var(--border)"}}>
-                    <th style={{textAlign:"left",padding:"6px 8px"}}>Pago SUBATIR</th>
-                    <th style={{textAlign:"right",padding:"6px 8px"}}>Monto</th>
-                    <th style={{textAlign:"right",padding:"6px 8px"}}>Venta sem. pedido</th>
-                    <th style={{textAlign:"right",padding:"6px 8px"}}>Cobertura</th>
-                    <th style={{textAlign:"center",padding:"6px 8px"}}>Estado</th>
-                  </tr></thead>
-                  <tbody>{rows.map((r,i)=><tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,.05)"}}>
-                    <td style={{padding:"6px 8px",fontWeight:600}}>{r.mes} 2026</td>
-                    <td style={{textAlign:"right",padding:"6px 8px"}}>{fmtM(r.subPago)}</td>
-                    <td style={{textAlign:"right",padding:"6px 8px"}}>{fmtM(r.ventaSemana)}</td>
-                    <td style={{textAlign:"right",padding:"6px 8px"}}>{fmt(r.cobertura,1)}%</td>
-                    <td style={{textAlign:"center",padding:"6px 8px"}}>
-                      <span className={`tag ${r.cobertura<=100?"tg":r.cobertura<=150?"ty":"tr"}`}>
-                        {r.cobertura<=100?"✓ OK":r.cobertura<=150?"⚠️ Ajustado":"🔴 Alto"}
-                      </span>
-                    </td>
-                  </tr>)}</tbody>
-                </table>;
-              })()}
-            </div>
-          </div>
-
         </div>}
 
-                {tab==="control"&&<div className="gap">
+        {tab==="control"&&<div className="gap">
           <div className="abar"/>
           {!token&&<div className="banner" style={{borderColor:"#B45309"}}>⚠️ Tocá <b>&nbsp;Conectar Sheets&nbsp;</b> arriba para poder guardar el cierre.</div>}
           {token&&!modoCaja&&(()=>{const u=[...sheetCierres2].sort((x,y)=>x.fecha<y.fecha?1:-1)[0];if(!u)return <div className="tsm" style={{padding:"0 4px"}}>Se actualiza sola cada 3 minutos{actCierres?` · última: ${actCierres}`:""}</div>;const d=difCierre(u);const c=d==null?"#8A4A2A":Math.abs(d)<=50?"#15803D":Math.abs(d)<=300?"#B45309":"#B91C1C";
@@ -2237,57 +1741,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           })()}
         </div>}
 
-        {tab==="caja"&&<div className="gap">
+        {tab==="pagos"&&<div className="gap">
           <div className="abar"/>
-          {(()=>{
-            const hoy=new Date(); const mIdx=hoy.getMonth(); const yAct=hoy.getFullYear();
-            const delMes=sheetRetiros.map((r,i)=>({...r,_i:i})).filter(r=>{const d=new Date(r.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;});
-            const retiradoMes=delMes.reduce((s,r)=>s+(Number(r.monto)||0),0);
-            const proy=proyectarCaja(caja);
-            const CR=crecimientoReal(); const escSel=caja.escSel||"medio";
-            const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(caja,crecEscenario(caja,e.k))}));
-            const PS=planSubatir(caja); const fD=iso=>{const p=iso.split("-");return `${p[2]}/${p[1]}`;}; const DSEM=["dom","lun","mar","mié","jue","vie","sáb"];
-            const chartEsc=proy.map((r,i)=>{const o={mes:r.mes}; escProy.forEach(e=>{o[e.k]=e.p[i].saldo;}); return o;});
-            const sugerido=proy[0]?.retiro||0;
-            const minimo=proy.reduce((a,b)=>b.saldo<a.saldo?b:a,proy[0]);
-            const enLimite=proy.find(p=>p.saldo<caja.limite);
-            const enAlerta=proy.find(p=>p.saldo<caja.alerta);
-            const anioRet=sheetRetiros.filter(r=>String(r.fecha).startsWith(String(yAct))).reduce((s,r)=>s+(Number(r.monto)||0),0);
-            const num=(k)=>e=>setCaja({[k]:Number(e.target.value)});
-            return <>
-            {!token&&<div className="banner" style={{borderColor:"#B45309"}}>⚠️ Sheets no está conectado: tus retiros y saldos guardados no se ven hasta que toques <b>&nbsp;Conectar Sheets&nbsp;</b> arriba.</div>}
-            <div className="sh"><span className="st">Retiros de {MESES[mIdx]}</span><span className="ss">Registro y control</span></div>
-            <div className="grid4">
-              <div className="card"><div className="ctitle">Retirado este mes</div><div className="cval ac">{fmtM(retiradoMes)}</div><div className="csub">{delMes.length} movimientos</div></div>
-              <div className="card"><div className="ctitle">Sugerido este mes</div><div className="cval">{fmtM(sugerido)}</div><div className="csub">{(yAct<2027||(yAct===2027&&mIdx===0))?"Monto fijo":`${fmtM(caja.retiroFijo2)} + ${caja.retiroPct}% de ventas`}</div>
-                <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div></div>
-              <div className="card"><div className="ctitle">Retirado en {yAct}</div><div className="cval">{fmtM(anioRet)}</div><div className="csub">Registrado en la app</div></div>
-              <div className="card"><div className="ctitle">Saldo más bajo proyectado</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
-            </div>
-
-            {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
-             :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}). Ese mes conviene reducir la parte variable del retiro.</div>
-             :<div className="banner">✓ Con este plan el saldo no baja de tu límite de alerta en los próximos 15 meses.</div>}
-
-            <div className="card">
-              <div className="fg">
-                <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={rF.fecha} onChange={e=>setRF(p=>({...p,fecha:e.target.value}))}/></div>
-                <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 100000" value={rF.monto} onChange={e=>setRF(p=>({...p,monto:e.target.value}))}/></div>
-                <div className="fl"><label className="flabel">Tipo</label><select className="finput" value={rF.tipo} onChange={e=>setRF(p=>({...p,tipo:e.target.value}))}><option>Fijo</option><option>Variable</option><option>Adelanto</option></select></div>
-                <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={rF.obs} onChange={e=>setRF(p=>({...p,obs:e.target.value}))}/></div>
-              </div>
-              <button className="btn" style={{marginTop:12}} onClick={saveRetiro}>💾 Guardar retiro</button>
-            </div>
-
-            {sheetRetiros.length>0&&<div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead>
-              <tbody>{[...sheetRetiros.map((r,i)=>({...r,_i:i}))].reverse().slice(0,24).map(r=><tr key={r._i}>
-                <td>{r.fecha}</td><td className="tac">{fmtM(Number(r.monto)||0)}</td><td><span className="tag ty">{r.tipo}</span></td><td className="tsm">{r.obs||"—"}</td>
-                <td><button onClick={()=>deleteRow("Retiros",r._i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
-              </tr>)}</tbody></table></div>}
-
-
-
-
             {(()=>{const desde=caja.saldoFecha||"0000"; const dTs=caja.saldoTs||"";
               const posterior=x=>dTs&&x.ts?x.ts>dTs:x.fecha>desde;
               const dep=sheetDepositos.filter(posterior).reduce((s,d)=>s+d.monto,0)+sheetCierres2.filter(c=>c.deposito&&posterior(c)).reduce((s,c)=>s+c.deposito,0);
@@ -2298,39 +1753,6 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                 <div className="cval" style={{color:est<0?"#B91C1C":"#14532D"}}>{fmtM(est)}</div>
                 <div className="csub">Último saldo guardado ({caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"}) {fmtM(caja.saldo)} + depósitos registrados {fmtM(dep)} − pagos marcados {fmtM(pag)}. Cuenta todo lo que registres después de guardar el saldo (incluidos los depósitos de los cierres). Al guardar un saldo real nuevo, vuelve a empezar desde ahí.</div>
               </div>;})()}
-            <div className="sh"><span className="st">Stock valorizado</span><span className="ss">A costo · cobertura y crecimiento</span></div>
-            {(()=>{
-              const fechas=new Set(sheetStock.map(s=>s.fecha));
-              const lista=[...STOCK_HIST.filter(s=>!fechas.has(s.fecha)).map(s=>({...s,_base:true})),...sheetStock.map((s,i)=>({...s,_i:i}))];
-              const A=analizarStock(lista);
-              const objetivo=metaCob*COMPRAS_PROM_MES; const exced=A?A.ult.valor-objetivo:0;
-              const fF=s=>{const p=s.split("-");return `${p[2]}/${p[1]}/${p[0]}`;};
-              return <>
-              <div className="grid4">
-                <div className="card"><div className="ctitle">Stock al {A?fF(A.ult.fecha):"—"}</div><div className="cval ac">{A?fmtM(A.ult.valor):"—"}</div><div className="csub">Valorizado a costo</div></div>
-                <div className="card"><div className="ctitle">Cobertura</div><div className="cval">{A?fmt(A.cobertura,1):"—"} meses</div><div className="csub">Sobre compras promedio de {fmtM(COMPRAS_PROM_MES)}/mes</div>
-                  {A&&<div className={`delta ${A.cobertura<=metaCob+0.2?"up":"wr"}`}>{A.cobertura<=metaCob+0.2?"Dentro de la meta":`Meta: ${fmt(metaCob,1)} meses`}</div>}</div>
-                <div className="card"><div className="ctitle">Stock vs ventas (12 meses)</div><div className="cval">{A&&A.stockVar!=null?`${A.stockVar>=0?"+":""}${fmt(A.stockVar,1)}%`:"—"}</div><div className="csub">Ventas: {A&&A.ventasVar!=null?`${A.ventasVar>=0?"+":""}${fmt(A.ventasVar,1)}%`:"—"}</div>
-                  {A&&A.stockVar!=null&&A.ventasVar!=null&&<div className={`delta ${A.stockVar>A.ventasVar+5?"dn":"up"}`}>{A.stockVar>A.ventasVar+5?"El stock crece más rápido que las ventas":"Crece en línea con las ventas"}</div>}</div>
-                <div className="card"><div className="ctitle">{exced>0?"Excedente sobre la meta":"Margen hasta la meta"}</div><div className="cval" style={{color:exced>0?"#B45309":"#14532D"}}>{fmtM(Math.abs(exced))}</div><div className="csub">Meta: {fmt(metaCob,1)} meses = {fmtM(objetivo)}</div></div>
-              </div>
-              {A&&A.stockVar!=null&&A.ventasVar!=null&&A.stockVar>A.ventasVar+5&&<div className="banner" style={{borderColor:"#B45309"}}>⚠️ En el último año el stock creció {fmt(A.stockVar,1)}% y las ventas {fmt(A.ventasVar,1)}%. Esa diferencia es plata inmovilizada que hoy financia el sobregiro: conviene reponer menos de lo que rota lento.</div>}
-              <div className="card">
-                <div className="fg">
-                  <div className="fl"><label className="flabel">Fecha de la valuación</label><input type="date" className="finput" value={stF.fecha} onChange={e=>setStF(p=>({...p,fecha:e.target.value}))}/></div>
-                  <div className="fl"><label className="flabel">Valor del stock a costo ($)</label><input type="number" className="finput" placeholder="ej: 3890000" value={stF.valor} onChange={e=>setStF(p=>({...p,valor:e.target.value}))}/></div>
-                  <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={stF.obs} onChange={e=>setStF(p=>({...p,obs:e.target.value}))}/></div>
-                  <div className="fl"><label className="flabel">Meta de cobertura (meses)</label><input type="number" step="0.1" className="finput" value={metaCob} onChange={e=>{const v=Number(e.target.value);setMetaCob(v);try{localStorage.setItem("prolimpio_meta_cob",String(v));}catch(x){}}}/></div>
-                </div>
-                <button className="btn btn-p" style={{marginTop:12}} onClick={saveStock}>💾 Guardar valuación</button>
-                <div className="tw" style={{marginTop:12}}><table><thead><tr><th>Fecha</th><th>Valor</th><th>Cobertura</th><th>Obs.</th><th></th></tr></thead>
-                  <tbody>{A?[...A.lista].reverse().map((s,k)=><tr key={k}><td>{fF(s.fecha)}</td><td className="tac">{fmtM(s.valor)}</td><td>{fmt(s.valor/COMPRAS_PROM_MES,1)} meses</td><td className="tsm">{s.obs||"—"}</td>
-                    <td>{s._base?<span className="tsm">base</span>:<button onClick={()=>deleteRow("Stock",s._i)} style={{background:"rgba(232,68,0,0.12)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.85rem"}}>✕</button>}</td></tr>):null}</tbody></table></div>
-                <div className="tsm" style={{marginTop:8}}>Ideal: cargar una valuación por mes, a fin de mes. La cobertura usa el promedio de compras de 2026 (sin cuotas de créditos).</div>
-              </div>
-              </>;
-            })()}
-
             <div className="sh"><span className="st">Costos fijos del mes</span><span className="ss">Tocá uno para marcarlo pagado</span></div>
             {(()=>{const d=new Date();const mes=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
               const lista=(COSTOS_FIJOS_MES[mes]||COSTOS_FIJOS).map(c=>{const K=claveFijo(mes,c.nombre);const pg=sheetPagos.find(p=>p.clave===K)||(c.planilla?{monto:c.monto,fecha:"",planilla:true}:null);return {...c,K,pg};});
@@ -2379,9 +1801,35 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                     <input type="number" className="finput" style={{maxWidth:140}} value={pagoEdit.monto} onChange={e=>setPagoEdit(p=>({...p,monto:e.target.value}))}/>
                     <button className="btn btn-p" onClick={marcarPago}>✓ Confirmar pago</button><button className="btn btn-s" onClick={()=>setPagoEdit(null)}>Cancelar</button></div>}</td></tr>}</React.Fragment>;})}</tbody></table></div>
               </details>
-              <div className="tsm" style={{padding:"0 4px"}}>Noviembre todavía tiene un SUBATIR sin cargar y diciembre no tiene pedidos SUBATIR. Estos montos no incluyen los fijos del mes (alquiler, sueldos, IVA, etc.); la proyección de abajo sí los incluye.</div>
+              <div className="tsm" style={{padding:"0 4px"}}>Noviembre todavía tiene un SUBATIR sin cargar y diciembre no tiene pedidos SUBATIR. Estos montos no incluyen los fijos del mes (alquiler, sueldos, IVA, etc.); la Proyección sí los incluye.</div>
               </>;
             })()}
+            <div className="sh"><span className="st">Saldos bancarios</span><span className="ss">Guardalos con fecha para llevar el registro</span></div>
+            {(()=>{const neto=Math.round((Number(caja.brou)||0)+(Number(caja.santUyu)||0)+(Number(caja.santUsd)||0)*(Number(caja.tc)||0));
+            const setAcc=(k)=>e=>{const v={[k]:Number(e.target.value)};const n={...caja,...v};setCaja({...v,saldo:Math.round((Number(n.brou)||0)+(Number(n.santUyu)||0)+(Number(n.santUsd)||0)*(Number(n.tc)||0))});};
+            return <div className="card">
+              <div className="fg">
+                <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={caja.saldoFecha} onChange={e=>setCaja({saldoFecha:e.target.value})}/></div>
+                <div className="fl"><label className="flabel">BROU ($)</label><input type="number" className="finput" value={caja.brou} onChange={setAcc("brou")}/></div>
+                <div className="fl"><label className="flabel">Santander ($) — negativo si es sobregiro</label><input type="number" className="finput" value={caja.santUyu} onChange={setAcc("santUyu")}/></div>
+                <div className="fl"><label className="flabel">Santander (USD)</label><input type="number" className="finput" value={caja.santUsd} onChange={setAcc("santUsd")}/></div>
+                <div className="fl"><label className="flabel">Tipo de cambio ($/USD)</label><input type="number" className="finput" value={caja.tc} onChange={setAcc("tc")}/></div>
+              </div>
+              <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                <div><div className="ctitle">Neto en pesos</div><div className="cval" style={{color:neto<0?"#B91C1C":""}}>{fmtM(neto)}</div></div>
+                <button className="btn btn-p" onClick={saveSaldo}>💾 Guardar saldo</button>
+              </div>
+              {sheetSaldos.length>0&&<div className="tw" style={{marginTop:12}}><table><thead><tr><th>Fecha</th><th>BROU</th><th>Sant. $</th><th>Sant. USD</th><th>TC</th><th>Neto</th><th></th></tr></thead>
+                <tbody>{sheetSaldos.map((s,i)=>({...s,_i:i})).sort((a,b)=>a.fecha<b.fecha?1:-1).slice(0,12).map(s=><tr key={s._i}>
+                  <td>{s.fecha}</td><td>{fmtM(s.brou)}</td><td>{fmtM(s.santUyu)}</td><td>USD {fmt(s.santUsd)}</td><td>{s.tc}</td>
+                  <td><span className={`tag ${s.neto>=0?"tg":"tr"}`}>{fmtM(s.neto)}</span></td>
+                  <td><button onClick={()=>deleteRow("Saldos",s._i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
+                </tr>)}</tbody></table></div>}
+            </div>;})()}
+        </div>}
+
+        {tab==="compras"&&<div className="gap">
+          <div className="abar"/>
             <div className="sh"><span className="st">Pedido semanal SUBATIR</span><span className="ss">Se pide el lunes, llega el miércoles · escenario {(ESCENARIOS.find(e=>e.k===escSel)||{}).n} ({(PS.crec>=0?"+":"")+fmt(PS.crec,1)}%)</span></div>
             {(()=>{const f0=PS.filas[0]; const E=PS.extra; return <>
             <div className="grid4">
@@ -2405,19 +1853,103 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="fl"><label className="flabel">Pedido extra: kg (0 = sugerido)</label><input type="number" className="finput" value={caja.extraKg} onChange={num("extraKg")}/></div>
               <div className="fl"><label className="flabel">Pedido extra: lunes (vacío = sugerido)</label><input type="date" className="finput" value={caja.extraFecha||""} onChange={e=>setCaja({extraFecha:e.target.value})}/></div>
             </div>
-            <div className="tsm" style={{marginTop:8}}>Ventas de cada día = venta proyectada del mes (escenario elegido abajo) ÷ días hábiles. Lo necesario es el % de SUBATIR sobre esas ventas, a costo. Si una semana necesita menos que el tope, pedí solo lo necesario para no subir el stock. El precio por kg sale del pedido del 12/10 (2.650 kg ≈ $157.000); actualizalo cuando cambie. Diciembre se reparte parejo en el mes; en la práctica las últimas dos semanas venden más. Faltante en amarillo: es poco, alcanza con pedir un poco más del tope (como los 2.650 kg del 12/10). En rojo: hace falta un segundo pedido esa semana o ampliar el tope.</div></div>
+            <div className="tsm" style={{marginTop:8}}>Ventas de cada día = venta proyectada del mes (escenario elegido en Proyección) ÷ días hábiles. Lo necesario es el % de SUBATIR sobre esas ventas, a costo. Si una semana necesita menos que el tope, pedí solo lo necesario para no subir el stock. El precio por kg sale del pedido del 12/10 (2.650 kg ≈ $157.000); actualizalo cuando cambie. Diciembre se reparte parejo en el mes; en la práctica las últimas dos semanas venden más. Faltante en amarillo: es poco, alcanza con pedir un poco más del tope (como los 2.650 kg del 12/10). En rojo: hace falta un segundo pedido esa semana o ampliar el tope.</div></div>
             </>;})()}
+            <div className="sh"><span className="st">Stock valorizado</span><span className="ss">A costo · cobertura y crecimiento</span></div>
+            {(()=>{
+              const fechas=new Set(sheetStock.map(s=>s.fecha));
+              const lista=[...STOCK_HIST.filter(s=>!fechas.has(s.fecha)).map(s=>({...s,_base:true})),...sheetStock.map((s,i)=>({...s,_i:i}))];
+              const A=analizarStock(lista);
+              const objetivo=metaCob*COMPRAS_PROM_MES; const exced=A?A.ult.valor-objetivo:0;
+              const fF=s=>{const p=s.split("-");return `${p[2]}/${p[1]}/${p[0]}`;};
+              return <>
+              <div className="grid4">
+                <div className="card"><div className="ctitle">Stock al {A?fF(A.ult.fecha):"—"}</div><div className="cval ac">{A?fmtM(A.ult.valor):"—"}</div><div className="csub">Valorizado a costo</div></div>
+                <div className="card"><div className="ctitle">Cobertura</div><div className="cval">{A?fmt(A.cobertura,1):"—"} meses</div><div className="csub">Sobre compras promedio de {fmtM(COMPRAS_PROM_MES)}/mes</div>
+                  {A&&<div className={`delta ${A.cobertura<=metaCob+0.2?"up":"wr"}`}>{A.cobertura<=metaCob+0.2?"Dentro de la meta":`Meta: ${fmt(metaCob,1)} meses`}</div>}</div>
+                <div className="card"><div className="ctitle">Stock vs ventas (12 meses)</div><div className="cval">{A&&A.stockVar!=null?`${A.stockVar>=0?"+":""}${fmt(A.stockVar,1)}%`:"—"}</div><div className="csub">Ventas: {A&&A.ventasVar!=null?`${A.ventasVar>=0?"+":""}${fmt(A.ventasVar,1)}%`:"—"}</div>
+                  {A&&A.stockVar!=null&&A.ventasVar!=null&&<div className={`delta ${A.stockVar>A.ventasVar+5?"dn":"up"}`}>{A.stockVar>A.ventasVar+5?"El stock crece más rápido que las ventas":"Crece en línea con las ventas"}</div>}</div>
+                <div className="card"><div className="ctitle">{exced>0?"Excedente sobre la meta":"Margen hasta la meta"}</div><div className="cval" style={{color:exced>0?"#B45309":"#14532D"}}>{fmtM(Math.abs(exced))}</div><div className="csub">Meta: {fmt(metaCob,1)} meses = {fmtM(objetivo)}</div></div>
+              </div>
+              {A&&A.stockVar!=null&&A.ventasVar!=null&&A.stockVar>A.ventasVar+5&&<div className="banner" style={{borderColor:"#B45309"}}>⚠️ En el último año el stock creció {fmt(A.stockVar,1)}% y las ventas {fmt(A.ventasVar,1)}%. Esa diferencia es plata inmovilizada que hoy financia el sobregiro: conviene reponer menos de lo que rota lento.</div>}
+              <div className="card">
+                <div className="fg">
+                  <div className="fl"><label className="flabel">Fecha de la valuación</label><input type="date" className="finput" value={stF.fecha} onChange={e=>setStF(p=>({...p,fecha:e.target.value}))}/></div>
+                  <div className="fl"><label className="flabel">Valor del stock a costo ($)</label><input type="number" className="finput" placeholder="ej: 3890000" value={stF.valor} onChange={e=>setStF(p=>({...p,valor:e.target.value}))}/></div>
+                  <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={stF.obs} onChange={e=>setStF(p=>({...p,obs:e.target.value}))}/></div>
+                  <div className="fl"><label className="flabel">Meta de cobertura (meses)</label><input type="number" step="0.1" className="finput" value={metaCob} onChange={e=>{const v=Number(e.target.value);setMetaCob(v);try{localStorage.setItem("prolimpio_meta_cob",String(v));}catch(x){}}}/></div>
+                </div>
+                <button className="btn btn-p" style={{marginTop:12}} onClick={saveStock}>💾 Guardar valuación</button>
+                <div className="tw" style={{marginTop:12}}><table><thead><tr><th>Fecha</th><th>Valor</th><th>Cobertura</th><th>Obs.</th><th></th></tr></thead>
+                  <tbody>{A?[...A.lista].reverse().map((s,k)=><tr key={k}><td>{fF(s.fecha)}</td><td className="tac">{fmtM(s.valor)}</td><td>{fmt(s.valor/COMPRAS_PROM_MES,1)} meses</td><td className="tsm">{s.obs||"—"}</td>
+                    <td>{s._base?<span className="tsm">base</span>:<button onClick={()=>deleteRow("Stock",s._i)} style={{background:"rgba(232,68,0,0.12)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.85rem"}}>✕</button>}</td></tr>):null}</tbody></table></div>
+                <div className="tsm" style={{marginTop:8}}>Ideal: cargar una valuación por mes, a fin de mes. La cobertura usa el promedio de compras de 2026 (sin cuotas de créditos).</div>
+              </div>
+              </>;
+            })()}
+          {/* Condiciones de pago */}
+          <div className="sh"><span className="st">Condiciones de pago proveedores</span><span className="ss">Plazos acordados</span></div>
+          <div className="grid4">
+            {[
+              {proveedor:"SUBATIR",plazo:"45 días",pct:"38.1%",color:"#e84400"},
+              {proveedor:"Estuario Platino",plazo:"60 días",pct:"~8%",color:"#9A3412"},
+              {proveedor:"JASPE",plazo:"45 días",pct:"~4%",color:"#9A3412"},
+              {proveedor:"Resto proveedores",plazo:"30 días",pct:"~50%",color:"#7a3800"},
+            ].map((p,i)=><div key={i} className="card">
+              <div className="ctitle">{p.proveedor}</div>
+              <div className="cval" style={{fontSize:"1.4rem",color:p.color}}>{p.plazo}</div>
+              <div className="csub">{p.pct} del total de compras</div>
+            </div>)}
+          </div>
+          {/* Evolucion compras SUBATIR por año */}
+          <div><div className="sh"><span className="st">Evolución compras SUBATIR</span><span className="ss">2022–2026 por mes</span></div>
+          <div className="card"><div className="ch">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"].map((m,i)=>({
+                mes:m,
+                "2023":COMPRAS_SUBATIR["2023"][i],
+                "2024":COMPRAS_SUBATIR["2024"][i],
+                "2025":COMPRAS_SUBATIR["2025"][i],
+                "2026":COMPRAS_SUBATIR["2026"][i],
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
+                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
+                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
+                <Tooltip content={<TT/>}/>
+                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+                <Line type="monotone" dataKey="2023" stroke="#4a2000" dot={false} strokeWidth={2}/>
+                <Line type="monotone" dataKey="2024" stroke="#7a3800" dot={false} strokeWidth={2}/>
+                <Line type="monotone" dataKey="2025" stroke="#d4956a" dot={false} strokeWidth={2}/>
+                <Line type="monotone" dataKey="2026" stroke="#e84400" dot={false} strokeWidth={2.5} strokeDasharray="5 3"/>
+              </LineChart>
+            </ResponsiveContainer>
+          </div></div></div>
+          {/* Tabla comparativa proveedores por año */}
+          <div className="sh"><span className="st">Compras por proveedor — resumen anual</span></div>
+          <div className="card tw"><table><thead>
+            <tr><th>Proveedor</th><th>Plazo</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 (Ene-Jun)</th></tr>
+          </thead><tbody>
+            {[
+              {p:"SUBATIR",plazo:"45 días",data:COMPRAS_SUBATIR},
+              {p:"Estuario Platino",plazo:"60 días",data:COMPRAS_ESTUARIO},
+              {p:"JASPE",plazo:"45 días",data:COMPRAS_JASPE},
+            ].map((r,i)=>{
+              const tot = (yr) => r.data[yr].filter(v=>v!=null).reduce((s,v)=>s+v,0);
+              return <tr key={i}>
+                <td style={{fontWeight:600}}>{r.p}</td>
+                <td><span className="tag ty">{r.plazo}</span></td>
+                <td>{fmtM(tot("2022"))}</td>
+                <td>{fmtM(tot("2023"))}</td>
+                <td>{fmtM(tot("2024"))}</td>
+                <td>{fmtM(tot("2025"))}</td>
+                <td>{fmtM(tot("2026"))}</td>
+              </tr>;
+            })}
+          </tbody></table></div>
+        </div>}
 
-            <div className="sh"><span className="st">Crecimiento real de ventas</span><span className="ss">Cada mes contra el mismo mes del año anterior</span></div>
-            <div className="grid4">
-              <div className="card" style={{borderLeft:"4px solid #1D4ED8"}}><div className="ctitle">Tendencia (últimos 3 meses)</div><div className="cval" style={{color:"#1D4ED8"}}>{(CR.tend>=0?"+":"")+fmt(CR.tend,1)}%</div><div className="csub">{CR.u3.join(", ")} · es el escenario "Tendencia real"</div></div>
-              <div className="card"><div className="ctitle">Acumulado {CR.anio}</div><div className="cval">{(CR.ytd>=0?"+":"")+fmt(CR.ytd,1)}%</div><div className="csub">Meses cerrados del año</div></div>
-              {CR.curso&&<div className="card"><div className="ctitle">{CR.curso.mes} en curso</div><div className="cval">{(CR.curso.pct>=0?"+":"")+fmt(CR.curso.pct,1)}%</div><div className="csub">{CR.curso.dias} días: {fmtM(CR.curso.pdA)}/día vs {fmtM(CR.curso.pdP)}/día el año pasado</div></div>}
-            </div>
-            <div className="card tw"><table><thead><tr><th>Mes</th><th>Año anterior</th><th>Este año</th><th>Crecimiento</th></tr></thead>
-              <tbody>{[...CR.meses].reverse().slice(0,12).map((x,i)=><tr key={i}><td style={{fontWeight:600}}>{x.mes}</td><td>{fmtM(x.vPrev)}</td><td>{fmtM(x.v)}</td>
-                <td><span className={`tag ${x.pct>=10?"tg":x.pct>=0?"ty":"tr"}`}>{(x.pct>=0?"+":"")+fmt(x.pct,1)}%</span></td></tr>)}</tbody></table></div>
-
+        {tab==="proy"&&<div className="gap">
+          <div className="abar"/>
             <div className="sh"><span className="st">Saldo proyectado</span><span className="ss">Próximos 15 meses · 4 escenarios de crecimiento</span></div>
             <div className="card">
               <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:10}}>
@@ -2440,35 +1972,39 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             </div>
               <div className="tsm" style={{marginTop:6}}>Tocá un escenario para ver su detalle abajo. El elegido también se usa para el retiro sugerido, las alertas y el informe PDF.</div>
             </div>
-            <div className="card tw"><table><thead><tr><th>Mes</th><th>Ventas est.</th><th>Costos est.</th><th>de ellos fijos</th><th>Deudas</th><th>Retiro</th><th>Saldo</th></tr></thead>
+            <div className="card tw"><table className="tcomp thist"><thead><tr><th>Mes</th><th>Ventas</th><th>Costos</th><th>Deudas</th><th>Retiro</th><th>Saldo</th></tr></thead>
               <tbody>{proy.map((p,i)=><tr key={i}>
-                <td style={{fontWeight:600}}>{p.mes}</td><td>{fmtM(p.ventas)}</td><td>{fmtM(p.costos)}</td><td className="tsm">{fmtM(p.fijos)}</td><td>{fmtM(p.deuda)}</td><td>{fmtM(p.retiro)}</td>
-                <td><span className={`tag ${p.saldo>=0?"tg":p.saldo>=caja.alerta?"ty":"tr"}`}>{fmtM(p.saldo)}</span></td>
+                <td style={{fontWeight:600,whiteSpace:"nowrap"}}>{p.mes}</td><td>{cM(p.ventas)}</td><td>{cM(p.costos)}<div className="tsm">fijos {cM(p.fijos)}</div></td><td>{cM(p.deuda)}</td><td>{cM(p.retiro)}</td>
+                <td><span className={`tag ${p.saldo>=0?"tg":p.saldo>=caja.alerta?"ty":"tr"}`}>{cM(p.saldo)}</span></td>
               </tr>)}</tbody></table></div>
+            <div className="sh"><span className="st">Retiros de {MESES[mIdx]}</span><span className="ss">Registro y control</span></div>
+            <div className="grid4">
+              <div className="card"><div className="ctitle">Retirado este mes</div><div className="cval ac">{fmtM(retiradoMes)}</div><div className="csub">{delMes.length} movimientos</div></div>
+              <div className="card"><div className="ctitle">Sugerido este mes</div><div className="cval">{fmtM(sugerido)}</div><div className="csub">{(yAct<2027||(yAct===2027&&mIdx===0))?"Monto fijo":`${fmtM(caja.retiroFijo2)} + ${caja.retiroPct}% de ventas`}</div>
+                <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div></div>
+              <div className="card"><div className="ctitle">Retirado en {yAct}</div><div className="cval">{fmtM(anioRet)}</div><div className="csub">Registrado en la app</div></div>
+              <div className="card"><div className="ctitle">Saldo más bajo proyectado</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
+            </div>
 
-            <div className="sh"><span className="st">Saldos bancarios</span><span className="ss">Guardalos con fecha para llevar el registro</span></div>
-            {(()=>{const neto=Math.round((Number(caja.brou)||0)+(Number(caja.santUyu)||0)+(Number(caja.santUsd)||0)*(Number(caja.tc)||0));
-            const setAcc=(k)=>e=>{const v={[k]:Number(e.target.value)};const n={...caja,...v};setCaja({...v,saldo:Math.round((Number(n.brou)||0)+(Number(n.santUyu)||0)+(Number(n.santUsd)||0)*(Number(n.tc)||0))});};
-            return <div className="card">
+            {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
+             :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}). Ese mes conviene reducir la parte variable del retiro.</div>
+             :<div className="banner">✓ Con este plan el saldo no baja de tu límite de alerta en los próximos 15 meses.</div>}
+
+            <div className="card">
               <div className="fg">
-                <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={caja.saldoFecha} onChange={e=>setCaja({saldoFecha:e.target.value})}/></div>
-                <div className="fl"><label className="flabel">BROU ($)</label><input type="number" className="finput" value={caja.brou} onChange={setAcc("brou")}/></div>
-                <div className="fl"><label className="flabel">Santander ($) — negativo si es sobregiro</label><input type="number" className="finput" value={caja.santUyu} onChange={setAcc("santUyu")}/></div>
-                <div className="fl"><label className="flabel">Santander (USD)</label><input type="number" className="finput" value={caja.santUsd} onChange={setAcc("santUsd")}/></div>
-                <div className="fl"><label className="flabel">Tipo de cambio ($/USD)</label><input type="number" className="finput" value={caja.tc} onChange={setAcc("tc")}/></div>
+                <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={rF.fecha} onChange={e=>setRF(p=>({...p,fecha:e.target.value}))}/></div>
+                <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 100000" value={rF.monto} onChange={e=>setRF(p=>({...p,monto:e.target.value}))}/></div>
+                <div className="fl"><label className="flabel">Tipo</label><select className="finput" value={rF.tipo} onChange={e=>setRF(p=>({...p,tipo:e.target.value}))}><option>Fijo</option><option>Variable</option><option>Adelanto</option></select></div>
+                <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={rF.obs} onChange={e=>setRF(p=>({...p,obs:e.target.value}))}/></div>
               </div>
-              <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-                <div><div className="ctitle">Neto en pesos</div><div className="cval" style={{color:neto<0?"#B91C1C":""}}>{fmtM(neto)}</div></div>
-                <button className="btn btn-p" onClick={saveSaldo}>💾 Guardar saldo</button>
-              </div>
-              {sheetSaldos.length>0&&<div className="tw" style={{marginTop:12}}><table><thead><tr><th>Fecha</th><th>BROU</th><th>Sant. $</th><th>Sant. USD</th><th>TC</th><th>Neto</th><th></th></tr></thead>
-                <tbody>{sheetSaldos.map((s,i)=>({...s,_i:i})).sort((a,b)=>a.fecha<b.fecha?1:-1).slice(0,12).map(s=><tr key={s._i}>
-                  <td>{s.fecha}</td><td>{fmtM(s.brou)}</td><td>{fmtM(s.santUyu)}</td><td>USD {fmt(s.santUsd)}</td><td>{s.tc}</td>
-                  <td><span className={`tag ${s.neto>=0?"tg":"tr"}`}>{fmtM(s.neto)}</span></td>
-                  <td><button onClick={()=>deleteRow("Saldos",s._i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
-                </tr>)}</tbody></table></div>}
-            </div>;})()}
+              <button className="btn" style={{marginTop:12}} onClick={saveRetiro}>💾 Guardar retiro</button>
+            </div>
 
+            {sheetRetiros.length>0&&<div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead>
+              <tbody>{[...sheetRetiros.map((r,i)=>({...r,_i:i}))].reverse().slice(0,24).map(r=><tr key={r._i}>
+                <td>{r.fecha}</td><td className="tac">{fmtM(Number(r.monto)||0)}</td><td><span className="tag ty">{r.tipo}</span></td><td className="tsm">{r.obs||"—"}</td>
+                <td><button onClick={()=>deleteRow("Retiros",r._i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td>
+              </tr>)}</tbody></table></div>}
             <div className="sh"><span className="st">Datos de partida</span><span className="ss">Actualizalos cuando cambien</span></div>
             <div className="card"><div className="fg">
 
@@ -2491,8 +2027,58 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="tsm" style={{marginTop:10}}>El saldo de partida es el neto de las tres cuentas guardado arriba. Incluye cuota Candela (~$19.600 hasta jun-28) y Santander ($53.347 hasta dic-26). Ventas de cada mes = el mismo mes del año anterior más el crecimiento del escenario. Costos = gastos fijos (suben con la inflación desde enero) + mercadería e IVA como % de las ventas, pagados mitad en el mes y mitad el mes siguiente; para octubre a diciembre 2026 se usan los gastos ya programados en la planilla cuando son mayores que el estimado. Últimos 12 meses reales: fijos ~$366.000/mes y variable 67,7% (2025: 65,3%; 2026 con el stock de más: 71,6%). A los costos se suma la comisión de los bancos por tarjetas: la real medida en Caja si hay meses cerrados con datos, si no el % configurado. Estos datos se guardan en este dispositivo.</div>
             <button className="btn" style={{marginTop:10,background:"var(--bg3)"}} onClick={()=>setCaja(CAJA_DEFAULT)}>Restablecer valores</button>
             </div>
-            </>;
-          })()}
+        </div>}
+
+        {tab==="carga"&&<div className="gap">
+          <div className="abar"/>
+          {!token&&<div className="banner">🔗 <span>Para guardar datos en Google Sheets, <strong style={{color:"#C2410C",cursor:"pointer"}} onClick={handleLogin}>conectate primero</strong> tocando el botón arriba.</span></div>}
+          <div className="sh"><span className="st">Registrar venta diaria</span></div>
+          <div className="card">
+            <div className="fg">
+              <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={vF.fecha} onChange={e=>setVF(p=>({...p,fecha:e.target.value}))}/></div>
+              <div className="fl"><label className="flabel">Monto del día ($)</label><input type="number" className="finput" placeholder="ej: 85000" value={vF.monto} onChange={e=>setVF(p=>({...p,monto:e.target.value}))}/></div>
+              <div className="fl" style={{gridColumn:"1/-1"}}><label className="flabel">Observación (opcional)</label><input type="text" className="finput" placeholder="ej: lluvia, feriado, Olkany..." value={vF.obs} onChange={e=>setVF(p=>({...p,obs:e.target.value}))}/></div>
+            </div>
+            <div className="factions"><button className="btn btn-p" onClick={saveVenta}>✓ Guardar en Sheets</button><span className="tsm">{token?"Se guarda directo en tu Google Sheet":"Conectate a Sheets primero"}</span></div>
+          </div>
+          <div className="sh"><span className="st">Registrar tickets del mes</span></div>
+          <div className="card"><div className="fg">
+            <div className="fl"><label className="flabel">Mes</label><select className="fsel" value={tkF.mes} onChange={e=>setTkF(p=>({...p,mes:Number(e.target.value)}))}>
+              {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select></div>
+            <div className="fl"><label className="flabel">Año</label><select className="fsel" value={tkF.anio} onChange={e=>setTkF(p=>({...p,anio:Number(e.target.value)}))}>
+              {[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</select></div>
+            <div className="fl"><label className="flabel">Cantidad emitidos</label><input type="number" className="finput" placeholder="ej: 1750" value={tkF.cantidad} onChange={e=>setTkF(p=>({...p,cantidad:e.target.value}))}/></div>
+            <div className="fl"><label className="flabel">Valor promedio ($)</label><input type="number" className="finput" placeholder="ej: 680" value={tkF.promedio} onChange={e=>setTkF(p=>({...p,promedio:e.target.value}))}/></div>
+            <div className="fl"><label className="flabel">Días trabajados</label><input type="number" className="finput" placeholder="ej: 26" value={tkF.dias} onChange={e=>setTkF(p=>({...p,dias:e.target.value}))}/></div>
+          </div><div className="factions"><button className="btn btn-p" onClick={saveTicket}>✓ Guardar en Sheets</button></div></div>
+          <div className="sh"><span className="st">Registrar compra / deuda</span></div>
+          <div className="card">
+            <div className="fg">
+              <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={cF.fecha} onChange={e=>setCF(p=>({...p,fecha:e.target.value}))}/></div>
+              <div className="fl"><label className="flabel">Nº de factura</label><input type="text" className="finput" placeholder="ej: A12345" value={cF.factura} onChange={e=>setCF(p=>({...p,factura:e.target.value}))}/></div>
+              <div className="fl"><label className="flabel">Proveedor</label>
+                <select className="fsel" value={cF.proveedor} onChange={e=>setCF(p=>({...p,proveedor:e.target.value}))}>
+                  <option value="">— Seleccioná —</option>
+                  {PROVEEDORES.map(p=><option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 150000" value={cF.monto} onChange={e=>setCF(p=>({...p,monto:e.target.value}))}/></div>
+              <div className="fl" style={{gridColumn:"1/-1"}}><label className="flabel">Observación</label><input type="text" className="finput" placeholder="ej: vence 15/06, USD 350..." value={cF.obs} onChange={e=>setCF(p=>({...p,obs:e.target.value}))}/></div>
+            </div>
+            <div className="factions"><button className="btn btn-p" onClick={saveCompra}>✓ Guardar en Sheets</button></div>
+          </div>
+          <div className="tsm" style={{padding:"0 4px"}}>Retiros, saldos bancarios, pagos y stock se cargan en sus pestañas (🔮 Proyección, 💳 Pagos y 📦 Compras).</div>
+          <details className="card"><summary style={{cursor:"pointer",color:"var(--text2)",fontSize:".95rem",fontWeight:600}}>Ver lo guardado en Google Sheets (para corregir o borrar)</summary>
+          {sheetVentas.length>0&&<><div className="sh"><span className="st">Ventas en Google Sheets</span><span className="ss">{sheetVentas.length} registros</span></div>
+          <div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Obs.</th></tr></thead>
+          <tbody>{sheetVentas.slice(0,20).map((v,i)=><tr key={i}><td>{v.fecha}</td><td className="tac">${fmt(Number(v.monto))}</td><td className="tsm">{v.obs||"—"}</td><td><button onClick={()=>deleteRow("Ventas",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
+          {sheetTickets.length>0&&<><div className="sh"><span className="st">Tickets en Google Sheets</span><span className="ss">{sheetTickets.length} registros</span></div>
+          <div className="card tw"><table><thead><tr><th>Mes</th><th>Año</th><th>Cantidad</th><th>Prom $</th><th>Días</th></tr></thead>
+          <tbody>{sheetTickets.map((t,i)=><tr key={i}><td>{t.mes}</td><td>{t.anio}</td><td>{fmt(Number(t.cantidad))}</td><td>${fmt(Number(t.promedio),0)}</td><td>{t.dias||"—"}</td><td><button onClick={()=>deleteRow("Tickets",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
+          {sheetCompras.length>0&&<><div className="sh"><span className="st">Compras en Google Sheets</span><span className="ss">{sheetCompras.length} registros</span></div>
+          <div className="card tw"><table><thead><tr><th>Fecha</th><th>Factura</th><th>Proveedor</th><th>Monto</th><th>Obs.</th></tr></thead>
+          <tbody>{sheetCompras.slice(0,20).map((c,i)=><tr key={i}><td>{c.fecha}</td><td className="tsm">{c.factura||"—"}</td><td>{c.proveedor}</td><td className="tac">${fmt(Number(c.monto))}</td><td className="tsm">{c.obs||"—"}</td><td><button onClick={()=>deleteRow("Compras",i)} style={{background:"rgba(232,68,0,0.15)",border:"none",color:"#C2410C",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:"0.78rem"}}>✕</button></td></tr>)}</tbody></table></div></>}
+          </details>
         </div>}
 
         {tab==="informes"&&<div className="gap">
@@ -2519,10 +2105,6 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             </div>
             <div className="tsm" style={{marginTop:12}}>En el iPhone, "Compartir" abre el menú del sistema: elegí WhatsApp y el contacto. Para el informe de caja conviene tener Sheets conectado, así incluye tus retiros.</div>
           </div>
-        </div>}
-
-        {tab==="ai"&&<div className="gap">
-          <div className="abar"/>
           <div className="sh"><span className="st">Análisis con IA</span><span className="ss">Basado en tus datos reales</span></div>
           <div className="card">
             <div className="ctitle">Clave de OpenRouter</div>
@@ -2577,6 +2159,208 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               </div>
             </div>
           </div>
+        </div>}
+
+        {tab==="historial"&&<div className="gap">
+          <div className="abar"/>
+          <div className="sh"><span className="st">Historial mes a mes</span>
+            <select value={histAnio} onChange={e=>setHistAnio(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",color:"var(--text)",fontFamily:"var(--font)",fontSize:".95rem",padding:"7px 10px",outline:"none"}}>
+              {["2022","2023","2024","2025","2026"].map(y=><option key={y}>{y}</option>)}
+            </select>
+          </div>
+          {(()=>{
+            const y=histAnio, k=y.slice(2), prev=String(+y-1);
+            const isoF=x=>{const t=String(x||"");const m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:t;};
+            const saldos=[...sheetSaldos.map(s=>({fecha:isoF(s.fecha),neto:s.neto,ts:s.ts||""})),{fecha:SALDO_REF.fecha,neto:SALDO_REF.brou+SALDO_REF.santUyu,ts:SALDO_REF.ts}];
+            const saldoMes=i=>{const pre=`${y}-${String(i+1).padStart(2,"0")}`;const l=saldos.filter(s=>s.fecha.startsWith(pre)).sort((a,b)=>a.fecha!==b.fecha?(a.fecha<b.fecha?1:-1):(a.ts<b.ts?1:-1));return l[0]||null;};
+            const rows=VM.map((r,i)=>{const v=r[y], vP=r[prev]; const enCurso=v==null&&+y===yAct&&i===mIdx&&RMC.total>0;
+              const tk=TK[i]?.["c"+k]??(enCurso&&TK_CURSO.mes===i&&TK_CURSO.anio===+y?TK_CURSO.cantidad:null), tp=TK[i]?.["p"+k]??(enCurso&&TK_CURSO.mes===i?TK_CURSO.promedio:null);
+              const g=v!=null?gastoTotal(y,i):null, d=DEUDA_PAGOS[y]?.[i]||0, op=(v!=null&&g!=null)?v-g+d:null;
+              return {mes:r.mes,i,v:v??(enCurso?RMC.total:null),enCurso,vP,crec:v!=null&&vP?(v/vP-1)*100:null,tk,tp,g,op,opPct:op!=null&&v?op/v*100:null,saldo:saldoMes(i)};});
+            const cer=rows.filter(r=>r.v!=null&&!r.enCurso); const sum=f=>cer.reduce((s,r)=>s+(f(r)||0),0);
+            const tV=sum(r=>r.v), tP=sum(r=>r.vP), tTk=sum(r=>r.tk), tG=sum(r=>r.g), tOp=sum(r=>r.op);
+            const tpProm=tTk?cer.reduce((s,r)=>s+(r.tk||0)*(r.tp||0),0)/tTk:null;
+            const vis=rows.filter(r=>r.v!=null||r.saldo);
+            return <>
+            <div className="grid4">
+              <div className="card"><div className="ctitle">Ventas {y}{cer.length<12?` (${cer.length} meses)`:""}</div><div className="cval ac">{fmtM(tV)}</div>{tP?<div className={`delta ${tV>=tP?"up":"dn"}`}>{tV>=tP?"▲":"▼"} {fmt(Math.abs((tV/tP-1)*100),1)}% vs mismos meses de {prev}</div>:null}</div>
+              <div className="card"><div className="ctitle">Tickets {y}</div><div className="cval">{tTk?fmt(tTk):"—"}</div><div className="csub">{tpProm?`Ticket promedio $${fmt(tpProm,0)}`:"Sin datos de tickets"}</div></div>
+              <div className="card"><div className="ctitle">Gastos {y}</div><div className="cval">{fmtM(tG)}</div><div className="csub">Incluye comisión de bancos</div></div>
+              <div className="card"><div className="ctitle">Resultado operativo {y}</div><div className="cval" style={{color:tOp>=0?"#14532D":"#B91C1C"}}>{fmtM(tOp)}</div><div className="csub">{tV?`${fmt(tOp/tV*100,1)}% de las ventas · sin pagos de préstamos`:""}</div></div>
+            </div>
+            <div className="card tw"><table className="tcomp thist"><thead><tr><th>Mes</th><th>Ventas</th><th>Tickets</th><th>Gastos</th><th>Resultado</th><th>Banco</th></tr></thead>
+              <tbody>{vis.map(r=><tr key={r.i}>
+                <td style={{fontWeight:600}}>{r.mes}</td>
+                <td style={{whiteSpace:"nowrap"}}>{r.v!=null?cM(r.v):"—"}<div className="tsm">{r.enCurso?`${RMC.dias} días`:r.crec!=null?`${r.crec>=0?"+":""}${fmt(r.crec,1)}%`:""}</div></td>
+                <td style={{whiteSpace:"nowrap"}}>{r.tk!=null?fmt(r.tk):"—"}<div className="tsm">{r.tp?`$${fmt(r.tp,0)}`:""}</div></td>
+                <td style={{whiteSpace:"nowrap"}}>{r.g!=null?cM(r.g):"—"}</td>
+                <td style={{whiteSpace:"nowrap"}}>{r.op!=null?<span className={`tag ${r.opPct>=10?"tg":r.opPct>=0?"ty":"tr"}`}>{cM(r.op)}</span>:"—"}<div className="tsm">{r.opPct!=null?`${fmt(r.opPct,1)}%`:""}</div></td>
+                <td style={{whiteSpace:"nowrap"}}>{r.saldo?<span style={{color:r.saldo.neto<0?"#B91C1C":"#14532D"}}>{cM(r.saldo.neto)}</span>:"—"}<div className="tsm">{r.saldo?fD(r.saldo.fecha):""}</div></td>
+              </tr>)}
+              <tr><td style={{fontWeight:700}}>Total</td><td style={{fontWeight:700,whiteSpace:"nowrap"}}>{cM(tV)}</td><td style={{fontWeight:700}}>{tTk?fmt(tTk):"—"}</td><td style={{fontWeight:700,whiteSpace:"nowrap"}}>{cM(tG)}</td><td style={{fontWeight:700,whiteSpace:"nowrap"}}>{cM(tOp)}</td><td></td></tr>
+              </tbody></table>
+              <div className="tsm" style={{padding:"8px 4px"}}>Resultado = ventas − gastos de la planilla − comisión de bancos, sin contar las cuotas de préstamos. Saldo banco = el último saldo guardado de ese mes (BROU + Santander). Los totales son de los meses cerrados.</div></div>
+            </>;
+          })()}
+          <div className="sh"><span className="st">Resumen por año</span></div>
+          {(()=>{const ys=["2022","2023","2024","2025","2026"];
+            const D=ys.map(y=>{const k=y.slice(2);const n=TG_REAL[y].filter(x=>x!=null).length;const v=VM.slice(0,n).reduce((s,r)=>s+(r[y]||0),0);const vP=+y>2022?VM.slice(0,n).reduce((s,r)=>s+(r[String(+y-1)]||0),0):null;
+              const g=TG_REAL[y].slice(0,n).reduce((s,x,j)=>s+(gastoTotal(y,j)||0),0);const d=DEUDA_PAGOS[y].slice(0,n).reduce((s,x)=>s+(x||0),0);const tk=TK.slice(0,n).reduce((s,r)=>s+(r["c"+k]||0),0);
+              return {y,n,v,crec:vP?(v/vP-1)*100:null,tk,g,op:v-g+d,opPct:v?(v-g+d)/v*100:0};});
+            return <div className="card tw"><table className="tcomp thist"><thead><tr><th>Año</th><th>Ventas</th><th>Tickets</th><th>Gastos</th><th>Resultado</th></tr></thead>
+              <tbody>{D.map(r=><tr key={r.y} onClick={()=>setHistAnio(r.y)} style={{cursor:"pointer",background:r.y===histAnio?"#FFF1E6":""}}>
+                <td style={{fontWeight:600}}>{r.y}{r.n<12?<div className="tsm">{r.n} meses</div>:null}</td>
+                <td style={{whiteSpace:"nowrap"}}>{cM(r.v)}<div className="tsm">{r.crec!=null?`${r.crec>=0?"+":""}${fmt(r.crec,1)}%`:""}</div></td>
+                <td>{r.tk?fmt(r.tk):"—"}</td><td style={{whiteSpace:"nowrap"}}>{cM(r.g)}</td>
+                <td style={{whiteSpace:"nowrap"}}><span className={`tag ${r.opPct>=10?"tg":r.opPct>=0?"ty":"tr"}`}>{cM(r.op)}</span><div className="tsm">{fmt(r.opPct,1)}%</div></td></tr>)}</tbody></table>
+              <div className="tsm" style={{padding:"8px 4px"}}>Tocá un año para verlo arriba mes a mes. El crecimiento compara los mismos meses del año anterior.</div></div>;})()}
+          {/* Ventas vs Gastos con selector */}
+          {(()=>{
+            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
+            return <div><div className="sh">
+              <span className="st">Ventas vs Gastos</span>
+            </div>
+            <div className="card"><div className="ch">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={meses.map((m,i)=>({
+                mes:m,
+                Ventas:VM.find(r=>r.mes===m)?.[histAnio]||null,
+                Gastos:gastosMes(histAnio,i)||null,
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
+                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
+                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
+                <Tooltip content={<TT/>}/>
+                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+                <Bar dataKey="Ventas" fill="#e84400" radius={[3,3,0,0]}/>
+                <Bar dataKey="Gastos" fill="#7a3800" radius={[3,3,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div></div></div>;
+          })()}
+          {/* Grafica gastos por categoria con selector de año */}
+          {(()=>{
+            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
+            return <>
+            <div><div className="sh">
+              <span className="st">Gastos mensuales por categoría</span>
+            </div>
+            <div className="card"><div className="ch" style={{height:300}}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={meses.map((m,i)=>({
+                mes:m,
+                SUBATIR:COMPRAS_SUBATIR[histAnio]?.[i]||null,
+                Estuario:COMPRAS_ESTUARIO[histAnio]?.[i]||null,
+                Empleados:GASTOS.empleados[histAnio]?.[i]||null,
+                Fijos:(GASTOS.alquiler[histAnio]?.[i]||0)+(GASTOS.luz[histAnio]?.[i]||0)+(GASTOS.publicidad[histAnio]?.[i]||0),
+                IVA:GASTOS.iva[histAnio]?.[i]||null,
+                Otros:GASTOS.otros[histAnio]?.[i]||null,
+                Bancos:comisionBanco(histAnio,i),
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F6DCC2"/>
+                <XAxis dataKey="mes" stroke="#7A2E0A" fontSize={12}/>
+                <YAxis stroke="#7A2E0A" fontSize={12} tickFormatter={v=>`${Math.round(v/1000)}k`}/>
+                <Tooltip content={<TT/>}/>
+                <Legend wrapperStyle={{fontSize:"0.9rem",color:"#7A2E0A"}}/>
+                <Bar dataKey="SUBATIR" stackId="a" fill="#e84400" radius={[0,0,0,0]}/>
+                <Bar dataKey="Estuario" stackId="a" fill="#d4956a" radius={[0,0,0,0]}/>
+                <Bar dataKey="Empleados" stackId="a" fill="#7a3800" radius={[0,0,0,0]}/>
+                <Bar dataKey="Fijos" stackId="a" fill="#4a2000" radius={[0,0,0,0]}/>
+                <Bar dataKey="IVA" stackId="a" fill="#3B1206" radius={[0,0,0,0]}/>
+                <Bar dataKey="Bancos" name="Comisión bancos" stackId="a" fill="#B45309" radius={[3,3,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div></div></div>
+          </>;
+          })()}
+          <details className="card"><summary style={{cursor:"pointer",color:"var(--text2)",fontSize:".95rem",fontWeight:600}}>Gastos por rubro, mes a mes ({histAnio})</summary>
+          {/* Tabla detalle */}
+          {(()=>{
+            const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
+            return <>
+            <div className="sh">
+              <span className="st">Detalle mensual</span>
+            </div>
+            <div className="card tw"><table><thead>
+              <tr><th>Mes</th><th>Ventas</th><th>SUBATIR</th><th>Estuario</th><th>Empleados</th><th>Alquiler</th><th>Luz/Tel</th><th>Publicidad</th><th>IVA</th><th>Otros</th><th>Comisión bancos</th><th>Total gastos</th><th>Margen</th><th>%</th></tr>
+            </thead><tbody>
+            {meses.map((m,i)=>{
+              const venta = VM.find(r=>r.mes===m)?.[histAnio]||0;
+              const sub = COMPRAS_SUBATIR[histAnio]?.[i]||0;
+              const est = COMPRAS_ESTUARIO[histAnio]?.[i]||0;
+              const emp = GASTOS.empleados[histAnio]?.[i]||0;
+              const alq = GASTOS.alquiler[histAnio]?.[i]||0;
+              const luz = GASTOS.luz[histAnio]?.[i]||0;
+              const pub = GASTOS.publicidad[histAnio]?.[i]||0;
+              const iva = GASTOS.iva[histAnio]?.[i]||0;
+              const ot = GASTOS.otros[histAnio]?.[i]||0;
+              const ban = comisionBanco(histAnio,i)||0;
+              const banReal = !!COM.real[`${histAnio}-${String(i+1).padStart(2,"0")}`];
+              const total = gastosMes(histAnio,i);
+              const margen = venta - total;
+              const pct_margen = venta>0?((margen/venta)*100):0;
+              if(!venta && !total) return null;
+              return <tr key={i}>
+                <td style={{fontWeight:600}}>{m}</td>
+                <td className="tac">{fmtM(venta)}</td>
+                <td>{fmtM(sub)}</td>
+                <td>{fmtM(est)}</td>
+                <td>{fmtM(emp)}</td>
+                <td>{fmtM(alq)}</td>
+                <td>{fmtM(luz)}</td>
+                <td>{fmtM(pub)}</td>
+                <td>{fmtM(iva)}</td>
+                <td>{fmtM(ot)}</td>
+                <td>{fmtM(ban)}{ban?<div className="tsm">{banReal?"real":"est. "+fmt(COM.pct,1)+"%"}</div>:null}</td>
+                <td style={{fontWeight:600}}>{fmtM(total)}</td>
+                <td><span className={`tag ${margen>=0?"tg":"tr"}`}>{fmtM(margen)}</span></td>
+                <td><span className={`tag ${pct_margen>=5?"tg":pct_margen>=0?"ty":"tr"}`}>{fmt(pct_margen,1)}%</span></td>
+              </tr>;
+            })}
+          </tbody></table></div>
+          </>;
+          })()}
+          </details>
+          <div className="sh"><span className="st">Ventas históricas</span><span className="ss">Todos los años</span>
+            {token&&<button className="btn btn-p" style={{fontSize:"0.8rem",padding:"7px 14px"}} onClick={cargarHistorico}>📥 Cargar histórico a Sheets</button>}
+          </div>
+          <div className="card tw"><table className="tcomp thist"><thead><tr><th>Mes</th><th>2022</th><th>2023</th><th>Δ</th><th>2024</th><th>Δ</th><th>2025</th><th>Δ</th><th>2026</th><th>Δ</th></tr></thead>
+          <tbody>{VM.map((r,i)=>{
+            const tg=v=>v==null?"—":<span className={`tag ${v>=0?"tg":"tr"}`}>{v>=0?"+":""}{fmt(v,1)}%</span>;
+            return<tr key={i}><td style={{fontWeight:600}}>{r.mes}</td>
+              <td>{cM(r["2022"])}</td><td>{cM(r["2023"])}</td><td>{tg(pct(r["2023"],r["2022"]))}</td>
+              <td>{cM(r["2024"])}</td><td>{tg(pct(r["2024"],r["2023"]))}</td>
+              <td>{cM(r["2025"])}</td><td>{tg(pct(r["2025"],r["2024"]))}</td>
+              <td>{r["2026"]?cM(r["2026"]):<span className="tsm">—</span>}</td>
+              <td>{r["2026"]?tg(pct(r["2026"],r["2025"])):"—"}</td>
+            </tr>;
+          })}</tbody></table></div>
+          <div className="sh"><span className="st">Crecimiento real anual</span></div>
+          <div className="card tw">
+            <div className="tsm" style={{padding:"8px 12px 4px",color:"#7A2E0A"}}>Inflación según datos oficiales INE Uruguay</div>
+            <table><thead><tr><th>Período</th><th>Crec. nominal</th><th>Inflación real INE</th><th>Crec. real</th><th>Resultado</th></tr></thead>
+          <tbody>{[
+            {p:"2022 (apertura)",n:null,i:9.95,src:"INE 2022"},
+            {p:"2023 vs 2022",n:7.6,i:8.26,src:"INE 2023"},
+            {p:"2024 vs 2023",n:24.05,i:5.11,src:"INE 2024"},
+            {p:"2025 vs 2024",n:36.7,i:6.36,src:"INE 2025"},
+            {p:`2026 vs 2025 (${CR.u3.length?"Ene–"+CR.meses[CR.meses.length-1].mes.slice(0,3):""})`,n:Math.round(CR.ytd*10)/10,i:INF_ANUAL["2026"],src:"estimada"},
+          ].map((r,i)=>{
+            if(r.n===null) return <tr key={i}>
+              <td style={{fontWeight:600}}>{r.p}</td>
+              <td className="tsm">—</td>
+              <td className="tsm">{fmt(r.i,2)}% ({r.src})</td>
+              <td className="tsm">—</td>
+              <td className="tsm">Primer año</td>
+            </tr>;
+            const real=r.n-r.i;
+            return<tr key={i}><td style={{fontWeight:600}}>{r.p}</td>
+              <td className="tac">+{fmt(r.n,1)}%</td>
+              <td className="tsm">{fmt(r.i,2)}% <span style={{color:"#8A4A2A",fontSize:"0.8rem"}}>({r.src})</span></td>
+              <td><span className={`tag ${real>=0?"tg":"tr"}`}>{real>=0?"+":""}{fmt(real,1)}% real</span></td>
+              <td>{real>=10?"🚀 Excelente":real>=3?"📈 Bueno":real>=0?"➡️ Estable":"⚠️ Caída"}</td>
+            </tr>;
+          })}</tbody></table></div>
         </div>}
 
       </main>
