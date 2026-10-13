@@ -2109,7 +2109,17 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             </div>
             <div className="factions"><button className="btn btn-p" onClick={saveCompra}>✓ Guardar en Sheets</button></div>
           </div>
-          <div className="tsm" style={{padding:"0 4px"}}>Retiros, saldos bancarios, pagos y stock se cargan en sus pestañas (🔮 Proyección, 💳 Pagos y 📦 Compras).</div>
+          <div className="sh"><span className="st">Registrar retiro</span><span className="ss">Plata que sacás del negocio, incluidas cuentas personales pagadas desde el banco</span></div>
+          <div className="card">
+              <div className="fg">
+                <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={rF.fecha} onChange={e=>setRF(p=>({...p,fecha:e.target.value}))}/></div>
+                <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 100000" value={rF.monto} onChange={e=>setRF(p=>({...p,monto:e.target.value}))}/></div>
+                <div className="fl"><label className="flabel">Tipo</label><select className="finput" value={rF.tipo} onChange={e=>setRF(p=>({...p,tipo:e.target.value}))}><option>Fijo</option><option>Variable</option><option>Adelanto</option></select></div>
+                <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={rF.obs} onChange={e=>setRF(p=>({...p,obs:e.target.value}))}/></div>
+              </div>
+              <button className="btn btn-p" style={{marginTop:12}} onClick={saveRetiro}>💾 Guardar retiro</button>
+            </div>
+          <div className="tsm" style={{padding:"0 4px"}}>Saldos bancarios, pagos y stock se cargan en sus pestañas (💳 Pagos y 📦 Compras).</div>
           <details className="card"><summary style={{cursor:"pointer",color:"var(--text2)",fontSize:".95rem",fontWeight:600}}>Ver lo guardado en Google Sheets (para corregir o borrar)</summary>
           {sheetVentas.length>0&&<><div className="sh"><span className="st">Ventas en Google Sheets</span><span className="ss">{sheetVentas.length} registros</span></div>
           <div className="card tw"><table><thead><tr><th>Fecha</th><th>Monto</th><th>Obs.</th></tr></thead>
