@@ -381,9 +381,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:646193, pagadoYa:805006 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000
+const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:647954, pagadoYa:808788 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión) + cobro ANDA $1.761 (BROU); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor pagado contado 13/10 $3.782 (BROU)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T13:50:00.000Z", brou:50814, santUyu:-517577 }; // 13/10 10:50: entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
+const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T13:58:00.000Z", brou:48794, santUyu:-517577 }; // 13/10 10:58: BROU con cobro ANDA $1.761 y pago contado a proveedor $3.782; entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
