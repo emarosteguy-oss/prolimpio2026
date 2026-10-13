@@ -333,10 +333,8 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "12/10/2026";
+const PENDIENTES_FECHA = "13/10/2026";
 const PENDIENTES = [
-  {mes:"2026-10",prov:"Unimed (giro hecho, falta que lo debite el banco)",monto:30578,tipo:"prov"},
-  {mes:"2026-10",prov:"Pontyn (giro hecho, falta que lo debite el banco)",monto:50641,tipo:"prov"},
   {mes:"2026-10",prov:"Alido Valiero",monto:23892,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:149960,tipo:"cheque"},
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
@@ -383,9 +381,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-12", diasYa:10, ventasMes:727960, ventasYa:553141, pagadoYa:723787 }; // ventasMes = vendido 01–12/10 (10 días); ventasYa = lo que ya entró al banco (ventas hasta 08/10 + depósito de efectivo $16.000 del 12/10; tarjetas de vie, sáb y lun todavía no acreditadas por el feriado); pagado = proveedores en verde $592.098 − giros sin debitar (Pontyn $50.641, Unimed $30.578) + alquiler + sueldos $140.460 + correcaminata $10.000
+const MES_EN_CURSO = { idx:9, desde:"2026-10-13", diasYa:10, ventasMes:727960, ventasYa:646193, pagadoYa:805006 }; // ventasMes = vendido 01–12/10; ventasYa = lo que ya entró al banco: ventas hasta 08/10 + efectivo $16.000 del 12/10 + tarjetas de 9, 10 y 12/10 (acreditado $90.260 ≈ $93.052 antes de comisión); pagado = proveedores en verde $592.098 (Pontyn y Unimed ya debitados) + alquiler + sueldos $140.460 + correcaminata $10.000
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-12", ts:"2026-10-12T22:31:00.000Z", brou:50814, santUyu:-526463 }; // 12/10 19:31, saldo real del banco (faltan debitar los giros a Pontyn $50.641 y Unimed $30.578)
+const SALDO_REF = { fecha:"2026-10-13", ts:"2026-10-13T13:50:00.000Z", brou:50814, santUyu:-517577 }; // 13/10 10:50: entraron tarjetas Getnet de vie 9, sáb 10 y lun 12 ($90.260) y se debitaron los giros a Pontyn y Unimed
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
