@@ -470,6 +470,7 @@ const CIERRE_CAMPOS = [
 // Cierres que Esteban mandó por el chat y leyó Claude (se suman a los de la planilla de cierres si esa fecha no está)
 const CIERRES_CLAUDE = [
   {fecha:"2026-10-12",cajero:"Natalia Pereira",ventaPos:42633,efectivoPos:12756,tarjetasPos:29877,visa:9033,mastercard:20010,oca:null,maestro:null,otrasTj:834,aperturaPos:9839,salidaPos:13000,saldoSistema:9595,efectivoContado:9593,diferencia:-2,aperturaErp:18050,ventasErp:3409,tarjetaErp:5835,gastosEf:0,deposito:16000,saldoErp:18459,credito:0,transferencia:0,gastosDetalle:"",obs:"Leído por Claude (chat)",ts:"2026-10-12T21:30:00.000Z"},
+  {fecha:"2026-10-13",cajero:"Valentina Preza",ventaPos:50346,efectivoPos:22446,tarjetasPos:27900,visa:11651,mastercard:14505,oca:null,maestro:null,otrasTj:1744,aperturaPos:9593,salidaPos:21000,saldoSistema:11039,efectivoContado:11034,diferencia:-5,aperturaErp:18459,ventasErp:19750,tarjetaErp:0,gastosEf:330,deposito:40000,saldoErp:18879,credito:0,transferencia:0,gastosDetalle:"San Roque $330",obs:"Leído por Claude (chat). Cabal $1.744 en otras. ERP: devoluciones $7.520 y $279 descontadas",ts:"2026-10-13T21:10:00.000Z"},
 ].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
