@@ -386,9 +386,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1801210, 10:1471711, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:11, ventasMes:800337, ventasYa:719256, pagadoYa:893839, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000; retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:11, ventasMes:800337, ventasYa:719256, pagadoYa:927006, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T13:51:00.000Z", brou:64927, santUyu:-447214 }; // 14/10 10:51: Santander −477.577 + depósito del banco (tarjetas) $30.363. BROU real de las 07:11
+const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T14:28:00.000Z", brou:55652, santUyu:-471106 }; // 14/10 11:28 (calculado): BROU 64.927 − Cooperativa la Cruz 9.275; Santander −447.214 − Alido Valiero 23.892
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -429,7 +429,7 @@ const COSTOS_FIJOS = [
   {nombre:"Otros gastos", monto:55000},
 ];
 const COSTOS_FIJOS_MES = {
-  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz (pagada según planilla)",monto:11544,planilla:true},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
+  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
   "2026-11":[{nombre:"Alquiler",monto:65370},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS",monto:220000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:90000},{nombre:"Otros gastos",monto:45000}],
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
