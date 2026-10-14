@@ -386,9 +386,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:10, ventasMes:727960, ventasYa:687954, pagadoYa:893839, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000; retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:10, ventasMes:727960, ventasYa:719256, pagadoYa:893839, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000; retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T10:11:00.000Z", brou:64927, santUyu:-477577 }; // 14/10 07:11 saldos reales. BROU: −8.164 retiro (13/10) y −1.500 transferencia (14/10). Santander: +40.000 desde el 13/10
+const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T13:51:00.000Z", brou:64927, santUyu:-447214 }; // 14/10 10:51: Santander −477.577 + depósito del banco (tarjetas) $30.363. BROU real de las 07:11
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
