@@ -149,9 +149,10 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-05",monto:105429},{fecha:"2026-10-06",monto:84882},{fecha:"2026-10-07",monto:75023},{fecha:"2026-10-08",monto:82736},
   {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},
 ];
+const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
-  {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
+  {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
@@ -591,16 +592,16 @@ const proyectarCaja = (cfg, crecIn) => {
     const costoEst = fijoMes + variable;
     const enCurso = k===0 && idx===MES_EN_CURSO.idx && (cfg.saldoFecha||"")>=MES_EN_CURSO.desde && String(cfg.saldoFecha).slice(0,7)===`${y}-${String(m+1).padStart(2,"0")}`;
     const costoMes = Math.max(costoEst, COSTOS_PROGRAMADOS[idx]||0);
-    const ventasMes = enCurso ? Math.max(0, ventas-MES_EN_CURSO.ventasYa) : ventas;
+    const ventasMes = enCurso ? Math.max(0, ventas-MES_EN_CURSO.ventasYa-(cfg.depExtra||0)) : ventas;
     const comision = Math.round(ventasMes*comisionPctEfectiva()/100);
-    const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa) : costoMes) + comision;
+    const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa-(cfg.pagExtra||0)) : costoMes) + comision;
     let deuda = 0;
     if(idx>=9 && idx<=29) deuda += cfg.candela;        // Candela: Oct-26 a Jun-28
     if(idx>=9 && idx<=11) deuda += cfg.santander;      // Santander: hasta Dic-26
     if(idx===11 && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo en Dic-26
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
-    const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)) : retiro;
+    const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)-(cfg.retExtra||0)) : retiro;
     saldo = saldo + ventasMes - costos - deuda + cobros - retiroMes;
     out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, fijos:fijoMes, deuda, retiro, saldo:Math.round(saldo) });
     m++; if(m>11){m=0;y++;}
@@ -908,7 +909,7 @@ export default function App(){
   const [sheetSaldos,setSheetSaldos]=useState([]);
   const [sheetRetirosRaw,setSheetRetiros]=useState([]);
   const sheetRetiros=useMemo(()=>[...sheetRetirosRaw,...RETIROS_CLAUDE.filter(c=>!sheetRetirosRaw.some(x=>x.fecha===c.fecha&&Number(x.monto)===c.monto))],[sheetRetirosRaw]);
-  const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:""});
+  const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:"",cuenta:"Santander"});
   const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(migrarCfg(c));});
   const setCaja=(patch)=>setCajaState(p=>{const n={...p,...patch};try{localStorage.setItem("prolimpio_caja",JSON.stringify(n));}catch(e){}return n;});
   // datos de control (cierres + depósitos) compartidos por la pestaña Caja y por la comisión de bancos
@@ -1093,9 +1094,9 @@ export default function App(){
       }catch(e){}
       try{ const ci = await gapi_read(tk, "Cierres!A2:I2000"); setSheetCierres(ci.map((r,i)=>({_i:i,fecha:r[0],venta:Number(r[1])||0,efectivo:Number(r[2])||0,tarjetas:Number(r[3])||0,ventaErp:Number(r[4])||0,gastosEf:Number(r[5])||0,saldoErp:r[6]===""||r[6]==null?null:Number(r[6]),obs:r[7]||""})).filter(r=>r.fecha)); }catch(e){}
       try{ const de = await gapi_read(tk, "Depositos!A2:F2000"); setSheetDepositos(de.map((r,i)=>({_i:i,fecha:r[0],tipo:r[1],cuenta:r[2],monto:Number(r[3])||0,obs:r[4]||"",ts:r[5]||""})).filter(r=>r.fecha)); }catch(e){}
-      try{ const pg = await gapi_read(tk, "Pagos!A2:F2000"); setSheetPagos(pg.map((r,i)=>({_i:i,fecha:r[0],clave:r[1],concepto:r[2],monto:Number(r[3])||0,mes:r[4],ts:r[5]||""})).filter(r=>r.clave)); }catch(e){}
+      try{ const pg = await gapi_read(tk, "Pagos!A2:G2000"); setSheetPagos(pg.map((r,i)=>({_i:i,fecha:r[0],clave:r[1],concepto:r[2],monto:Number(r[3])||0,mes:r[4],ts:r[5]||"",cuenta:r[6]||""})).filter(r=>r.clave)); }catch(e){}
       try{ const st = await gapi_read(tk, "Stock!A2:D500"); setSheetStock(st.map(r=>({fecha:r[0],valor:Number(r[1])||0,obs:r[2]||""})).filter(r=>r.fecha&&r.valor)); }catch(e){}
-      try{ const rr = await gapi_read(tk, "Retiros!A2:E500"); setSheetRetiros(rr.map(r=>({fecha:r[0],monto:r[1],tipo:r[2],obs:r[3]})).filter(r=>r.fecha)); }catch(e){}
+      try{ const rr = await gapi_read(tk, "Retiros!A2:F500"); setSheetRetiros(rr.map(r=>({fecha:r[0],monto:r[1],tipo:r[2],obs:r[3],ts:r[4]||"",cuenta:r[5]||""})).filter(r=>r.fecha)); }catch(e){}
       setSheetVentas(v.map(r=>({fecha:r[0],monto:r[1],obs:r[2]})).filter(r=>r.fecha));
       setSheetCompras(c.map(r=>({fecha:r[0],factura:r[1],proveedor:r[2],monto:r[3],obs:r[4]})).filter(r=>r.fecha));
       setSheetTickets(t.map(r=>({mes:r[0],anio:r[1],cantidad:r[2],promedio:r[3],dias:r[4]})).filter(r=>r.mes));
@@ -1232,11 +1233,11 @@ export default function App(){
     else showToast("PIN incorrecto","er");
   };
 
-  const guardarFila = async (hoja, headers, fila, okMsg) => {
+  const guardarFila = async (hoja, headers, fila, okMsg, extra=[]) => {
     if(!token){showToast("Conectate a Google Sheets primero","er");return false;}
     setSyncStatus("syncing");
     const okS = await gapi_ensure_sheet(token,hoja,headers);
-    const ok = okS && await gapi_append(token,hoja,[...fila,new Date().toISOString()]);
+    const ok = okS && await gapi_append(token,hoja,[...fila,new Date().toISOString(),...extra]);
     if(ok){ showToast(okMsg); setSyncStatus("ok"); await loadSheetData(token); return true; }
     showToast("Error al guardar","er"); setSyncStatus("error"); return false;
   };
@@ -1255,7 +1256,7 @@ export default function App(){
   };
   const marcarPago = async () => {
     if(!pagoEdit) return; const m=Number(pagoEdit.monto)||0; if(!m){showToast("Poné el monto pagado","er");return;}
-    const ok=await guardarFila("Pagos",["Fecha pago","Clave","Concepto","Monto","Mes","Timestamp"],[pagoEdit.fecha,pagoEdit.clave,pagoEdit.concepto,String(m),pagoEdit.mes],"✓ Pago registrado");
+    const ok=await guardarFila("Pagos",["Fecha pago","Clave","Concepto","Monto","Mes","Timestamp","Cuenta"],[pagoEdit.fecha,pagoEdit.clave,pagoEdit.concepto,String(m),pagoEdit.mes],"✓ Pago registrado",[pagoEdit.cuenta||"Santander"]);
     if(ok) setPagoEdit(null);
   };
 
@@ -1283,8 +1284,8 @@ export default function App(){
     if(!rF.monto||!rF.fecha){showToast("Completá fecha y monto","er");return;}
     if(!token){showToast("Conectate a Google Sheets primero","er");return;}
     setSyncStatus("syncing");
-    const okSheet = await gapi_ensure_sheet(token,"Retiros",["Fecha","Monto","Tipo","Observacion","Timestamp"]);
-    const ok = okSheet && await gapi_append(token,"Retiros",[rF.fecha,String(rF.monto),rF.tipo,rF.obs||"",new Date().toISOString()]);
+    const okSheet = await gapi_ensure_sheet(token,"Retiros",["Fecha","Monto","Tipo","Observacion","Timestamp","Cuenta"]);
+    const ok = okSheet && await gapi_append(token,"Retiros",[rF.fecha,String(rF.monto),rF.tipo,rF.obs||"",new Date().toISOString(),rF.cuenta||"Santander"]);
     if(ok){ showToast("✓ Retiro guardado"); setSyncStatus("ok"); setRF(p=>({...p,monto:"",obs:""})); await loadSheetData(token); }
     else { showToast("Error al guardar el retiro","er"); setSyncStatus("error"); }
   };
@@ -1403,9 +1404,21 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
   const mesKey=`${yAct}-${String(mIdx+1).padStart(2,"0")}`;
   const delMes=sheetRetiros.map((r,i)=>({...r,_i:i})).filter(r=>{const d=new Date(r.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;});
   const retiradoMes=delMes.reduce((s,r)=>s+(Number(r.monto)||0),0);
-  const proy=proyectarCaja(caja);
+  // saldo estimado de hoy
+  const saldoHoy=(()=>{const desde=caja.saldoFecha||"0000"; const dTs=caja.saldoTs||""; const posterior=x=>dTs&&x.ts?x.ts>dTs:x.fecha>desde;
+    const cta=x=>{const c=String(x.cuenta||x.cta||"").toLowerCase(); return c.startsWith("brou")?"brou":c.startsWith("efectivo")?"efectivo":c.startsWith("otro")?"otro":"sant";};
+    const movs=[...sheetDepositos.filter(posterior).map(d=>({m:+d.monto||0,c:cta(d)})),...sheetCierres2.filter(c=>c.deposito&&posterior(c)).map(c=>({m:+c.deposito||0,c:"sant"})),
+      ...sheetPagos.filter(posterior).map(p=>({m:-(+p.monto||0),c:cta(p),pago:true})),...sheetRetiros.filter(r=>r.ts?posterior(r):r.fecha>desde).map(r=>({m:-(Number(r.monto)||0),c:cta(r),ret:true}))];
+    const suma=f=>movs.filter(f).reduce((s,x)=>s+x.m,0);
+    const brou=(+caja.brou||0)+suma(x=>x.c==="brou"), sant=(+caja.santUyu||0)+suma(x=>x.c==="sant"), usd=(+caja.santUsd||0)*(+caja.tc||0);
+    const dep=suma(x=>x.m>0&&(x.c==="sant"||x.c==="brou")), pag=-suma(x=>x.pago&&(x.c==="sant"||x.c==="brou")), ret=-suma(x=>x.ret&&(x.c==="sant"||x.c==="brou"));
+    const pagTodos=-suma(x=>x.pago), retTodos=-suma(x=>x.ret), fueraBanco=-suma(x=>(x.pago||x.ret)&&x.c==="efectivo");
+    return {brou,sant,dep,pag,ret,pagTodos,retTodos,fueraBanco,depTodos:suma(x=>x.m>0),est:brou+sant+usd,hay:movs.length>0};})();
+  // la proyección arranca del saldo estimado de hoy y descuenta del mes lo ya cobrado, pagado y retirado después del último saldo
+  const cajaProy={...caja,saldo:saldoHoy.est-saldoHoy.fueraBanco,depExtra:saldoHoy.depTodos,pagExtra:saldoHoy.pagTodos,retExtra:saldoHoy.retTodos};
+  const proy=proyectarCaja(cajaProy);
   const CR=crecimientoReal(); const escSel=caja.escSel||"medio";
-  const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(caja,crecEscenario(caja,e.k))}));
+  const escProy=ESCENARIOS.map(e=>({...e,crec:crecEscenario(caja,e.k),p:proyectarCaja(cajaProy,crecEscenario(caja,e.k))}));
   const PS=planSubatir(caja); const fD=iso=>{const p=iso.split("-");return `${p[2]}/${p[1]}`;};
   const chartEsc=proy.map((r,i)=>{const o={mes:r.mes}; escProy.forEach(e=>{o[e.k]=e.p[i].saldo;}); return o;});
   const sugerido=proy[0]?.retiro||0;
@@ -1414,10 +1427,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
   const enAlerta=proy.find(p=>p.saldo<caja.alerta);
   const anioRet=sheetRetiros.filter(r=>String(r.fecha).startsWith(String(yAct))).reduce((s,r)=>s+(Number(r.monto)||0),0);
   const num=(k)=>e=>setCaja({[k]:Number(e.target.value)});
-  // saldo estimado de hoy
-  const saldoHoy=(()=>{const desde=caja.saldoFecha||"0000"; const dTs=caja.saldoTs||""; const posterior=x=>dTs&&x.ts?x.ts>dTs:x.fecha>desde;
-    const dep=sheetDepositos.filter(posterior).reduce((s,d)=>s+d.monto,0)+sheetCierres2.filter(c=>c.deposito&&posterior(c)).reduce((s,c)=>s+c.deposito,0);
-    const pag=sheetPagos.filter(posterior).reduce((s,p)=>s+p.monto,0); return {dep,pag,est:(Number(caja.saldo)||0)+dep-pag};})();
+
   // ventas del mes en curso (planilla + app)
   const RMC=(()=>{const delM=v=>{if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0)return false;const d=new Date(v.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;};
     const pl=VENTAS_DIA_PLANILLA.filter(delM); const fs=new Set(pl.map(v=>v.fecha)); const todas=[...pl,...sheetVentas.filter(delM).filter(v=>!fs.has(v.fecha))];
@@ -1458,7 +1468,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           <div className="card" style={{borderLeft:"5px solid #E84400"}}>
             <div className="ctitle">Saldo estimado de hoy</div>
             <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
-            <div className="csub">BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""} al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"}{saldoHoy.dep||saldoHoy.pag?` · + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} registrados después`:""}</div>
+            <div className="csub">BROU {fmtM(saldoHoy.brou)} · Santander {fmtM(saldoHoy.sant)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""}</div>
+            <div className="csub" style={{fontSize:".85rem"}}>Último saldo real al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"} (BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}){saldoHoy.hay?` + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} − retiros ${fmtM(saldoHoy.ret)} cargados después`:""}</div>
             {girosSinDebitar.length>0&&<div className="delta wr" style={{marginTop:8}}>Falta que el banco debite {girosSinDebitar.map(g=>g.prov.split(" (")[0]).join(" y ")}: {fmtM(girosSinDebitar.reduce((s,g)=>s+g.monto,0))}</div>}
           </div>
           <div className="grid2">
@@ -1785,16 +1796,12 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
 
         {tab==="pagos"&&<div className="gap">
           <div className="abar"/>
-            {(()=>{const desde=caja.saldoFecha||"0000"; const dTs=caja.saldoTs||"";
-              const posterior=x=>dTs&&x.ts?x.ts>dTs:x.fecha>desde;
-              const dep=sheetDepositos.filter(posterior).reduce((s,d)=>s+d.monto,0)+sheetCierres2.filter(c=>c.deposito&&posterior(c)).reduce((s,c)=>s+c.deposito,0);
-              const pag=sheetPagos.filter(posterior).reduce((s,p)=>s+p.monto,0);
-              const est=(Number(caja.saldo)||0)+dep-pag;
-              return <div className="card" style={{borderLeft:"4px solid #E84400"}}>
+            <div className="card" style={{borderLeft:"4px solid #E84400"}}>
                 <div className="ctitle">Saldo estimado de hoy</div>
-                <div className="cval" style={{color:est<0?"#B91C1C":"#14532D"}}>{fmtM(est)}</div>
-                <div className="csub">Último saldo guardado ({caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"}) {fmtM(caja.saldo)} + depósitos registrados {fmtM(dep)} − pagos marcados {fmtM(pag)}. Cuenta todo lo que registres después de guardar el saldo (incluidos los depósitos de los cierres). Al guardar un saldo real nuevo, vuelve a empezar desde ahí.</div>
-              </div>;})()}
+                <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
+                <div className="grid2" style={{marginTop:6}}><div><div className="ctitle">BROU</div><div style={{fontWeight:700}}>{fmtM(saldoHoy.brou)}</div></div><div><div className="ctitle">Santander</div><div style={{fontWeight:700}}>{fmtM(saldoHoy.sant)}</div></div></div>
+                <div className="csub" style={{marginTop:6}}>Parte del último saldo guardado ({caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"}) y le suma o resta en su cuenta lo que cargues después: depósitos {fmtM(saldoHoy.dep)}, pagos {fmtM(saldoHoy.pag)} y retiros {fmtM(saldoHoy.ret)}. Lo pagado o retirado desde el efectivo de la caja no cambia los bancos. Al guardar un saldo real nuevo, vuelve a empezar desde ahí.</div>
+              </div>
             <div className="sh"><span className="st">Costos fijos del mes</span><span className="ss">Tocá uno para marcarlo pagado</span></div>
             {(()=>{const d=new Date();const mes=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
               const lista=(COSTOS_FIJOS_MES[mes]||COSTOS_FIJOS).map(c=>{const K=claveFijo(mes,c.nombre);const pg=sheetPagos.find(p=>p.clave===K)||(c.planilla?{monto:c.monto,fecha:"",planilla:true}:null);return {...c,K,pg};});
@@ -1809,6 +1816,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                   {pagoEdit&&pagoEdit.clave===K&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:8,alignItems:"center"}}>
                     <input type="date" className="finput" style={{maxWidth:160}} value={pagoEdit.fecha} onChange={e=>setPagoEdit(p=>({...p,fecha:e.target.value}))}/>
                     <input type="number" className="finput" style={{maxWidth:140}} value={pagoEdit.monto} onChange={e=>setPagoEdit(p=>({...p,monto:e.target.value}))}/>
+                    <select className="finput" style={{maxWidth:170}} value={pagoEdit.cuenta||"Santander"} onChange={e=>setPagoEdit(p=>({...p,cuenta:e.target.value}))}>{CUENTAS.map(c=><option key={c}>{c}</option>)}</select>
                     <button className="btn btn-p" onClick={marcarPago}>✓ Confirmar pago</button><button className="btn btn-s" onClick={()=>setPagoEdit(null)}>Cancelar</button></div>}
                 </div>;})}
                 <div className="tsm" style={{marginTop:8}}>Montos y pagos según tu planilla de deudas al {PENDIENTES_FECHA}; al marcar un pago podés poner el monto real.</div>
@@ -1841,6 +1849,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                   {pagoEdit&&pagoEdit.clave===K&&<tr><td colSpan={4}>{<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:8,alignItems:"center"}}>
                     <input type="date" className="finput" style={{maxWidth:160}} value={pagoEdit.fecha} onChange={e=>setPagoEdit(p=>({...p,fecha:e.target.value}))}/>
                     <input type="number" className="finput" style={{maxWidth:140}} value={pagoEdit.monto} onChange={e=>setPagoEdit(p=>({...p,monto:e.target.value}))}/>
+                    <select className="finput" style={{maxWidth:170}} value={pagoEdit.cuenta||"Santander"} onChange={e=>setPagoEdit(p=>({...p,cuenta:e.target.value}))}>{CUENTAS.map(c=><option key={c}>{c}</option>)}</select>
                     <button className="btn btn-p" onClick={marcarPago}>✓ Confirmar pago</button><button className="btn btn-s" onClick={()=>setPagoEdit(null)}>Cancelar</button></div>}</td></tr>}</React.Fragment>;})}</tbody></table></div>
               </details>
               <div className="tsm" style={{padding:"0 4px"}}>Noviembre todavía tiene un SUBATIR sin cargar y diciembre no tiene pedidos SUBATIR. Estos montos no incluyen los fijos del mes (alquiler, sueldos, IVA, etc.); la Proyección sí los incluye.</div>
@@ -2037,6 +2046,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                 <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={rF.fecha} onChange={e=>setRF(p=>({...p,fecha:e.target.value}))}/></div>
                 <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 100000" value={rF.monto} onChange={e=>setRF(p=>({...p,monto:e.target.value}))}/></div>
                 <div className="fl"><label className="flabel">Tipo</label><select className="finput" value={rF.tipo} onChange={e=>setRF(p=>({...p,tipo:e.target.value}))}><option>Fijo</option><option>Variable</option><option>Adelanto</option></select></div>
+                <div className="fl"><label className="flabel">¿De dónde salió?</label><select className="finput" value={rF.cuenta} onChange={e=>setRF(p=>({...p,cuenta:e.target.value}))}>{CUENTAS.map(c=><option key={c}>{c}</option>)}</select></div>
                 <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={rF.obs} onChange={e=>setRF(p=>({...p,obs:e.target.value}))}/></div>
               </div>
               <button className="btn" style={{marginTop:12}} onClick={saveRetiro}>💾 Guardar retiro</button>
@@ -2115,6 +2125,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                 <div className="fl"><label className="flabel">Fecha</label><input type="date" className="finput" value={rF.fecha} onChange={e=>setRF(p=>({...p,fecha:e.target.value}))}/></div>
                 <div className="fl"><label className="flabel">Monto ($)</label><input type="number" className="finput" placeholder="ej: 100000" value={rF.monto} onChange={e=>setRF(p=>({...p,monto:e.target.value}))}/></div>
                 <div className="fl"><label className="flabel">Tipo</label><select className="finput" value={rF.tipo} onChange={e=>setRF(p=>({...p,tipo:e.target.value}))}><option>Fijo</option><option>Variable</option><option>Adelanto</option></select></div>
+                <div className="fl"><label className="flabel">¿De dónde salió?</label><select className="finput" value={rF.cuenta} onChange={e=>setRF(p=>({...p,cuenta:e.target.value}))}>{CUENTAS.map(c=><option key={c}>{c}</option>)}</select></div>
                 <div className="fl"><label className="flabel">Observación</label><input type="text" className="finput" placeholder="opcional" value={rF.obs} onChange={e=>setRF(p=>({...p,obs:e.target.value}))}/></div>
               </div>
               <button className="btn btn-p" style={{marginTop:12}} onClick={saveRetiro}>💾 Guardar retiro</button>
