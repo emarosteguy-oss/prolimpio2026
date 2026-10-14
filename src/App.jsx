@@ -147,7 +147,7 @@ const VM=[
 const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-01",monto:66662},{fecha:"2026-10-02",monto:94263},{fecha:"2026-10-03",monto:28146,obs:"Mucha lluvia"},
   {fecha:"2026-10-05",monto:105429},{fecha:"2026-10-06",monto:84882},{fecha:"2026-10-07",monto:75023},{fecha:"2026-10-08",monto:82736},
-  {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},
+  {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},{fecha:"2026-10-13",monto:72377},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
@@ -338,9 +338,8 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "13/10/2026";
+const PENDIENTES_FECHA = "14/10/2026";
 const PENDIENTES = [
-  {mes:"2026-10",prov:"Alido Valiero",monto:23892,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:149960,tipo:"cheque"},
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
   {mes:"2026-10",prov:"Andrés Bauer (527 USD)",monto:21344,tipo:"prov"},
@@ -361,6 +360,7 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Solsire",monto:18516,tipo:"prov"},
   {mes:"2026-11",prov:"Aymi",monto:9934,tipo:"prov"},
   {mes:"2026-11",prov:"Palmisol",monto:17116,tipo:"prov"},
+  {mes:"2026-11",prov:"Calusil",monto:14976,tipo:"prov"},
   {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,tipo:"prov"},
   {mes:"2026-11",prov:"Irmari",monto:11624,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 23/09)",monto:149691,tipo:"cheque"}, // planilla: "Mirar wasap, falta un cheque $19.303"
@@ -383,10 +383,10 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"SUBATIR Intex (3/3)",monto:95819,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1788153, 10:1456735, 11:590720};
+const COSTOS_PROGRAMADOS = {9:1801210, 10:1471711, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:10, ventasMes:727960, ventasYa:719256, pagadoYa:893839, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000; retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:11, ventasMes:800337, ventasYa:719256, pagadoYa:893839, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000; retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
 const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T13:51:00.000Z", brou:64927, santUyu:-447214 }; // 14/10 10:51: Santander −477.577 + depósito del banco (tarjetas) $30.363. BROU real de las 07:11
 
@@ -429,7 +429,7 @@ const COSTOS_FIJOS = [
   {nombre:"Otros gastos", monto:55000},
 ];
 const COSTOS_FIJOS_MES = {
-  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
+  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz (pagada según planilla)",monto:11544,planilla:true},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
   "2026-11":[{nombre:"Alquiler",monto:65370},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS",monto:220000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:90000},{nombre:"Otros gastos",monto:45000}],
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
