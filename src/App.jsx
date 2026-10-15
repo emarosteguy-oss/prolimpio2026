@@ -152,6 +152,12 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-10-01",monto:1227,tipo:"Personal",cuenta:"BROU",ts:"2026-10-01T15:00:00.000Z",obs:"Carnicería"},
+  {fecha:"2026-10-12",monto:1306,tipo:"Personal",cuenta:"BROU",ts:"2026-10-12T15:00:00.000Z",obs:"Super Italia"},
+  {fecha:"2026-10-12",monto:435,tipo:"Personal",cuenta:"BROU",ts:"2026-10-12T15:30:00.000Z",obs:"Panadería"},
+  {fecha:"2026-10-13",monto:8164,tipo:"Personal",cuenta:"BROU",ts:"2026-10-13T19:00:00.000Z",obs:"Retiro del BROU"},
+  {fecha:"2026-10-14",monto:1500,tipo:"Personal",cuenta:"BROU",ts:"2026-10-14T15:00:00.000Z",obs:"Transferencia, a confirmar"},
+  {fecha:"2026-10-15",monto:1228,tipo:"Personal",cuenta:"BROU",ts:"2026-10-15T15:00:00.000Z",obs:"Xander Juli"},
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 // Tickets del mes en curso (planilla "Analisis tickets")
