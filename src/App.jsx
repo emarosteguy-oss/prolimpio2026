@@ -985,7 +985,7 @@ export default function App(){
   const [visionPago,setVisionPago]=useState(()=>{try{return localStorage.getItem("prolimpio_vision_pago")!=="no";}catch(e){return true;}});
   const [sheetSaldos,setSheetSaldos]=useState([]);
   const [sheetRetirosRaw,setSheetRetiros]=useState([]);
-  const sheetRetiros=useMemo(()=>[...sheetRetirosRaw,...RETIROS_CLAUDE.filter(c=>!sheetRetirosRaw.some(x=>x.fecha===c.fecha&&Number(x.monto)===c.monto))],[sheetRetirosRaw]);
+  const sheetRetiros=useMemo(()=>[...sheetRetirosRaw,...RETIROS_CLAUDE.filter(c=>!sheetRetirosRaw.some(x=>Number(x.monto)===c.monto&&Math.abs(new Date(String(x.fecha).slice(0,10)+"T12:00:00")-new Date(c.fecha+"T12:00:00"))<=2*864e5))],[sheetRetirosRaw]);
   const [rF,setRF]=useState({fecha:hoyISO(),monto:"",tipo:"Fijo",obs:"",cuenta:"Santander"});
   const [caja,setCajaState]=useState(()=>{let c=CAJA_DEFAULT;try{const s=localStorage.getItem("prolimpio_caja");if(s)c={...CAJA_DEFAULT,...JSON.parse(s)};}catch(e){} return conSaldoRef(migrarCfg(c));});
   const setCaja=(patch)=>setCajaState(p=>{const n={...p,...patch};try{localStorage.setItem("prolimpio_caja",JSON.stringify(n));}catch(e){}return n;});
