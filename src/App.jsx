@@ -159,9 +159,15 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-14",monto:1500,tipo:"Personal",cuenta:"BROU",ts:"2026-10-14T15:00:00.000Z",obs:"Transferencia, a confirmar"},
   {fecha:"2026-10-14",monto:750,tipo:"Personal",cuenta:"BROU",ts:"2026-10-15T00:30:00.000Z",obs:"Chivitería"},
   {fecha:"2026-10-15",monto:500,tipo:"Personal",cuenta:"BROU",ts:"2026-10-15T14:00:00.000Z",obs:"Retiro"},
-  {fecha:"2026-10-15",monto:1228,tipo:"Personal",cuenta:"BROU",ts:"2026-10-15T15:00:00.000Z",obs:"Xander Juli"},
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
+// Acreditaciones de tarjetas vistas en las capturas de los bancos (se suman a la hoja Depositos si no están)
+const DEPOSITOS_CLAUDE = [
+  {fecha:"2026-10-14",tipo:"Tarjetas",cuenta:"Santander",monto:30364,obs:"Abono pago a proveedores (captura)"},
+  {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"Santander",monto:39052,obs:"Abono pago a proveedores (captura)"},
+  {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"Santander",monto:349,obs:"Abono pago a proveedores (captura)"},
+  {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"BROU",monto:2632,obs:"TRF pago a proveedores (captura, a confirmar)"},
+];
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
 const TK=[
@@ -452,7 +458,8 @@ const claveFijo = (mes,n) => `fijo|${mes}|${n}`;
 const controlDiario = (cierres, depositos) => {
   const C=[...cierres].sort((a,b)=>a.fecha<b.fecha?-1:1);
   const depEf={}, depTj={};
-  depositos.forEach(d=>{ const m=Number(d.monto)||0; if(d.tipo==="Efectivo") depEf[d.fecha]=(depEf[d.fecha]||0)+m; else depTj[d.fecha]=(depTj[d.fecha]||0)+m; });
+  const desde=C.length?C[0].fecha:"", hasta=C.length?C[C.length-1].fecha:"";
+  depositos.forEach(d=>{ if(d.tipo==="Efectivo"&&C.length&&(String(d.fecha)<desde||String(d.fecha)>diaHabilBancoSig(hasta))) return; const m=Number(d.monto)||0; if(d.tipo==="Efectivo") depEf[d.fecha]=(depEf[d.fecha]||0)+m; else depTj[d.fecha]=(depTj[d.fecha]||0)+m; });
   // agrupar tarjetas por fecha de acreditación esperada
   const porAcred={};
   C.forEach(c=>{ const f=diaHabilBancoSig(c.fecha); (porAcred[f]=porAcred[f]||[]).push(c); });
@@ -468,7 +475,7 @@ const controlDiario = (cierres, depositos) => {
   const conAcred=filas.filter(f=>f.tjAcred!=null);
   const tjVend=conAcred.reduce((s,f)=>s+f.tarjetas,0), tjCob=conAcred.reduce((s,f)=>s+f.tjAcred,0);
   const efVendNeto=filas.reduce((s,f)=>s+f.efNeto,0), efDepTot=Object.values(depEf).reduce((s,x)=>s+x,0);
-  return {filas, comision: tjVend? (1-tjCob/tjVend)*100 : null, tjVend, tjCob, efVendNeto, efDepTot, efPendiente: efVendNeto-efDepTot};
+  return {filas, comision: tjVend&&conAcred.length>=5? (1-tjCob/tjVend)*100 : null, diasAcred:conAcred.length, tjVend, tjCob, efVendNeto, efDepTot, efPendiente: efVendNeto-efDepTot, desde, hasta};
 };
 
 // ── Cierre de caja con foto ──────────────────────────────────────────────────
@@ -992,7 +999,13 @@ export default function App(){
   // datos de control (cierres + depósitos) compartidos por la pestaña Caja y por la comisión de bancos
   const ctlCierres=useMemo(()=>[...sheetCierres2.map(c=>({_i:"n"+c._i,fecha:c.fecha,venta:(c.ventaPos||0)+(c.tarjetaErp||0),efectivo:c.efectivoPos||0,tarjetas:(c.tarjetasPos||0)+(c.tarjetaErp||0),ventaErp:c.ventasErp||0,gastosEf:c.gastosEf||0,saldoErp:c.saldoErp})),
     ...sheetCierres.filter(o=>!sheetCierres2.some(n=>n.fecha===o.fecha))],[sheetCierres,sheetCierres2]);
-  const ctlDepositos=useMemo(()=>[...sheetDepositos,...sheetCierres2.filter(c=>c.deposito).map(c=>({fecha:c.fecha,tipo:"Efectivo",cuenta:"Santander",monto:c.deposito}))],[sheetDepositos,sheetCierres2]);
+  const ctlDepositos=useMemo(()=>{
+    const cerca=(a,b,d)=>Math.abs(new Date(String(a).slice(0,10)+"T12:00:00")-new Date(String(b).slice(0,10)+"T12:00:00"))<=d*864e5;
+    const deCierre=sheetCierres2.filter(c=>c.deposito).map(c=>({fecha:c.fecha,tipo:"Efectivo",cuenta:"Santander",monto:Number(c.deposito),deCierre:true}));
+    // un depósito de efectivo cargado a mano que ya viene en el cierre (mismo monto, mismo día o el siguiente) no se cuenta dos veces
+    const manual=sheetDepositos.filter(d=>!(d.tipo==="Efectivo"&&deCierre.some(c=>Number(d.monto)===c.monto&&cerca(d.fecha,c.fecha,1))));
+    const extra=DEPOSITOS_CLAUDE.filter(c=>!sheetDepositos.some(d=>d.tipo===c.tipo&&Math.abs(Number(d.monto)-c.monto)<=1&&cerca(d.fecha,c.fecha,1)));
+    return [...manual,...deCierre,...extra];},[sheetDepositos,sheetCierres2]);
   const ctlK=useMemo(()=>controlDiario(ctlCierres,ctlDepositos),[ctlCierres,ctlDepositos]);
   COM.pct=Number(caja.comisionPct); if(isNaN(COM.pct)) COM.pct=3;
   COM.real=comisionPorMes(ctlK.filas);
@@ -1839,10 +1852,10 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             {K.filas.length>0&&<>
             <div className="sh"><span className="st">Control</span><span className="ss">Ventas contra depósitos</span></div>
             <div className="grid4">
-              <div className="card"><div className="ctitle">Comisión de tarjetas</div><div className="cval">{K.comision!=null?fmt(K.comision,1)+"%":"—"}</div><div className="csub">Vendido {fmtM(K.tjVend)} · acreditado {fmtM(K.tjCob)}</div>
+              <div className="card"><div className="ctitle">Comisión de tarjetas</div><div className="cval">{K.comision!=null?fmt(K.comision,1)+"%":"—"}</div><div className="csub">{K.comision==null?`Faltan días: hay ${K.diasAcred} con acreditación (se calcula desde 5, porque Visa y Master no acreditan siempre el mismo día)`:`Vendido ${fmtM(K.tjVend)} · acreditado ${fmtM(K.tjCob)}`}</div>
                 {(()=>{const k=hoyISO().slice(0,7);const r=COM.real[k];return <div className="tsm" style={{marginTop:4}}>{r?`Este mes: ${fmt(r.tasa,1)}% sobre tarjetas ≈ ${fmtM(r.monto)} (se usa como gasto)`:`Se usa ${fmt(COM.pct,1)}% de las ventas como gasto hasta tener 8 días acreditados en el mes`}</div>;})()}</div>
-              <div className="card"><div className="ctitle">Efectivo a depositar</div><div className="cval">{fmtM(K.efVendNeto)}</div><div className="csub">Efectivo POS + ventas ERP − gastos en efectivo</div></div>
-              <div className="card"><div className="ctitle">Efectivo depositado</div><div className="cval">{fmtM(K.efDepTot)}</div><div className="csub">Depósitos de la encargada</div></div>
+              <div className="card"><div className="ctitle">Efectivo a depositar</div><div className="cval">{fmtM(K.efVendNeto)}</div><div className="csub">Efectivo POS + ventas ERP − gastos en efectivo{K.desde?` · cierres del ${fCorta(K.desde)} al ${fCorta(K.hasta)}`:""}</div></div>
+              <div className="card"><div className="ctitle">Efectivo depositado</div><div className="cval">{fmtM(K.efDepTot)}</div><div className="csub">Depósitos de efectivo de esos mismos días (sin repetir los que vienen en el cierre)</div></div>
               <div className="card"><div className="ctitle">Efectivo pendiente</div><div className="cval" style={{color:K.efPendiente>50000?"#B45309":"#1F0D05"}}>{fmtM(K.efPendiente)}</div><div className="csub">Debería estar en la caja ERP{(()=>{const u=[...sheetCierres].filter(c=>c.saldoErp!=null).sort((a,b)=>a.fecha<b.fecha?1:-1)[0];return u?` · último saldo ERP informado ${fmtM(u.saldoErp)} (${fCorta(u.fecha)})`:"";})()}</div></div>
             </div>
             <div className="card tw"><table><thead><tr><th>Día</th><th>Venta</th><th>Tarjetas</th><th>Acreditado</th><th>Efectivo neto</th><th>Depositado</th><th>%</th><th></th></tr></thead>
