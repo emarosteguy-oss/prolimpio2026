@@ -338,7 +338,7 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "14/10/2026";
+const PENDIENTES_FECHA = "15/10/2026";
 const PENDIENTES = [
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:149960,tipo:"cheque"},
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
@@ -386,9 +386,9 @@ const PENDIENTES = [
 const COSTOS_PROGRAMADOS = {9:1801210, 10:1471711, 11:590720};
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-14", diasYa:11, ventasMes:800337, ventasYa:719256, pagadoYa:927006, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-15", diasYa:11, ventasMes:800337, ventasYa:759515, pagadoYa:927006, retiradoYa:33585 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-14", ts:"2026-10-14T14:28:00.000Z", brou:55652, santUyu:-471106 }; // 14/10 11:28 (calculado): BROU 64.927 − Cooperativa la Cruz 9.275; Santander −447.214 − Alido Valiero 23.892
+const SALDO_REF = { fecha:"2026-10-15", ts:"2026-10-15T14:00:00.000Z", brou:55652, santUyu:-432055 }; // 15/10 (calculado): BROU 55.652; Santander −471.106 + tarjetas acreditadas hoy 39.051
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -553,16 +553,72 @@ const HEAD_CIERRES = ["Fecha","Cajero",...CIERRE_CAMPOS.map(c=>c[1]),"Ventas cre
 
 // ── Proyección de caja ───────────────────────────────────────────────────────
 const MES3 = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
+const LOCAL_CERRADO = new Set(["2026-12-25","2027-01-01","2027-02-08","2027-02-09","2027-03-25","2027-03-26","2027-03-27","2027-05-01","2027-07-18","2027-08-25","2027-12-25"]);
+
+// ── Curva de ventas dentro del mes ───────────────────────────────────────────
+// Las ventas no son parejas en el mes: arrancan fuerte (cobros, días 1–10) y bajan hacia fin de mes (días 16–28).
+// Índices calculados con las ventas diarias de ene-2021 a oct-2026 (1.443 días): 1 = día promedio.
+const DIA_MES_IDX = [1.172,1.2,1.243,1.221,1.189,1.157,1.134,1.118,1.112,1.097,1.062,1.008,1.001,0.98,0.96,0.915,0.904,0.895,0.884,0.862,0.863,0.898,0.91,0.906,0.867,0.861,0.868,0.878,0.918,0.945,0.977];
+const DIA_SEM_IDX = [1.131,1.031,1.001,0.938,1.051,0.848]; // lunes … sábado
+// Ventas diarias del año anterior (planilla), para comparar el mes en curso contra los mismos días
+const VENTAS_DIA_HIST = {
+  "2025-01":[0,100034,104663,63765,0,104893,81337,64922,105347,82030,77168,0,81636,82136,75035,58015,102604,65646,0,74279,71045,71910,64381,48217,66908,0,81901,42049,59577,102874,70809],
+  "2025-02":[101851,0,109466,77190,41981,78647,81806,66423,0,70458,59079,61978,60269,82435,40403,0,83721,62260,58162,88854,72020,48438,0,81010,49347,42446,39022,58574,0,0,0],
+  "2025-03":[0,0,0,0,93161,87402,68485,84888,0,86106,103568,41140,73669,127332,51851,0,57172,56978,56978,40426,55784,43480,0,64445,51072,55735,32953,46519,47978,0,61752],
+  "2025-04":[72792,72658,71585,65911,60086,0,44875,45854,48775,38882,60491,47048,0,78132,52713,48169,0,0,0,0,57184,35708,50128,52749,63279,39103,0,70055,45247,60145,0],
+  "2025-05":[0,64371,75045,0,48658,59039,104220,49657,81339,60678,0,75803,47124,60253,42088,72161,43683,0,53608,72580,44454,53436,52422,42563,0,41147,36323,45304,29867,38506,41581],
+  "2025-06":[0,61811,62372,66116,67484,74643,64289,0,74578,91805,61588,42511,50939,31042,0,57660,38197,61117,66621,64731,42888,0,76799,52011,58063,51768,58125,48268,0,53366,0],
+  "2025-07":[61371,63378,63139,59190,60412,0,67367,115321,87335,62990,72976,36868,0,93907,52184,48093,41743,0,49208,0,88482,38802,42308,60022,43665,32144,0,47293,53270,50161,53989],
+  "2025-08":[71354,57044,0,76435,73538,89228,58512,57419,56704,0,77419,84816,38135,48161,54137,33018,0,90370,76047,65885,46007,49663,44381,0,0,38577,58914,55512,62993,55150,0],
+  "2025-09":[48919,71707,62136,86043,101852,50338,0,67823,58259,66343,86956,63413,46528,0,98170,55507,48796,32539,39549,52562,0,55579,91717,58852,68676,57655,23434,0,53201,43511,0],
+  "2025-10":[82637,73417,93619,63263,0,107813,116781,68658,52527,90333,50757,0,50949,103827,84589,63329,94176,43609,0,67552,60467,59119,39820,37592,32295,0,53426,58245,52193,46911,82493],
+  "2025-11":[56608,0,84002,67611,85448,87959,63698,68547,0,104657,77370,73281,70032,69546,55882,0,82003,47399,53362,61652,28958,53364,0,48249,49707,59451,58034,65964,59831,0,0],
+  "2025-12":[97709,122433,112835,84341,84488,116178,0,56822,38167,77453,76791,93925,97904,0,70539,117210,107062,94446,109157,110672,0,141359,124382,71102,0,167904,119701,0,191724,121527,121118],
+  "2026-01":[0,162971,84270,0,127147,102717,131697,102632,85605,52710,0,104288,114329,97772,75516,78007,75662,0,89900,90275,66673,64523,64511,73412,0,81732,46434,82010,61713,167646,89427],
+  "2026-02":[0,114704,126317,85931,83469,124824,58604,0,92350,84231,74278,50626,66906,45745,0,0,0,119205,64638,50640,52104,0,73051,60281,69413,66540,99129,47128,0,0,0],
+  "2026-03":[0,75941,81150,81908,95153,75727,75437,0,89227,88434,93859,66602,52079,63282,0,74160,62655,69243,57198,76415,23394,0,54920,110798,52897,74298,67940,12927,0,114047,94610],
+  "2026-04":[82912,0,0,0,0,94115,65286,88900,98706,85004,57761,0,102100,93231,55264,80064,66107,57123,0,69492,56661,69707,45489,73139,33639,0,45422,48588,51043,101071,0],
+  "2026-05":[0,61146,0,87324,75113,54309,63435,72264,59842,0,73025,85460,70391,95921,75674,35350,0,63417,72507,27434,28890,59705,23964,0,118937,59948,46912,51222,48951,61276,0],
+  "2026-06":[91544,92486,78219,96299,68707,70296,0,42009,42513,62071,53913,75214,41361,0,90358,80280,70503,74988,41210,52946,0,55219,39022,56767,51281,47568,35800,0,50292,99163,0],
+  "2026-07":[80443,87991,63450,77431,0,53507,63846,64036,55260,65320,52807,0,79665,104787,76990,38227,52579,0,0,65303,50394,31449,133672,53183,50461,0,68386,60839,54055,56616,72396],
+  "2026-08":[38779,0,86932,92086,66537,68688,64805,77937,0,115789,81355,49651,52998,37377,45455,0,40332,46182,59280,53080,80538,67013,0,59958,0,45975,26381,80769,51708,0,107676],
+  "2026-09":[76889,105146,101236,91415,62792,0,74518,59180,70345,83986,73046,37073,0,104233,66996,52045,58517,82657,54748,0,73951,81403,41034,56322,62583,28528,0,194195,45795,72165,0],
+};
+const pesoDia = (d) => { const wd=d.getDay(); if(wd===0||LOCAL_CERRADO.has(isoDe(d))) return 0; return DIA_MES_IDX[d.getDate()-1]*DIA_SEM_IDX[wd-1]; };
+// Proyección del mes con la curva: lo vendido × (peso de todo el mes ÷ peso de los días ya vendidos)
+const proyMesCurva = (y, m, lista) => {
+  const delM=(lista||[]).filter(v=>{ if(!v.fecha||!(Number(v.monto)>0)) return false; const d=new Date(v.fecha+"T12:00:00"); return d.getFullYear()===y&&d.getMonth()===m; });
+  const vend={}; delM.forEach(v=>{ vend[v.fecha]=(vend[v.fecha]||0)+Number(v.monto); });
+  const fechas=Object.keys(vend).sort(); if(!fechas.length) return null;
+  const ult=fechas[fechas.length-1], nd=new Date(y,m+1,0).getDate();
+  let wH=0,wF=0,wTot=0; const pesos={};
+  for(let k=1;k<=nd;k++){ const d=new Date(y,m,k,12); const iso=isoDe(d); let w=pesoDia(d); if(vend[iso]&&!w) w=DIA_MES_IDX[k-1]*DIA_SEM_IDX[Math.max(0,d.getDay()-1)]; pesos[iso]=w;
+    if(vend[iso]) wH+=w; else if(iso>ult) wF+=w; }
+  wTot=wH+wF;
+  const total=fechas.reduce((s,f)=>s+vend[f],0), dias=fechas.length, base=wH?total/wH:0;
+  const diasFalta=Object.keys(pesos).filter(f=>f>ult&&pesos[f]>0).length;
+  const proy=Math.round(total*(wTot/wH));
+  const simple=Math.round(total+(total/dias)*diasFalta);
+  const esperado=f=>base*(pesos[f]||0);
+  // mismos días del año anterior
+  const hp=VENTAS_DIA_HIST[`${y-1}-${String(m+1).padStart(2,"0")}`]; const dUlt=+ult.slice(8,10);
+  const prevMismos=hp? hp.slice(0,dUlt).reduce((s,x)=>s+x,0) : null;
+  const prevMes=VM[m]?.[String(y-1)]??(hp?hp.reduce((s,x)=>s+x,0):null);
+  return {total,dias,diasFalta,ult,proy,simple,pctHecho:wH/wTot*100,esperado,prevMismos,prevMes,
+    varMismos: prevMismos? (total/prevMismos-1)*100 : null, varProy: prevMes? (proy/prevMes-1)*100 : null};
+};
+// Mes en curso con los datos de la planilla (se usa en la proyección de caja y el pedido de SUBATIR)
+const CURVA_CURSO = (()=>{ const mc=MES_EN_CURSO; const y=2026+Math.floor(mc.idx/12), m=mc.idx%12; const r=proyMesCurva(y,m,VENTAS_DIA_PLANILLA); return r&&r.dias>=5?{y,m,...r}:null; })();
+const ventaMesBase = (y,m) => { const r=VM[m]?.[String(y)]; if(r!=null) return r; if(CURVA_CURSO&&CURVA_CURSO.y===y&&CURVA_CURSO.m===m) return CURVA_CURSO.proy; return null; };
 // Crecimiento real de ventas mes a mes (2026 vs 2025) y tendencia de los últimos 3 meses cerrados
 const crecimientoReal = () => {
   const meses=[]; ["2026","2027"].forEach(y=>{const p=String(+y-1); VM.forEach((r,i)=>{ if(r[y]!=null&&r[p]) meses.push({mes:`${MES3[i]} ${y.slice(2)}`,y,i,v:r[y],vPrev:r[p],pct:(r[y]/r[p]-1)*100}); });});
   const u3=meses.slice(-3); const tend=u3.length? (u3.reduce((s,x)=>s+x.v,0)/u3.reduce((s,x)=>s+x.vPrev,0)-1)*100 : 0;
   const anio=meses.length?meses[meses.length-1].y:"2026"; const ya=meses.filter(x=>x.y===anio);
   const ytd=ya.length?(ya.reduce((s,x)=>s+x.v,0)/ya.reduce((s,x)=>s+x.vPrev,0)-1)*100:0;
-  // mes en curso: promedio por día hábil contra el mismo mes del año anterior
-  let curso=null; const mc=MES_EN_CURSO; const yc=2026+Math.floor(mc.idx/12), ic=mc.idx%12;
-  const vPrevMes=VM[ic]?.[String(yc-1)], dPrev=DIAS_HABILES[String(yc-1)]?.[MES3[ic]];
-  if(VM[ic]?.[String(yc)]==null && vPrevMes && dPrev && mc.diasYa){ const pdA=(mc.ventasMes||mc.ventasYa)/mc.diasYa, pdP=vPrevMes/dPrev; curso={mes:`${MES3[ic]} ${String(yc).slice(2)}`,dias:mc.diasYa,v:mc.ventasMes||mc.ventasYa,pdA,pdP,pct:(pdA/pdP-1)*100}; }
+  // mes en curso: contra los mismos días del mismo mes del año anterior
+  let curso=null; const cc=CURVA_CURSO;
+  if(cc&&VM[cc.m]?.[String(cc.y)]==null&&cc.prevMismos){ curso={mes:`${MES3[cc.m]} ${String(cc.y).slice(2)}`,dias:cc.dias,hasta:+cc.ult.slice(8,10),v:cc.total,vPrev:cc.prevMismos,pdA:cc.total/cc.dias,pct:cc.varMismos,proy:cc.proy,prevMes:cc.prevMes,varProy:cc.varProy}; }
   return {meses,tend,ytd,anio,curso,u3:u3.map(x=>x.mes)};
 };
 const ESCENARIOS = [
@@ -579,7 +635,7 @@ const proyectarCaja = (cfg, crecIn) => {
   const crec = (crecIn==null? crecEscenario(cfg,cfg.escSel||"medio") : crecIn)/100;
   const varP=(Number(cfg.varPct)||68)/100, fijos=Number(cfg.fijosMes)||370000, inf=(Number(cfg.infFijos)||0)/100;
   const cache={};
-  const ventasDe=(y,m)=>{ const r=VM[m]; if(r[String(y)]!=null) return r[String(y)]; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key];
+  const ventasDe=(y,m)=>{ const r=ventaMesBase(y,m); if(r!=null) return r; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key];
     const prev= y>2025 ? ventasDe(y-1,m) : 0; return (cache[key]=Math.round((prev||0)*(1+crec))); };
   const out = [];
   let saldo = cfg.saldo;
@@ -612,12 +668,12 @@ const proyectarCaja = (cfg, crecIn) => {
 // ── Pedido semanal SUBATIR ───────────────────────────────────────────────────
 // Se pide el lunes y llega el miércoles; cada pedido cubre las ventas de miércoles a martes.
 // Lo que se repone en SUBATIR ≈ pctSub % de las ventas (38,3% en 2025 y 38,9% en 2026). Tope de kg por pedido.
-const LOCAL_CERRADO = new Set(["2026-12-25","2027-01-01","2027-02-08","2027-02-09","2027-03-25","2027-03-26","2027-03-27","2027-05-01","2027-07-18","2027-08-25","2027-12-25"]);
-const ventasMesProy = (crec) => { const cache={}; const f=(y,m)=>{ const r=VM[m]; if(r[String(y)]!=null) return r[String(y)]; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key]; return (cache[key]=Math.round((y>2025?f(y-1,m):0)*(1+crec/100))); }; return f; };
+const ventasMesProy = (crec) => { const cache={}; const f=(y,m)=>{ const r=ventaMesBase(y,m); if(r!=null) return r; const key=`${y}-${m}`; if(cache[key]!=null) return cache[key]; return (cache[key]=Math.round((y>2025?f(y-1,m):0)*(1+crec/100))); }; return f; };
 const planSubatir = (cfg, semanas=14) => {
   const crec=crecEscenario(cfg,cfg.escSel||"medio"); const vm=ventasMesProy(crec);
   const pKg=Number(cfg.precioKg)||59, tope=Number(cfg.topeKg)||2500, pct=(Number(cfg.pctSub)||38.5)/100;
-  const ventaDia=(d)=>{ if(d.getDay()===0||LOCAL_CERRADO.has(isoDe(d))) return 0; const y=d.getFullYear(),m=d.getMonth(); const dh=DIAS_HABILES[String(y)]?.[MES3[m]]||26; return vm(y,m)/dh; };
+  const wMes={}; const sumW=(y,m)=>{ const k=y*12+m; if(wMes[k]!=null) return wMes[k]; let t=0; const nd=new Date(y,m+1,0).getDate(); for(let i=1;i<=nd;i++) t+=pesoDia(new Date(y,m,i,12)); return (wMes[k]=t); };
+  const ventaDia=(d)=>{ const w=pesoDia(d); if(!w) return 0; const y=d.getFullYear(),m=d.getMonth(); return vm(y,m)*w/sumW(y,m); }; // reparte la venta del mes según la curva
   const hoy=new Date(); hoy.setHours(12,0,0,0); const lun=new Date(hoy); do{ lun.setDate(lun.getDate()+1); }while(lun.getDay()!==1);
   const filas=[];
   for(let k=0;k<semanas;k++){
@@ -1434,7 +1490,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
     const pl=VENTAS_DIA_PLANILLA.filter(delM); const fs=new Set(pl.map(v=>v.fecha)); const todas=[...pl,...sheetVentas.filter(delM).filter(v=>!fs.has(v.fecha))];
     const total=todas.reduce((s,v)=>s+Number(v.monto),0), dias=todas.length, prom=dias?total/dias:0;
     const dh=DIAS_HABILES[String(yAct)]?.[MES3[mIdx]]||26, vPrev=VM[mIdx]?.[String(yAct-1)], dhP=DIAS_HABILES[String(yAct-1)]?.[MES3[mIdx]]||26;
-    const promPrev=vPrev?vPrev/dhP:null; return {total,dias,prom,dh,proyeccion:total+prom*Math.max(0,dh-dias),promPrev,var:promPrev&&prom?(prom/promPrev-1)*100:null};})();
+    const promPrev=vPrev?vPrev/dhP:null; const cv=proyMesCurva(yAct,mIdx,todas);
+    return {total,dias,prom,dh,proyeccion:cv?cv.proy:total+prom*Math.max(0,dh-dias),simple:cv?.simple,cv,promPrev,var:cv?.varMismos??(promPrev&&prom?(prom/promPrev-1)*100:null)};})();
   // pendientes del mes
   const pagadasK=new Set(sheetPagos.map(x=>x.clave));
   const pendMes=PENDIENTES.filter(p=>p.mes===mesKey&&!pagadasK.has(clavePend(p)));
@@ -1477,8 +1534,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="card" onClick={()=>setTab("ventas")} style={{cursor:"pointer"}}>
               <div className="ctitle">Ventas de {MESES[mIdx]}</div>
               <div className="cval ac">{RMC.total?fmtM(RMC.total):"Sin datos"}</div>
-              <div className="csub">{RMC.dias} de {RMC.dh} días · {fmtM(RMC.prom)}/día · proyección del mes {fmtM(RMC.proyeccion)}</div>
-              {RMC.var!=null&&<div className={`delta ${RMC.var>=0?"up":"dn"}`}>{RMC.var>=0?"▲":"▼"} {fmt(Math.abs(RMC.var),1)}% por día vs {yAct-1}</div>}
+              <div className="csub">{RMC.dias} de {RMC.dh} días · {fmtM(RMC.prom)}/día · proyección del mes {fmtM(RMC.proyeccion)}{RMC.cv?" (con la curva del mes)":""}</div>
+              {RMC.var!=null&&<div className={`delta ${RMC.var>=0?"up":"dn"}`}>{RMC.var>=0?"▲":"▼"} {fmt(Math.abs(RMC.var),1)}% vs mismos días de {yAct-1}</div>}
             </div>
             <div className="card" onClick={()=>setTab("pagos")} style={{cursor:"pointer"}}>
               <div className="ctitle">Falta pagar en {MESES[mIdx]}</div>
@@ -1525,7 +1582,9 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             const promDiario = diasCargados>0?totalMes/diasCargados:0;
             const diasHabilesTotal = DIAS_HABILES[String(anioActual)]?.[nombreMesCorto]||26;
             const diasHabilesRestantes = Math.max(0, diasHabilesTotal - diasCargados);
-            const proyeccion = totalMes + (promDiario * diasHabilesRestantes);
+            const CV = proyMesCurva(anioActual, mesActual, ventasMesActual);
+            const proyeccionSimple = totalMes + (promDiario * diasHabilesRestantes);
+            const proyeccion = CV ? CV.proy : proyeccionSimple;
             const ventasMismoMesAnterior = VM.find(r=>r.mes===nombreMesCorto)?.[String(anioActual-1)];
             const diasHabilesAnterior = DIAS_HABILES[String(anioActual-1)]?.[nombreMesCorto]||26;
             const promDiarioAnterior = ventasMismoMesAnterior?ventasMismoMesAnterior/diasHabilesAnterior:null;
@@ -1541,17 +1600,17 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                   <div className="ctitle">Prom. diario actual</div>
                   <div className="cval">{promDiario>0?fmtM(promDiario):"—"}</div>
                   <div className="csub">Promedio sobre días cargados</div>
-                  {promDiarioAnterior&&promDiario>0&&<div className={`delta ${promDiario>=promDiarioAnterior?"up":"dn"}`}>
+                  {CV?.varMismos!=null?<div className={`delta ${CV.varMismos>=0?"up":"dn"}`}>{CV.varMismos>=0?"▲":"▼"} {fmt(Math.abs(CV.varMismos),1)}% vs mismos días {anioActual-1}</div>
+                  :promDiarioAnterior&&promDiario>0&&<div className={`delta ${promDiario>=promDiarioAnterior?"up":"dn"}`}>
                     {promDiario>=promDiarioAnterior?"▲":"▼"} {fmt(Math.abs(pct(promDiario,promDiarioAnterior)),1)}% vs {anioActual-1}
                   </div>}
                 </div>
                 <div className="card">
                   <div className="ctitle">Proyección del mes</div>
                   <div className="cval ac">{proyeccion>0?fmtM(proyeccion):"—"}</div>
-                  <div className="csub">{diasHabilesRestantes} días hábiles restantes</div>
-                  {proyeccionVsAnterior&&proyeccion>0&&<div className={`delta ${proyeccion>=proyeccionVsAnterior?"up":"dn"}`}>
-                    {proyeccion>=proyeccionVsAnterior?"▲":"▼"} {fmt(Math.abs(pct(proyeccion,proyeccionVsAnterior)),1)}% vs proy {anioActual-1}
-                  </div>}
+                  <div className="csub">{CV?`${CV.diasFalta} días hábiles restantes · ya se hizo el ${fmt(CV.pctHecho,0)}% del mes`:`${diasHabilesRestantes} días hábiles restantes`}</div>
+                  {CV?.varProy!=null&&<div className={`delta ${CV.varProy>=0?"up":"dn"}`}>{CV.varProy>=0?"▲":"▼"} {fmt(Math.abs(CV.varProy),1)}% vs {nombreMes} {anioActual-1} ({fmtM(CV.prevMes)})</div>}
+                  {CV&&<div className="tsm" style={{marginTop:4}}>Con el promedio simple daría {fmtM(proyeccionSimple)}</div>}
                 </div>
                 <div className="card">
                   <div className="ctitle">Prom. diario {anioActual-1}</div>
@@ -1559,10 +1618,15 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                   <div className="csub">{nombreMes} {anioActual-1} · {diasHabilesAnterior} días hábiles</div>
                 </div>
               </div>
+              {CV&&<div className="card" style={{borderLeft:"4px solid #1D4ED8"}}>
+                <div className="ctitle">Cómo se proyecta el mes</div>
+                <div className="csub" style={{lineHeight:1.5}}>Las ventas arrancan fuertes los primeros 10 días (cobros) y bajan hacia fin de mes: del 16 al 28 se vende 10–14% menos que el promedio, y el sábado ~15% menos que un día normal. Por eso no se multiplica el promedio de lo que va del mes por los días que faltan: se usa la curva de los últimos 5 años.
+                {CV.prevMismos!=null&&<> Contra los mismos días ({CV.dias} días hasta el {+CV.ult.slice(8,10)}) de {nombreMes} {anioActual-1}: <b>{fmtM(CV.total)}</b> vs {fmtM(CV.prevMismos)} (<b style={{color:CV.varMismos>=0?"#15803D":"#B91C1C"}}>{CV.varMismos>=0?"+":""}{fmt(CV.varMismos,1)}%</b>).</>}</div>
+              </div>}
               {ventasMesActual.length>0&&<div className="card tw" style={{marginTop:4}}>
-                <table className="tcomp"><thead><tr><th>Fecha</th><th>Monto</th><th>vs prom.</th><th>Obs.</th></tr></thead>
+                <table className="tcomp"><thead><tr><th>Fecha</th><th>Monto</th><th>vs esperado</th><th>Obs.</th></tr></thead>
                 <tbody>{[...ventasMesActual].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)).map((v,i)=>{
-                  const diff = promDiario>0?((Number(v.monto)-promDiario)/promDiario*100):0;
+                  const esp = CV? CV.esperado(v.fecha) : promDiario; const diff = esp>0?((Number(v.monto)-esp)/esp*100):0;
                   return<tr key={i}>
                     <td style={{whiteSpace:"nowrap"}}>{fCorta(v.fecha)}</td>
                     <td className="tac">${fmt(Number(v.monto))}</td>
@@ -1578,7 +1642,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="grid4">
               <div className="card" style={{borderLeft:"4px solid #1D4ED8"}}><div className="ctitle">Tendencia (últimos 3 meses)</div><div className="cval" style={{color:"#1D4ED8"}}>{(CR.tend>=0?"+":"")+fmt(CR.tend,1)}%</div><div className="csub">{CR.u3.join(", ")} · es el escenario "Tendencia real"</div></div>
               <div className="card"><div className="ctitle">Acumulado {CR.anio}</div><div className="cval">{(CR.ytd>=0?"+":"")+fmt(CR.ytd,1)}%</div><div className="csub">Meses cerrados del año</div></div>
-              {CR.curso&&<div className="card"><div className="ctitle">{CR.curso.mes} en curso</div><div className="cval">{(CR.curso.pct>=0?"+":"")+fmt(CR.curso.pct,1)}%</div><div className="csub">{CR.curso.dias} días: {fmtM(CR.curso.pdA)}/día vs {fmtM(CR.curso.pdP)}/día el año pasado</div></div>}
+              {CR.curso&&<div className="card"><div className="ctitle">{CR.curso.mes} en curso</div><div className="cval">{(CR.curso.pct>=0?"+":"")+fmt(CR.curso.pct,1)}%</div><div className="csub">Hasta el {CR.curso.hasta}: {fmtM(CR.curso.v)} vs {fmtM(CR.curso.vPrev)} los mismos días del año pasado · proyección del mes {fmtM(CR.curso.proy)}</div></div>}
             </div>
             <div className="card tw"><table><thead><tr><th>Mes</th><th>Año anterior</th><th>Este año</th><th>Crecimiento</th></tr></thead>
               <tbody>{[...CR.meses].reverse().slice(0,12).map((x,i)=><tr key={i}><td style={{fontWeight:600}}>{x.mes}</td><td>{fmtM(x.vPrev)}</td><td>{fmtM(x.v)}</td>
