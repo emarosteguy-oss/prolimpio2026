@@ -173,6 +173,7 @@ const DEPOSITOS_CLAUDE = [
   {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"Santander",monto:39052,obs:"Abono pago a proveedores (captura)"},
   {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"Santander",monto:349,obs:"Abono pago a proveedores (captura)"},
   {fecha:"2026-10-15",tipo:"Tarjetas",cuenta:"BROU",monto:2632,obs:"TRF pago a proveedores (captura, a confirmar)"},
+  {fecha:"2026-10-16",tipo:"Tarjetas",cuenta:"Santander",monto:26918,obs:"Abono pago a proveedores (captura)"},
 ];
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
@@ -411,9 +412,9 @@ const COSTOS_PROGRAMADOS = {9:1801210, 10:1471711, 11:590720}; // dic incluye En
 const COMPRAS_TEMPORADA = {11:127780, 12:223599, 13:223598}; // dic: Intex 1/3 · ene y feb: Enjoy + Intex
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-15", diasYa:11, ventasMes:800337, ventasYa:805587, pagadoYa:927006, retiradoYa:36063 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-16", diasYa:11, ventasMes:800337, ventasYa:853055, pagadoYa:1070426, retiradoYa:36063 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + BROU TRF otros $2.718 (15/10, a confirmar); pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-15", ts:"2026-10-15T19:50:00.000Z", brou:68806, santUyu:-401705 }; // 15/10 16:49 saldos reales (capturas): Santander −401.706 (incluye buzonera $30.000 del 14/10 y abono $349); BROU 68.806
+const SALDO_REF = { fecha:"2026-10-16", ts:"2026-10-16T15:56:00.000Z", brou:71524, santUyu:-501207 }; // 16/10 12:56 saldos reales (capturas). Santander: −401.705 + buzonera 17.000 (cierre 15/10) − cheque 143.420 + tarjetas 26.918; BROU: 68.806 + TRF otros 2.718
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
