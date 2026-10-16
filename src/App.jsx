@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
@@ -7,7 +7,13 @@ import LOGO_H from "./logo.png";
 const CLIENT_ID = "590485373332-ft5l9d7md2ggoluku7pa8936cu6qlilg.apps.googleusercontent.com";
 const SHEET_ID  = "1RFLpLV_HKC6fLFe1LA0xNcYIjBZ3yJcV8OqvmvzrvQ0";
 const SHEET_CIERRES = "1Txwyn2fgzmrtqrsQCZOwMDbQjsQkmgxUetgJHcifgRg"; // planilla "PROlimpio Durazno – Cierres"
-const SCOPES    = "https://www.googleapis.com/auth/spreadsheets";
+const SCOPES    = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email";
+// Conexión con Google recordada en este equipo: el permiso dura ~1 hora; se guarda para no pedirlo en cada apertura
+const TOK_KEY = "prolimpio_gtok";
+const leerTok = () => { try{ const o=JSON.parse(localStorage.getItem(TOK_KEY)||"null"); if(o&&o.t&&o.exp>Date.now()+60000) return o; }catch(e){} return null; };
+const guardarTok = (t,seg) => { try{ localStorage.setItem(TOK_KEY,JSON.stringify({t,exp:Date.now()+(Number(seg)||3600)*1000})); localStorage.setItem("prolimpio_conectado","1"); }catch(e){} };
+const borrarTok = () => { try{ localStorage.removeItem(TOK_KEY); }catch(e){} };
+const yaConecto = () => { try{ return localStorage.getItem("prolimpio_conectado")==="1"; }catch(e){ return false; } };
 
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre"];
 const PROVEEDORES = ["SUBATIR","San Francisco","Emilio Benzo","Estuario Platino","Clausil","IRMARI","JASPE","Jupiter","Regional Sur","Norte Sur","Pedro Merla","Andres Bauer","Solsire","Atersa","Bettasul","Carmania","Uruquim","Zitan","Bakedplus","Otro"];
@@ -1012,6 +1018,7 @@ export default function App(){
   const [aiText,setAiText]=useState("");
   const [aiLoading,setAiLoading]=useState(false);
   const [token,setToken]=useState(null);
+  const [pideToque,setPideToque]=useState(false); // reconexión automática bloqueada por el navegador: un toque para reconectar
   const [syncStatus,setSyncStatus]=useState("disconnected"); // disconnected | syncing | ok | error
   const [sheetVentas,setSheetVentas]=useState([]);
   const [sheetCompras,setSheetCompras]=useState([]);
@@ -1027,29 +1034,47 @@ export default function App(){
   const showToast=useCallback((msg,type="ok")=>{setToast({msg,type});setTimeout(()=>setToast(null),3200)},[]);
 
   // Load Google Identity Services
+  const gisListo=useRef(false);
   useEffect(()=>{
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
+    script.onload = () => { gisListo.current=true; if(!leerTok() && yaConecto()) conectar("auto"); };
     document.head.appendChild(script);
   },[]);
 
-  const handleLogin = () => {
+  // Al abrir: si hay un permiso guardado y vigente, se usa directo (sin tocar nada)
+  useEffect(()=>{ const o=leerTok(); if(o){ setToken(o.t); setSyncStatus("syncing"); loadSheetData(o.t).then(ok=>{ if(ok!==false) setSyncStatus("ok"); }); } },[]);
+  // Al volver a la app: si el permiso venció, intenta reconectar solo (o deja el botón de un toque)
+  useEffect(()=>{ const f=()=>{ if(document.visibilityState!=="visible"||!token) return; if(!leerTok()){ setToken(null); setSyncStatus("disconnected"); if(gisListo.current) conectar("auto"); } };
+    document.addEventListener("visibilitychange",f); return ()=>document.removeEventListener("visibilitychange",f); },[token]);
+
+  const conectar = (modo) => {
+    if(!window.google?.accounts?.oauth2){ if(modo!=="auto") showToast("Google todavía está cargando, probá de nuevo en un segundo","er"); return; }
+    let hint=""; try{ hint=localStorage.getItem("prolimpio_gmail")||""; }catch(e){}
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
+      ...(hint?{hint}:{}),
       callback: async (resp) => {
         if(resp.access_token){
+          guardarTok(resp.access_token, resp.expires_in);
+          setPideToque(false);
           setToken(resp.access_token);
           setSyncStatus("syncing");
-          showToast("✓ Conectado a Google Sheets");
+          if(modo!=="auto") showToast("✓ Conectado a Google Sheets");
+          try{ const r=await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${resp.access_token}`); const j=await r.json(); if(j.email) localStorage.setItem("prolimpio_gmail",j.email); }catch(e){}
           await loadSheetData(resp.access_token);
           setSyncStatus("ok");
-        }
+        } else if(modo==="auto"){ setPideToque(true); setSyncStatus("disconnected"); }
       },
+      error_callback: () => { setPideToque(true); setSyncStatus("disconnected"); },
     });
-    client.requestAccessToken();
+    client.requestAccessToken(yaConecto()?{prompt:""}:{});
   };
+  const handleLogin = () => conectar("manual");
+  // Permiso vencido mientras se usa la app (Google responde 401)
+  const tokenVencido = () => { borrarTok(); setToken(null); setSyncStatus("disconnected"); setPideToque(true); };
 
   const cargarHistorico = async () => {
     if(!token){showToast("Conectate a Sheets primero","er");return;}
@@ -1156,6 +1181,7 @@ export default function App(){
       // Fetch sheet metadata to get real gids
       const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties`;
       const metaRes = await fetch(metaUrl, { headers: { Authorization: `Bearer ${tk}` } });
+      if(metaRes.status===401){ tokenVencido(); return false; }
       if(metaRes.ok){
         const meta = await metaRes.json();
         const gids = {};
@@ -1399,7 +1425,7 @@ export default function App(){
   };
 
   const syncDot = syncStatus==="ok"?"green":syncStatus==="syncing"?"orange":"red";
-  const syncLabel = syncStatus==="ok"?"Sheets conectado":syncStatus==="syncing"?"Sincronizando...":syncStatus==="disconnected"?"Conectar Sheets":"Error de sync";
+  const syncLabel = syncStatus==="ok"?"Sheets conectado":syncStatus==="syncing"?"Sincronizando...":syncStatus==="disconnected"?(yaConecto()?"Reconectar":"Conectar Sheets"):"Error de sync";
 
   const tk26=TK.filter(r=>r.c26).reduce((s,r)=>s+(r.c26||0),0);
   const tk25=TK.filter(r=>r.c26).reduce((s,r)=>s+(r.c25||0),0);
@@ -1548,6 +1574,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           </div>
         </div>
       </header>
+      {!token&&pideToque&&<div onClick={handleLogin} style={{cursor:"pointer",margin:"8px 16px 0",padding:"12px 14px",borderRadius:12,background:"#e84400",color:"#fff",fontWeight:700,textAlign:"center"}}>🔄 Tocá acá para reconectar con Google</div>}
       {!modoCaja&&<nav className="nav">
         {TABS.map(n=><button key={n.id} className={`nav-btn${tab===n.id?" active":""}`} onClick={()=>setTab(n.id)}>{n.label}</button>)}
       </nav>}
