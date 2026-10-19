@@ -169,6 +169,7 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-10-19",clave:"pend|2026-10|Solsire Sal (210 USD)|8505",concepto:"Solsire Sal (210 USD)",monto:8505,mes:"2026-10",ts:"2026-10-19T12:00:00.000Z",cuenta:"BROU",obs:"Marcado pagado en la planilla 19/10"},
   {fecha:"2026-10-19",clave:"pend|2026-10|Unión Disprofarma|55046",concepto:"Unión Disprofarma",monto:55046,mes:"2026-10",ts:"2026-10-19T21:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-16",clave:"pend|2026-10|SUBATIR (llegó 26/08)|143420",concepto:"SUBATIR (llegó 26/08)",monto:143420,mes:"2026-10",ts:"2026-10-16T13:00:00.000Z",cuenta:"Santander"},
 ];
@@ -366,11 +367,10 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "15/10/2026";
+const PENDIENTES_FECHA = "19/10/2026";
 const PENDIENTES = [
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:143420,tipo:"cheque"}, // la planilla decía 149.960; el cheque real fue 143.420 (cobrado 16/10)
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
-  {mes:"2026-10",prov:"Andrés Bauer (527 USD)",monto:21344,tipo:"prov"},
   {mes:"2026-10",prov:"Solsire Sal (210 USD)",monto:8505,tipo:"prov"},
   {mes:"2026-10",prov:"Unión Disprofarma",monto:55046,tipo:"prov"},
   {mes:"2026-10",prov:"Jaspe",monto:28812,tipo:"prov"},
@@ -397,8 +397,8 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"SUBATIR",monto:193210,tipo:"cheque"},
   {mes:"2026-11",prov:"Estuario Platino",monto:72116,tipo:"prov"},
   {mes:"2026-11",prov:"Jaspe",monto:19768,tipo:"prov"},
-  {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg, sin facturar)",monto:159478,tipo:"cheque"},
-  {mes:"2026-11",prov:"SUBATIR",monto:6303,tipo:"cheque"},
+  {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg)",monto:171694,tipo:"cheque"},
+  {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,tipo:"prov"},
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,tipo:"credito"},
   {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,tipo:"prov"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,tipo:"prov"},
@@ -414,12 +414,12 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1801210, 10:1471711, 11:590720}; // dic incluye Enjoy 1/3 (95.819), que la planilla llama "SUBATIR INTEX"
+const COSTOS_PROGRAMADOS = {9:1773327, 10:1498968, 11:590720}; // planilla 19/10 sin cuotas de créditos; dic sin Intex (va aparte en COMPRAS_TEMPORADA, porque el costo estimado de dic supera lo programado)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 const COMPRAS_TEMPORADA = {11:127780, 12:223599, 13:223598}; // dic: Intex 1/3 · ene y feb: Enjoy + Intex
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:968469, pagadoYa:1128679, retiradoYa:36063 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:968469, pagadoYa:1137184, retiradoYa:36063 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Solsire Sal $8.505 (pagado según planilla 19/10, cuenta a confirmar; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
 const SALDO_REF = { fecha:"2026-10-19", ts:"2026-10-19T21:11:00.000Z", brou:76881, santUyu:-449808 }; // 19/10 18:11 Santander real (captura): −418.498 + buzonera 22.000 + cobro de SUBATIR 1.814 (nos lo debían) − Unión Disprofarma 55.046 − comisión transferencia 78 (cierra exacto); BROU sin cambios desde 17/10
 
