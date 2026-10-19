@@ -1580,6 +1580,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           <div className="header-sub">{modoCaja?"Cierre de caja · Durazno":"Panel de gestión · Durazno"}</div>
         </div>
         <div className="header-actions">
+          <a className="sync-badge" href="./reloj.html" style={{textDecoration:"none",color:"inherit"}} title="Reloj de marcas del personal">⏱️ Reloj</a>
           <div className="sync-badge" onClick={!token?handleLogin:()=>loadSheetData(token)}>
             <span className={`sync-dot ${syncDot}`}/>
             {syncLabel}
