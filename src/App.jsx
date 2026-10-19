@@ -1822,10 +1822,13 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <details style={{marginBottom:12}}><summary style={{cursor:"pointer",color:"#9A3412",fontWeight:600}}>¿Lo leyó Claude en el lector de cierres? Pegar código del lector</summary>
                 <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}><textarea className="ftxt" style={{minHeight:60,flex:"1 1 220px"}} placeholder="Pegá acá el código" value={codLector} onChange={e=>setCodLector(e.target.value)}/>
                 <button className="btn btn-p" onClick={()=>{if(aplicarCodigoLector(codLector))setCodLector("");}}>Cargar números</button></div></details>
-              <label style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"18px",border:"2px dashed #E84400",borderRadius:12,cursor:"pointer",color:"#9A3412",fontWeight:700,fontSize:"1.05rem"}}>
-                📷 {fotos.length?`${fotos.length} foto(s) — agregar otra`:"Sacar o elegir foto"}
-                <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={async e=>{const fs=[...e.target.files];e.target.value="";try{const urls=await Promise.all(fs.map(reducirFoto));setFotos(p=>[...p,...urls].slice(0,4));}catch(x){showToast("No se pudo abrir la foto","er");}}}/>
-              </label>
+              {(()=>{const alElegir=async e=>{const fs=[...e.target.files];e.target.value="";try{const urls=await Promise.all(fs.map(reducirFoto));setFotos(p=>[...p,...urls].slice(0,4));}catch(x){showToast("No se pudo abrir la foto","er");}};
+                const est={flex:"1 1 150px",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"16px 10px",border:"2px dashed #E84400",borderRadius:12,cursor:"pointer",color:"#9A3412",fontWeight:700,fontSize:"1.02rem",textAlign:"center"};
+                return <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                  <label style={est}>📷 {fotos.length?"Sacar otra foto":"Sacar foto"}<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={alElegir}/></label>
+                  <label style={est}>🖼️ Elegir de la galería<input type="file" accept="image/*" multiple style={{display:"none"}} onChange={alElegir}/></label>
+                </div>;})()}
+              {fotos.length>0&&<div className="tsm" style={{marginTop:6}}>{fotos.length} foto(s) cargada(s). Podés sacar una por papel (hasta 4).</div>}
               {fotos.length>0&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:10}}>{fotos.map((u,i)=><div key={i} style={{position:"relative"}}><img src={u} alt="" style={{width:72,height:72,objectFit:"cover",borderRadius:8,border:"1px solid #F2C9A0"}}/><button onClick={()=>setFotos(p=>p.filter((_,j)=>j!==i))} style={{position:"absolute",top:-6,right:-6,background:"#B91C1C",color:"#fff",border:"none",borderRadius:"50%",width:22,height:22,cursor:"pointer"}}>×</button></div>)}</div>}
               <button className="btn btn-p" style={{marginTop:12,width:"100%",fontSize:"1.05rem"}} disabled={!!leyendo} onClick={analizarFotos}>{leyendo?`⏳ ${leyendo}`:"✨ Leer la foto y completar"}</button>
               {leyendo&&<button className="btn btn-s" style={{marginTop:8,width:"100%"}} onClick={()=>{CANCELAR_LECTURA&&CANCELAR_LECTURA();}}>✋ Cancelar lectura</button>}
