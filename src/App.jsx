@@ -657,10 +657,14 @@ const proyMesCurva = (y, m, lista) => {
     varProy: pdPrevMes? (pdProy/pdPrevMes-1)*100 : null};
 };
 // Mes en curso con los datos de la planilla (se usa en la proyección de caja y el pedido de SUBATIR)
-const CURVA_CURSO = (()=>{ const mc=MES_EN_CURSO; const y=2026+Math.floor(mc.idx/12), m=mc.idx%12; const r=proyMesCurva(y,m,VENTAS_DIA_PLANILLA); return r&&r.dias>=5?{y,m,...r}:null; })();
+// Ventas de días que todavía no están en la planilla: las cargadas en la app y, si no, el total del cierre de caja (se actualiza en cada render)
+let EXTRA_VENTAS = [];
+const ventasConExtra = () => { const fs=new Set(VENTAS_DIA_PLANILLA.map(v=>v.fecha)); const vistos=new Set(); const out=[...VENTAS_DIA_PLANILLA];
+  for(const v of EXTRA_VENTAS){ if(!v.fecha||fs.has(v.fecha)||vistos.has(v.fecha)) continue; vistos.add(v.fecha); out.push(v); } return out; };
+const curvaCurso = () => { const mc=MES_EN_CURSO; const y=2026+Math.floor(mc.idx/12), m=mc.idx%12; const r=proyMesCurva(y,m,ventasConExtra()); return r&&r.dias>=5?{y,m,...r}:null; };
 // mes futuro = promedio diario del mismo mes del año anterior × (1+crecimiento) × días hábiles de este año
 const escalaDias = (y,m) => dhMes(y,m)/dhMes(y-1,m);
-const ventaMesBase = (y,m) => { const r=VM[m]?.[String(y)]; if(r!=null) return r; if(CURVA_CURSO&&CURVA_CURSO.y===y&&CURVA_CURSO.m===m) return CURVA_CURSO.proy; return null; };
+const ventaMesBase = (y,m) => { const r=VM[m]?.[String(y)]; if(r!=null) return r; const cc=curvaCurso(); if(cc&&cc.y===y&&cc.m===m) return cc.proy; return null; };
 // Crecimiento real de ventas mes a mes (2026 vs 2025) y tendencia de los últimos 3 meses cerrados
 const crecimientoReal = () => {
   const meses=[]; ["2026","2027"].forEach(y=>{const p=String(+y-1); VM.forEach((r,i)=>{ if(r[y]!=null&&r[p]){ const dh=dhMes(+y,i), dhP=dhMes(+p,i); meses.push({mes:`${MES3[i]} ${y.slice(2)}`,y,i,v:r[y],vPrev:r[p],dh,dhP,pd:r[y]/dh,pdPrev:r[p]/dhP,pct:(r[y]/dh/(r[p]/dhP)-1)*100,pctTot:(r[y]/r[p]-1)*100}); } });});
@@ -669,7 +673,7 @@ const crecimientoReal = () => {
   const anio=meses.length?meses[meses.length-1].y:"2026"; const ya=meses.filter(x=>x.y===anio);
   const ytd=ya.length?(ya.reduce((s,x)=>s+x.v,0)/ya.reduce((s,x)=>s+x.dh,0)/(ya.reduce((s,x)=>s+x.vPrev,0)/ya.reduce((s,x)=>s+x.dhP,0))-1)*100:0;
   // mes en curso: contra los mismos días del mismo mes del año anterior
-  let curso=null; const cc=CURVA_CURSO;
+  let curso=null; const cc=curvaCurso();
   if(cc&&VM[cc.m]?.[String(cc.y)]==null&&cc.prevMismos){ curso={mes:`${MES3[cc.m]} ${String(cc.y).slice(2)}`,dias:cc.dias,diasPrev:cc.prevDiasMismos,hasta:+cc.ult.slice(8,10),v:cc.total,vPrev:cc.prevMismos,pdA:cc.pd,pdP:cc.pdPrevMismos,pct:cc.varMismos,proy:cc.proy,pdProy:cc.pdProy,pdPrevMes:cc.pdPrevMes,prevMes:cc.prevMes,varProy:cc.varProy}; }
   return {meses,tend,ytd,anio,curso,u3:u3.map(x=>x.mes)};
 };
@@ -1036,6 +1040,10 @@ export default function App(){
   const [pideToque,setPideToque]=useState(false); // reconexión automática bloqueada por el navegador: un toque para reconectar
   const [syncStatus,setSyncStatus]=useState("disconnected"); // disconnected | syncing | ok | error
   const [sheetVentas,setSheetVentas]=useState([]);
+  // total del día según el cierre de caja: POS + ERP contado + ERP tarjeta + crédito + transferencias
+  const ventasCierres=useMemo(()=>sheetCierres2.map(c=>({fecha:c.fecha,monto:(c.ventaPos||0)+(c.ventasErp||0)+(c.tarjetaErp||0)+(c.credito||0)+(c.transferencia||0),obs:"",origen:"Cierre"})).filter(v=>v.monto>0),[sheetCierres2]);
+  const ventasExtra=useMemo(()=>{const fa=new Set(sheetVentas.map(v=>v.fecha)); return [...sheetVentas.map(v=>({...v,origen:"App"})),...ventasCierres.filter(v=>!fa.has(v.fecha))];},[sheetVentas,ventasCierres]);
+  EXTRA_VENTAS=ventasExtra;
   const [sheetCompras,setSheetCompras]=useState([]);
   const [sheetTickets,setSheetTickets]=useState([]);
   const [sheetGids,setSheetGids]=useState({Ventas:0,Compras:1,Tickets:2});
@@ -1561,7 +1569,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
 
   // ventas del mes en curso (planilla + app)
   const RMC=(()=>{const delM=v=>{if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0)return false;const d=new Date(v.fecha+"T12:00:00");return d.getMonth()===mIdx&&d.getFullYear()===yAct;};
-    const pl=VENTAS_DIA_PLANILLA.filter(delM); const fs=new Set(pl.map(v=>v.fecha)); const todas=[...pl,...sheetVentas.filter(delM).filter(v=>!fs.has(v.fecha))];
+    const todas=ventasConExtra().filter(delM);
     const total=todas.reduce((s,v)=>s+Number(v.monto),0), dias=todas.length, prom=dias?total/dias:0;
     const dh=DIAS_HABILES[String(yAct)]?.[MES3[mIdx]]||26, vPrev=VM[mIdx]?.[String(yAct-1)], dhP=DIAS_HABILES[String(yAct-1)]?.[MES3[mIdx]]||26;
     const promPrev=vPrev?vPrev/dhP:null; const cv=proyMesCurva(yAct,mIdx,todas);
@@ -1652,7 +1660,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             const delMes = v=>{ if(!v.fecha||isNaN(Number(v.monto))||Number(v.monto)<=0) return false; const d = new Date(v.fecha+"T12:00:00"); return d.getMonth()===mesActual && d.getFullYear()===anioActual; };
             const dePlanilla = VENTAS_DIA_PLANILLA.filter(delMes).map(v=>({...v,origen:"Planilla"}));
             const fechasPl = new Set(dePlanilla.map(v=>v.fecha));
-            const ventasMesActual = [...dePlanilla, ...sheetVentas.filter(delMes).filter(v=>!fechasPl.has(v.fecha)).map(v=>({...v,origen:"App"}))];
+            const ventasMesActual = [...dePlanilla, ...ventasExtra.filter(delMes).filter(v=>!fechasPl.has(v.fecha))];
             const totalMes = ventasMesActual.reduce((s,v)=>s+Number(v.monto),0);
             const diasCargados = ventasMesActual.length;
             const promDiario = diasCargados>0?totalMes/diasCargados:0;
@@ -1709,7 +1717,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                     <td style={{whiteSpace:"nowrap"}}>{fCorta(v.fecha)}</td>
                     <td className="tac">${fmt(Number(v.monto))}</td>
                     <td><span className={`tag ${diff>=0?"tg":"tr"}`}>{diff>=0?"+":""}{fmt(diff,1)}%</span></td>
-                    <td className="tsm">{v.obs||""}{v.origen==="App"?<span className="tag ty" style={{marginLeft:v.obs?4:0}}>app</span>:null}</td>
+                    <td className="tsm">{v.obs||""}{v.origen==="App"?<span className="tag ty" style={{marginLeft:v.obs?4:0}}>app</span>:v.origen==="Cierre"?<span className="tag tg">según cierre</span>:null}</td>
                   </tr>;
                 })}</tbody></table>
               </div>}
