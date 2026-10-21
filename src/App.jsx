@@ -421,9 +421,12 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1805402, 10:1498968, 11:494901}; // planilla 19/10 sin cuotas de créditos; dic sin los cheques de Enjoy e Intex (van aparte en COMPRAS_TEMPORADA, porque el costo estimado de dic supera lo programado)
+const COSTOS_PROGRAMADOS = {9:1805402, 10:1498968, 11:718500}; // planilla 19/10 sin cuotas de créditos; dic incluye los cheques de Enjoy e Intex
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
-const COMPRAS_TEMPORADA = {11:223599, 12:223599, 13:223598}; // cheques de temporada librados a SUBATIR: Enjoy (20/12, 20/01, 20/02) + Intex (30/12, 30/01, 28/02)
+// Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
+// son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
+const COMPRAS_TEMPORADA = {};
+const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
 const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1028173, pagadoYa:1174649, retiradoYa:47303, candelaPagada:true }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
@@ -755,7 +758,10 @@ const planSubatir = (cfg, semanas=14) => {
   const crec=crecEscenario(cfg,cfg.escSel||"medio"); const vm=ventasMesProy(crec);
   const pKg=Number(cfg.precioKg)||59, tope=Number(cfg.topeKg)||2500, pct=(Number(cfg.pctSub)||38.5)/100;
   const wMes={}; const sumW=(y,m)=>{ const k=y*12+m; if(wMes[k]!=null) return wMes[k]; let t=0; const nd=new Date(y,m+1,0).getDate(); for(let i=1;i<=nd;i++) t+=pesoDia(new Date(y,m,i,12)); return (wMes[k]=t); };
-  const ventaDia=(d)=>{ const w=pesoDia(d); if(!w) return 0; const y=d.getFullYear(),m=d.getMonth(); return vm(y,m)*w/sumW(y,m); }; // reparte la venta del mes según la curva
+  // En la zafra parte de lo que se vende es mercadería de temporada (Intex, Enjoy) que ya está en el local: no se repone en SUBATIR
+  const ventaTemp=TEMPORADA.costo/((Number(cfg.varPct)||68)/100); const totTemp=TEMPORADA.meses.reduce((t,[y,m])=>t+vm(y,m),0);
+  const fracTemp=(y,m)=> TEMPORADA.meses.some(([a,b])=>a===y&&b===m)&&totTemp>0 ? Math.min(0.5,ventaTemp/totTemp) : 0;
+  const ventaDia=(d)=>{ const w=pesoDia(d); if(!w) return 0; const y=d.getFullYear(),m=d.getMonth(); return vm(y,m)*w/sumW(y,m)*(1-fracTemp(y,m)); }; // reparte la venta del mes según la curva
   const hoy=new Date(); hoy.setHours(12,0,0,0); const lun=new Date(hoy); do{ lun.setDate(lun.getDate()+1); }while(lun.getDay()!==1);
   const filas=[];
   for(let k=0;k<semanas;k++){
@@ -774,13 +780,15 @@ const planSubatir = (cfg, semanas=14) => {
   if(iF>=0){
     let n=0; for(let k=iF;k<filas.length&&n<4&&grande(filas[k]);k++,n++) filas[k].enTemporada=true;
     const faltaTot=filas.filter(f=>f.enTemporada).reduce((s,f)=>s+f.faltaKg,0);
-    const kg=Number(cfg.extraKg)>0?Number(cfg.extraKg):Math.ceil(faltaTot/50)*50;
+    // lo que falta se cubre primero con el stock de más que ya hay en el local (parte SUBATIR del excedente sobre 3 meses de cobertura)
+    const st=STOCK_HIST[STOCK_HIST.length-1]; const excesoKg=Math.max(0,Math.round((st.valor-3*COMPRAS_PROM_MES)*pct/pKg));
+    const kg=Number(cfg.extraKg)>0?Number(cfg.extraKg):Math.max(0,Math.ceil((faltaTot-excesoKg)/50)*50);
     const lunesSug=filas[Math.max(0,iF-1)].lunes;
     const fecha=cfg.extraFecha&&cfg.extraFecha>=filas[0].lunes?cfg.extraFecha:lunesSug;
     const llega=new Date(fecha+"T12:00:00"); llega.setDate(llega.getDate()+2); const paga=new Date(llega); paga.setDate(llega.getDate()+45);
-    extra={kg,monto:Math.round(kg*pKg),fecha,sugerida:lunesSug,llega:isoDe(llega),paga:isoDe(paga),faltaTot,primera:filas[iF].lunes,semanas:n};
-    let stock=0, entro=false;
-    filas.forEach(f=>{ if(!entro&&f.llega>=extra.llega){ stock=kg; entro=true; } if(!f.enTemporada) return; const usa=Math.min(stock,f.faltaKg); stock-=usa; f.cubreExtra=usa; f.faltaFinal=f.faltaKg-usa; });
+    extra={kg,monto:Math.round(kg*pKg),fecha,sugerida:lunesSug,llega:isoDe(llega),paga:isoDe(paga),faltaTot,primera:filas[iF].lunes,semanas:n,excesoKg:Math.min(excesoKg,faltaTot)};
+    let stock=Math.min(excesoKg,faltaTot), entro=false;
+    filas.forEach(f=>{ if(!entro&&f.llega>=extra.llega){ stock+=kg; entro=true; } if(!f.enTemporada) return; const usa=Math.min(stock,f.faltaKg); stock-=usa; f.cubreExtra=usa; f.faltaFinal=f.faltaKg-usa; });
   }
   return {filas,extra,pKg,tope,pct:pct*100,crec};
 };
@@ -1664,7 +1672,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="ctitle">Pedido SUBATIR del lunes {fD(PS.filas[0].lunes)}</div>
               <div className="cval">{fmt(PS.filas[0].kgPed)} kg</div>
               <div className="csub">≈ {fmtM(PS.filas[0].montoPed)}{PS.filas[0].faltaKg>0?` · harían falta ${fmt(PS.filas[0].kgNec)} kg`:""}</div>
-              {PS.extra&&<div className="delta up">Pedido extra de temporada: {fmt(PS.extra.kg)} kg el lunes {fD(PS.extra.fecha)}</div>}
+              {PS.extra&&PS.extra.kg>0&&<div className="delta up">Pedido extra de temporada: {fmt(PS.extra.kg)} kg el lunes {fD(PS.extra.fecha)}</div>}
             </div>}
             <div className="card" onClick={()=>setTab("proy")} style={{cursor:"pointer"}}>
               <div className="ctitle">Retiro de {MESES[mIdx]}</div>
@@ -2073,8 +2081,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="grid4">
               <div className="card" style={{borderLeft:"4px solid #E84400"}}><div className="ctitle">Pedido del lunes {fD(f0.lunes)}</div><div className="cval ac">{fmt(f0.kgPed)} kg</div><div className="csub">≈ {fmtM(f0.montoPed)} · cubre ventas del {fD(f0.llega)} al martes (est. {fmtM(f0.ventas)}) · se paga ~{fD(f0.paga)}</div>
                 {f0.faltaKg>0&&<div className={`delta ${f0.faltaKg<=PS.tope*0.2?"wr":"dn"}`}>Necesitaría {fmt(f0.kgNec)} kg: {f0.faltaKg<=PS.tope*0.2?`pedí unos ${fmt(f0.kgNec)} kg si te lo aceptan`:`faltan ${fmt(f0.faltaKg)} kg`}</div>}</div>
-              {E?<div className="card" style={{borderLeft:"4px solid #15803D"}}><div className="ctitle">Pedido extra de inicio de temporada</div><div className="cval" style={{color:"#15803D"}}>{fmt(E.kg)} kg</div>
-                <div className="csub">≈ {fmtM(E.monto)} · pedir el lunes {fD(E.fecha)}{E.fecha!==E.sugerida?` (sugerido ${fD(E.sugerida)})`:""}, llega {fD(E.llega)}, se paga ~{fD(E.paga)}. Cubre los {fmt(E.faltaTot)} kg que no entran en el tope en las {E.semanas} semanas fuertes desde el {fD(E.primera)}.</div></div>
+              {E?<div className="card" style={{borderLeft:"4px solid #15803D"}}><div className="ctitle">Pedido extra de inicio de temporada</div><div className="cval" style={{color:"#15803D"}}>{E.kg?`${fmt(E.kg)} kg`:"No hace falta"}</div>
+                <div className="csub">{E.kg?<>≈ {fmtM(E.monto)} · pedir el lunes {fD(E.fecha)}{E.fecha!==E.sugerida?` (sugerido ${fD(E.sugerida)})`:""}, llega {fD(E.llega)}, se paga ~{fD(E.paga)}. </>:null}En las {E.semanas} semanas fuertes desde el {fD(E.primera)} faltan {fmt(E.faltaTot)} kg sobre el tope{E.excesoKg?`; unos ${fmt(E.excesoKg)} kg los cubre el stock de más que ya hay en el local`:""}{E.kg?` y el resto este pedido`:""}.</div></div>
                :<div className="card"><div className="ctitle">Pedido extra de temporada</div><div className="cval">No hace falta</div><div className="csub">En las próximas {PS.filas.length} semanas todo entra en el tope de {fmt(PS.tope)} kg.</div></div>}
             </div>
             <div className="card tw"><table className="tcomp"><thead><tr><th>Lunes</th><th>Necesario</th><th>Pedir</th><th>Falta</th></tr></thead>
@@ -2091,7 +2099,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="fl"><label className="flabel">Pedido extra: kg (0 = sugerido)</label><input type="number" className="finput" value={caja.extraKg} onChange={num("extraKg")}/></div>
               <div className="fl"><label className="flabel">Pedido extra: lunes (vacío = sugerido)</label><input type="date" className="finput" value={caja.extraFecha||""} onChange={e=>setCaja({extraFecha:e.target.value})}/></div>
             </div>
-            <div className="tsm" style={{marginTop:8}}>Ventas de cada día = venta proyectada del mes (escenario elegido en Proyección) ÷ días hábiles. Lo necesario es el % de SUBATIR sobre esas ventas, a costo. Si una semana necesita menos que el tope, pedí solo lo necesario para no subir el stock. El precio por kg sale del pedido del 12/10 (2.650 kg ≈ $157.000); actualizalo cuando cambie. Diciembre se reparte parejo en el mes; en la práctica las últimas dos semanas venden más. Faltante en amarillo: es poco, alcanza con pedir un poco más del tope (como los 2.650 kg del 12/10). En rojo: hace falta un segundo pedido esa semana o ampliar el tope.</div></div>
+            <div className="tsm" style={{marginTop:8}}>Ventas de cada día = venta proyectada del mes (escenario elegido en Proyección) ÷ días hábiles. Lo necesario es el % de SUBATIR sobre esas ventas, a costo. Si una semana necesita menos que el tope, pedí solo lo necesario para no subir el stock. El precio por kg sale del pedido del 12/10 (2.650 kg ≈ $157.000); actualizalo cuando cambie. En noviembre a febrero no se cuenta la parte de las ventas que es mercadería de temporada (Intex, Enjoy) que ya está en el local. Faltante en amarillo: es poco, alcanza con pedir un poco más del tope (como los 2.650 kg del 12/10). En rojo: hace falta un segundo pedido esa semana o ampliar el tope.</div></div>
             </>;})()}
             <div className="sh"><span className="st">Stock valorizado</span><span className="ss">A costo · cobertura y crecimiento</span></div>
             {(()=>{
