@@ -423,7 +423,7 @@ const COSTOS_PROGRAMADOS = {9:1773327, 10:1498968, 11:590720}; // planilla 19/10
 const COMPRAS_TEMPORADA = {11:127780, 12:223599, 13:223598}; // dic: Intex 1/3 · ene y feb: Enjoy + Intex
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:999274, pagadoYa:1140837, retiradoYa:46565 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:999274, pagadoYa:1145837, retiradoYa:46565 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
 const SALDO_REF = { fecha:"2026-10-20", ts:"2026-10-20T13:55:00.000Z", brou:57586, santUyu:-423274 }; // 20/10 10:55 Santander real (captura): −449.808 + tarjetas 28.223 + 1.067 − Antel 2.756 (débito automático); BROU 19/10 18:36
 
@@ -466,7 +466,7 @@ const COSTOS_FIJOS = [
   {nombre:"Otros gastos", monto:55000},
 ];
 const COSTOS_FIJOS_MES = {
-  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (vence 20/10)",monto:5000}],
+  "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:85000},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
   "2026-11":[{nombre:"Alquiler",monto:65370},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS",monto:220000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:90000},{nombre:"Otros gastos",monto:45000}],
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
@@ -510,6 +510,12 @@ const CIERRES_CLAUDE = [
   {fecha:"2026-10-12",cajero:"Natalia Pereira",ventaPos:42633,efectivoPos:12756,tarjetasPos:29877,visa:9033,mastercard:20010,oca:null,maestro:null,otrasTj:834,aperturaPos:9839,salidaPos:13000,saldoSistema:9595,efectivoContado:9593,diferencia:-2,aperturaErp:18050,ventasErp:3409,tarjetaErp:5835,gastosEf:0,deposito:16000,saldoErp:18459,credito:0,transferencia:0,gastosDetalle:"",obs:"Leído por Claude (chat)",ts:"2026-10-12T21:30:00.000Z"},
   {fecha:"2026-10-13",cajero:"Valentina Preza",ventaPos:50346,efectivoPos:22446,tarjetasPos:27900,visa:11651,mastercard:14505,oca:null,maestro:null,otrasTj:1744,aperturaPos:9593,salidaPos:21000,saldoSistema:11039,efectivoContado:11034,diferencia:-5,aperturaErp:18459,ventasErp:19750,tarjetaErp:0,gastosEf:330,deposito:40000,saldoErp:18879,credito:0,transferencia:0,gastosDetalle:"San Roque $330",obs:"Leído por Claude (chat). Cabal $1.744 en otras. ERP: devoluciones $7.520 y $279 descontadas",ts:"2026-10-13T21:10:00.000Z"},
 ].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
+// Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
+const CIERRES_CORREC = {
+  "2026-10-16": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS
+  "2026-10-20": {tarjetaErp:null, gastosEf:6456, gastosDetalle:"Encomiendas del Litoral 400 y 470; Impacto Carrera 5.000 (correcaminata); Estela Elgues 319; Laurenza Dupont 267"}, // tarjetaErp tomó el saldo de caja ERP; total real del día $108.737 (Macrosoft)
+};
+const textoGastos = g => Array.isArray(g) ? g.map(x=> x&&typeof x==="object" ? [x.concepto||x.detalle||x.descripcion||x.nombre||"", x.monto??x.importe??""].join(" ").trim() : String(x)).join("; ") : (g&&typeof g==="object" ? Object.values(g).join(" ") : String(g||""));
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
@@ -523,6 +529,7 @@ const chequearCierre = (c) => {
   if(v("efectivoContado")!=null&&v("saldoSistema")!=null&&v("diferencia")!=null)
     R.push({ok:ok(v("efectivoContado")-v("saldoSistema"),v("diferencia")),txt:"Efectivo contado − saldo del sistema = diferencia",campos:["efectivoContado","saldoSistema","diferencia"]});
   if(["aperturaErp","ventasErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>v(k)!=null))
+    if(v("tarjetaErp")) R.push({ok:!(v("tarjetaErp")===v("saldoErp")||v("tarjetaErp")===v("tarjetasPos")),txt:"Ventas con tarjeta en ERP: solo si en el desglose hay sección \"Pos Alambrico Manual\" (si no, va 0)",campos:["tarjetaErp"]});
     R.push({ok:ok(v("aperturaErp")+v("ventasErp")+v("salidaPos")-v("gastosEf")-v("deposito"),v("saldoErp")),txt:"Caja ERP: apertura + ventas + ingreso del POS − gastos − depósito = saldo",campos:["aperturaErp","ventasErp","salidaPos","gastosEf","deposito","saldoErp"]});
   return R;
 };
@@ -534,9 +541,23 @@ const PROMPT_CIERRE = `Sos un asistente que lee cierres de caja de un local come
 Papeles posibles:
 1) "Y de Caja" (ticket térmico angosto): Venta Total; Forma Pago-: Efectivo y Tarjetas; Ingresos-: Apertura De Caja; Egresos-: Salida De Caja; "Saldo Caja--Sis" Efectivo; "Caja Final--Caj" Efectivo; "Diferencias--Si" Efectivo; y "Cajero: N-Nombre".
 2) "Z de Caja" (ticket térmico): líneas Efectivo, VISA, MASTERCARD, OCA, MAESTRO u otras tarjetas.
-3) "Desglose de Valores en Caja por Forma de Pago" (hoja A4 del ERP). Sección "1-Efectivo $": entradas "E-Ticket Contado"/"E-Factura Contado" (ventas en efectivo del ERP), "7 Apertura De Caja", "11 Ingreso De Pos"; salidas: gastos y retiros (Movimiento De Caja con conceptos como Arreglo, Adelanto, Retiro, Gasto Recibo, Regalo), "0 Deposito:DE" (depósito al banco); "Saldo" final. Sección "21-Pos Alambrico Manual": ventas con tarjeta en el ERP (restar devoluciones), usar su Saldo.
+3) "Desglose de Valores en Caja por Forma de Pago" (hoja A4 del ERP). Sección "1-Efectivo $": entradas "E-Ticket Contado"/"E-Factura Contado" (ventas en efectivo del ERP), "7 Apertura De Caja", "11 Ingreso De Pos"; salidas: gastos y retiros (Movimiento De Caja con conceptos como Arreglo, Adelanto, Retiro, Gasto Recibo, Regalo), "0 Deposito:DE" (depósito al banco); "Saldo" final. Sección "21-Pos Alambrico Manual": ventas con tarjeta en el ERP (restar devoluciones), usar su Saldo. Si esa sección NO aparece en la hoja, tarjetaErp es 0 (no uses el Saldo de la sección Efectivo ni las tarjetas del POS).
 4) Boleta de depósito del banco (MONTO).
-Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj, aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp, ventasErp (suma de E-Ticket/E-Factura Contado en efectivo), tarjetaErp (saldo de Pos Alambrico Manual), gastosEf (suma de salidas de efectivo del ERP que NO son depósito), deposito, saldoErp; y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre) y "gastosDetalle" (texto corto con concepto y monto de cada gasto). No agregues explicaciones.`;
+Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj, aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp, ventasErp (suma de E-Ticket/E-Factura Contado en efectivo), tarjetaErp (saldo de Pos Alambrico Manual), gastosEf (suma de TODAS las salidas de efectivo del ERP que NO son el depósito: Gasto Recibo, Movimiento De Caja, etc.; comprobá que apertura + ventas + ingreso de POS − gastosEf − depósito = saldo), deposito, saldoErp; y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre) y "gastosDetalle" (UN SOLO TEXTO, no lista: concepto y monto de cada gasto separados por punto y coma). No agregues explicaciones.`;
+// Junta las fotos del cierre en una sola imagen liviana para el mail (se guarda en la planilla de cierres, columnas AA en adelante)
+const fotoParaMail = async (urls) => {
+  if(!urls||!urls.length) return null;
+  const imgs=await Promise.all(urls.map(u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=u;}))).then(a=>a.filter(Boolean));
+  if(!imgs.length) return null;
+  for(const [H,q] of [[1100,0.6],[950,0.5],[800,0.45],[650,0.4],[520,0.35]]){
+    const ws=imgs.map(i=>Math.round(i.width*H/i.height)); let W=ws.reduce((a,b)=>a+b,0), h=H; const k=Math.min(1,1700/W); W=Math.round(W*k); h=Math.round(H*k);
+    const cv=document.createElement("canvas"); cv.width=W; cv.height=h; const g=cv.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,W,h);
+    let x=0; imgs.forEach((im,j)=>{ const w=Math.round(ws[j]*k); g.drawImage(im,x,0,w,h); x+=w; });
+    const b64=cv.toDataURL("image/jpeg",q).split(",")[1];
+    if(b64.length<=135000) return b64;
+  }
+  return null;
+};
 const achicarFoto = (url, M) => new Promise(res=>{ const img=new Image(); img.onload=()=>{ let w=img.width,h=img.height; const k=Math.min(1,M/Math.max(w,h)); const cv=document.createElement("canvas"); cv.width=Math.round(w*k); cv.height=Math.round(h*k); cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height); res(cv.toDataURL("image/jpeg",0.8)); }; img.onerror=()=>res(url); img.src=url; });
 let CANCELAR_LECTURA = null;
 const leerCierreConIA = async (fotos, orKey, onEstado) => {
@@ -1194,9 +1215,9 @@ export default function App(){
   };
 
   const loadCierres2 = async (tk) => {
-    try{ const rows=await gapi_read(tk,"CierresCaja!A2:AB3000",sidCierres||SHEET_ID);
+    try{ const rows=await gapi_read(tk,"CierresCaja!A2:Z3000",sidCierres||SHEET_ID);
       setActCierres(new Date().toLocaleTimeString("es-UY",{hour:"2-digit",minute:"2-digit"}));
-      setSheetCierres2(rows.map((r,i)=>{const o={_i:i,fecha:r[0],cajero:r[1]||""};CIERRE_CAMPOS.forEach(([k],j)=>{o[k]=r[2+j]===""||r[2+j]==null?null:Number(r[2+j]);});const b=2+CIERRE_CAMPOS.length;o.credito=Number(r[b])||0;o.transferencia=Number(r[b+1])||0;o.gastosDetalle=r[b+2]||"";o.obs=r[b+3]||"";o.ts=r[b+4]||"";return o;}).filter(o=>o.fecha));
+      setSheetCierres2(rows.map((r,i)=>{const o={_i:i,fecha:r[0],cajero:r[1]||""};CIERRE_CAMPOS.forEach(([k],j)=>{o[k]=r[2+j]===""||r[2+j]==null?null:Number(r[2+j]);});const b=2+CIERRE_CAMPOS.length;o.credito=Number(r[b])||0;o.transferencia=Number(r[b+1])||0;o.gastosDetalle=r[b+2]||"";o.obs=r[b+3]||"";o.ts=r[b+4]||"";if(/\[object Object\]/.test(o.gastosDetalle))o.gastosDetalle="";const cx=CIERRES_CORREC[o.fecha];return cx?{...o,...cx}:o;}).filter(o=>o.fecha));
     }catch(e){}
   };
   const loadSheetData = async (tk) => {
@@ -1334,7 +1355,7 @@ export default function App(){
     CIERRE_CAMPOS.forEach(([k])=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Math.abs(Number(d[k]))*(k==="diferencia"&&Number(d[k])<0?-1:1)); });
     if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=d.fecha;
     if(d.cajero) n.cajero=String(d.cajero).replace(/^\d+-/,"").trim();
-    if(d.gastosDetalle) n.gastosDetalle=String(d.gastosDetalle);
+    if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
     setCjF(n); setLeido({modelo:r.modelo}); showToast("✓ Foto leída: revisá los números");
   };
   // Datos que vienen del "Lector de cierres" (página de Claude): link #cierre=CODIGO o código pegado
@@ -1345,7 +1366,7 @@ export default function App(){
       const n={...CIERRE_VACIO()};
       [...CIERRE_CAMPOS.map(([k])=>k),"credito","transferencia"].forEach(k=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Number(d[k])); });
       if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=d.fecha;
-      if(d.cajero) n.cajero=String(d.cajero); if(d.gastosDetalle) n.gastosDetalle=String(d.gastosDetalle);
+      if(d.cajero) n.cajero=String(d.cajero); if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
       setCjF(n); setLeido({modelo:"Claude (lector de cierres)"}); setTab("control"); showToast("✓ Números del lector cargados: revisá y guardá"); return true;
     }catch(e){ showToast("El código no es válido. Copialo de nuevo desde el lector","er"); return false; }
   };
@@ -1359,7 +1380,13 @@ export default function App(){
     const sid=sidCierres||SHEET_ID;
     setSyncStatus("syncing");
     const okS=await gapi_ensure_sheet(token,"CierresCaja",HEAD_CIERRES,sid);
-    const fila=[cjF.fecha,cjF.cajero||"",...CIERRE_CAMPOS.map(([k])=>nC(cjF[k])==null?"":String(nC(cjF[k]))),String(nC(cjF.credito)||0),String(nC(cjF.transferencia)||0),cjF.gastosDetalle||"",cjF.obs||"",new Date().toISOString()];
+    const fila=[cjF.fecha,cjF.cajero||"",...CIERRE_CAMPOS.map(([k])=>nC(cjF[k])==null?"":String(nC(cjF[k]))),String(nC(cjF.credito)||0),String(nC(cjF.transferencia)||0),textoGastos(cjF.gastosDetalle),cjF.obs||"",new Date().toISOString()];
+    // foto liviana para el mail, partida en pedazos de 45.000 caracteres (límite de una celda)
+    try{ const b64=await fotoParaMail(fotos); if(b64 && okS){ const partes=b64.match(/.{1,45000}/g)||[];
+        const meta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties(sheetId,title,gridProperties.columnCount)`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json());
+        const hj=(meta.sheets||[]).find(x=>x.properties.title==="CierresCaja"); const fal=26+partes.length-(hj?.properties?.gridProperties?.columnCount||26);
+        if(hj&&fal>0) await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({requests:[{appendDimension:{sheetId:hj.properties.sheetId,dimension:"COLUMNS",length:fal+2}}]})});
+        fila.push(...partes.map(x=>"img:"+x)); } }catch(e){}
     const ok=okS&&await gapi_append(token,"CierresCaja",fila,sid);
     if(ok){ setSyncStatus("ok"); setUltimoCierre({...cjF}); setCjF(CIERRE_VACIO()); setFotos([]); setLeido(null); await loadCierres2(token); window.scrollTo({top:0,behavior:"smooth"}); }
     else { setSyncStatus("error"); showToast("No se pudo guardar: revisá la conexión","er"); }
