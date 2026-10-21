@@ -159,6 +159,7 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-10-20",monto:738,tipo:"Personal",cuenta:"Santander",ts:"2026-10-20T20:00:00.000Z",obs:"Compra Banred San José (a confirmar)"},
   {fecha:"2026-10-19",monto:6212,tipo:"Personal",cuenta:"BROU",ts:"2026-10-19T18:00:00.000Z",obs:"Lojas Renner (a confirmar)"},
   {fecha:"2026-10-19",monto:4290,tipo:"Personal",cuenta:"BROU",ts:"2026-10-19T18:05:00.000Z",obs:"Zara (a confirmar)"},
   {fecha:"2026-10-01",monto:1227,tipo:"Personal",cuenta:"BROU",ts:"2026-10-01T15:00:00.000Z",obs:"Carnicería"},
@@ -171,6 +172,7 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-10-20",clave:"pend|2026-10|Jaspe|28812",concepto:"Jaspe",monto:28812,mes:"2026-10",ts:"2026-10-20T20:00:00.000Z",cuenta:"BROU"},
   {fecha:"2026-10-19",clave:"pend|2026-10|Solsire Sal (210 USD)|8505",concepto:"Solsire Sal (210 USD)",monto:9402,mes:"2026-10",ts:"2026-10-19T12:00:00.000Z",cuenta:"BROU",obs:"Pagado 19/10 desde BROU ($9.401,70 al tipo de cambio del día)"},
   {fecha:"2026-10-19",clave:"pend|2026-10|Unión Disprofarma|55046",concepto:"Unión Disprofarma",monto:55046,mes:"2026-10",ts:"2026-10-19T21:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-16",clave:"pend|2026-10|SUBATIR (llegó 26/08)|143420",concepto:"SUBATIR (llegó 26/08)",monto:143420,mes:"2026-10",ts:"2026-10-16T13:00:00.000Z",cuenta:"Santander"},
@@ -423,9 +425,9 @@ const COSTOS_PROGRAMADOS = {9:1805402, 10:1498968, 11:590720}; // planilla 19/10
 const COMPRAS_TEMPORADA = {11:127780, 12:223599, 13:223598}; // dic: Intex 1/3 · ene y feb: Enjoy + Intex
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:999274, pagadoYa:1145837, retiradoYa:46565 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1028173, pagadoYa:1174649, retiradoYa:47303 }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-20", ts:"2026-10-20T13:55:00.000Z", brou:57586, santUyu:-423274 }; // 20/10 10:55 Santander real (captura): −449.808 + tarjetas 28.223 + 1.067 − Antel 2.756 (débito automático); BROU 19/10 18:36
+const SALDO_REF = { fecha:"2026-10-20", ts:"2026-10-21T02:36:00.000Z", brou:37203, santUyu:-398012 }; // 20/10 23:36 reales (capturas). Santander: −423.274 + buzonera 26.000 (cierre 20/10 + $1.000 del 19/10) − compra Banred San José 738. BROU: 57.586 + 5.530 (TRF pago a proveedores, cobro a confirmar) + 2.899 (transferencia Liga, cierre 20/10) − Jaspe 28.812
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -788,9 +790,9 @@ const conSaldoRef = (c) => {
   const n={...c,brou:SALDO_REF.brou,santUyu:SALDO_REF.santUyu,saldoFecha:SALDO_REF.fecha,saldoTs:SALDO_REF.ts};
   n.saldo=Math.round((+n.brou||0)+(+n.santUyu||0)+(+n.santUsd||0)*(+n.tc||0)); return n;
 };
-const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:65481, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
+const CAJA_DEFAULT = { brou:17000, santUyu:-390000, santUsd:0, tc:40, saldo:-373000, saldoFecha:"2026-10-01", cobros:59951, plazoFijo:313000, pagaPF:true, candela:19600, santander:53347,
   ratio:89, crec27:10, comisionPct:3, retiroFijo:80000, retiroFijo2:80000, retiroPct:0, alerta:-600000, limite:-1000000,
-  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:8 };
+  varPct:68, fijosMes:370000, infFijos:6, crecBajo:5, crecMedio:10, crecAlto:15, escSel:"medio", precioKg:59, topeKg:2500, pctSub:38.5, extraKg:0, extraFecha:"", cfgVer:9 };
 // 11/10/2026: costos 89% de las ventas (2026 sin el stock comprado de más) y retiro fijo $80.000/mes. Se aplica una vez sobre lo guardado en cada equipo.
 // 11/10/2026 (v72): proyección con gastos fijos + variables y tres escenarios de crecimiento.
 const migrarCfg = (c) => {
@@ -801,7 +803,8 @@ const migrarCfg = (c) => {
   if((n.cfgVer||0)<5) n={...n, cobros:Math.max(0,(Number(n.cobros)||0)-131801), cfgVer:5};
   if((n.cfgVer||0)<6) n={...n, cobros:Math.max(0,(Number(n.cobros)||0)-2718), cfgVer:6};
   if((n.cfgVer||0)<7) n={...n, cobros:Math.max(0,(Number(n.cobros)||0)-5357), cfgVer:7};
-  if((n.cfgVer||0)<8) n={...n, cobros:(Number(n.cobros)||0)+5357, cfgVer:8};   // 17/10: los $5.357 eran una venta por transferencia del cierre 17/10, no un cobro: se devuelven   // 15/10: cobrada venta a crédito $2.718 (BROU)   // 13/10: Olkany pagó $131.801 de los cobros pendientes
+  if((n.cfgVer||0)<8) n={...n, cobros:(Number(n.cobros)||0)+5357, cfgVer:8};
+  if((n.cfgVer||0)<9) n={...n, cobros:Math.max(0,(Number(n.cobros)||0)-5530), cfgVer:9};   // 20/10: BROU TRF pago a proveedores $5.530, cobro de venta a crédito (a confirmar)   // 17/10: los $5.357 eran una venta por transferencia del cierre 17/10, no un cobro: se devuelven   // 15/10: cobrada venta a crédito $2.718 (BROU)   // 13/10: Olkany pagó $131.801 de los cobros pendientes
   return n;
 };
 
