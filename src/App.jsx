@@ -191,6 +191,8 @@ const DEPOSITOS_CLAUDE = [
   {fecha:"2026-10-19",tipo:"Tarjetas",cuenta:"Santander",monto:25303,obs:"Abono pago a proveedores (captura, viernes y sábado)"},
   {fecha:"2026-10-20",tipo:"Tarjetas",cuenta:"Santander",monto:28223,obs:"Abono pago a proveedores (captura)"},
   {fecha:"2026-10-20",tipo:"Tarjetas",cuenta:"Santander",monto:1067,obs:"Abono pago a proveedores (captura)"},
+  {fecha:"2026-10-21",tipo:"Tarjetas",cuenta:"Santander",monto:28935,obs:"Abono pago a proveedores (captura)"},
+  {fecha:"2026-10-22",tipo:"Tarjetas",cuenta:"Santander",monto:18434,obs:"Abono pago a proveedores (captura)"},
 ];
 // Tickets del mes en curso (planilla "Analisis tickets")
 const TK_CURSO = { mes:9, anio:2026, hasta:"12/10", cantidad:827, promedio:680.11, dias:10 };
@@ -431,9 +433,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1028173, pagadoYa:1174649, retiradoYa:47303, candelaPagada:true }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1171634, pagadoYa:1174649, retiradoYa:48106, candelaPagada:true }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-20", ts:"2026-10-21T02:42:00.000Z", brou:37203, santUyu:-417396, santUsd:3.45, tc:41.42 }; // 23:42: Santander $ −398.012 − cuota Candela 468 USD pagada en pesos ($19.384); cuenta USD +3,45 // 20/10 23:36 reales (capturas). Santander: −423.274 + buzonera 26.000 (cierre 20/10 + $1.000 del 19/10) − compra Banred San José 738. BROU: 57.586 + 5.530 (TRF pago a proveedores, cobro a confirmar) + 2.899 (transferencia Liga, cierre 20/10) − Jaspe 28.812
+const SALDO_REF = { fecha:"2026-10-22", ts:"2026-10-22T20:22:00.000Z", brou:86027, santUyu:-324897, santUsd:0, tc:41.42 }; // 22/10 17:22 reales (capturas). Santander: −417.396 + tarjetas 28.935 (20/10) + 18.434 (21/10) + buzoneras 21.000 (21/10) + 24.000 (22/10) (+130 sin identificar; la compra de 738 del 20/10 quedó firme como Supermercado Italia). BROU: 37.203 + transferencias recibidas 49.627 (21–22/10) − farmacia 476 − carnicería 327
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -528,6 +530,7 @@ const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
   const v=k=>nC(c[k]); const ok=(a,b)=>Math.abs(a-b)<=1; const R=[];
+  if(c.fecha&&c.fecha>hoyISO()) R.push({ok:false,txt:"La fecha del cierre es posterior a hoy: revisá la fecha",campos:["fecha"]});
   if(v("ventaPos")!=null&&v("efectivoPos")!=null&&v("tarjetasPos")!=null)
     R.push({ok:ok(v("efectivoPos")+v("tarjetasPos"),v("ventaPos")),txt:"Efectivo + tarjetas = venta total POS",campos:["ventaPos","efectivoPos","tarjetasPos"]});
   const marcas=["visa","mastercard","oca","maestro","otrasTj"].map(v).filter(x=>x!=null);
@@ -1231,7 +1234,14 @@ export default function App(){
   const loadCierres2 = async (tk) => {
     try{ const rows=await gapi_read(tk,"CierresCaja!A2:Z3000",sidCierres||SHEET_ID);
       setActCierres(new Date().toLocaleTimeString("es-UY",{hour:"2-digit",minute:"2-digit"}));
-      setSheetCierres2(rows.map((r,i)=>{const o={_i:i,fecha:r[0],cajero:r[1]||""};CIERRE_CAMPOS.forEach(([k],j)=>{o[k]=r[2+j]===""||r[2+j]==null?null:Number(r[2+j]);});const b=2+CIERRE_CAMPOS.length;o.credito=Number(r[b])||0;o.transferencia=Number(r[b+1])||0;o.gastosDetalle=r[b+2]||"";o.obs=r[b+3]||"";o.ts=r[b+4]||"";if(/\[object Object\]/.test(o.gastosDetalle))o.gastosDetalle="";const cx=CIERRES_CORREC[o.fecha];return cx?{...o,...cx}:o;}).filter(o=>o.fecha));
+      setSheetCierres2(rows.map((r,i)=>{const o={_i:i,fecha:r[0],cajero:r[1]||""};CIERRE_CAMPOS.forEach(([k],j)=>{o[k]=r[2+j]===""||r[2+j]==null?null:Number(r[2+j]);});const b=2+CIERRE_CAMPOS.length;o.credito=Number(r[b])||0;o.transferencia=Number(r[b+1])||0;o.gastosDetalle=r[b+2]||"";o.obs=r[b+3]||"";o.ts=r[b+4]||"";if(/\[object Object\]/.test(o.gastosDetalle))o.gastosDetalle="";
+        // fecha mal leída: un cierre no puede ser posterior al día en que se guardó
+        if(o.ts){ const dGuard=isoDe(new Date(o.ts)); if(o.fecha>dGuard){ o.fechaLeida=o.fecha; o.fecha=dGuard; } }
+        // "tarjeta en ERP" igual al saldo de caja ERP o a las tarjetas del POS: error de lectura
+        if(o.tarjetaErp&&(o.tarjetaErp===o.saldoErp||o.tarjetaErp===o.tarjetasPos)) o.tarjetaErp=null;
+        const cx=CIERRES_CORREC[o.fecha];return cx?{...o,...cx}:o;}).filter(o=>o.fecha)
+        // si el mismo día se guardó dos veces, queda el último
+        .filter((o,i,a)=>!a.some((x,j)=>j>i&&x.fecha===o.fecha)));
     }catch(e){}
   };
   const loadSheetData = async (tk) => {
