@@ -159,6 +159,8 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-10-22",monto:476,tipo:"Personal",cuenta:"BROU",ts:"2026-10-22T13:00:00.000Z",obs:"Farmacia"},
+  {fecha:"2026-10-22",monto:327,tipo:"Personal",cuenta:"BROU",ts:"2026-10-22T13:05:00.000Z",obs:"Carnicería"},
   {fecha:"2026-10-20",monto:738,tipo:"Personal",cuenta:"Santander",ts:"2026-10-20T20:00:00.000Z",obs:"Compra Banred San José (a confirmar)"},
   {fecha:"2026-10-19",monto:6212,tipo:"Personal",cuenta:"BROU",ts:"2026-10-19T18:00:00.000Z",obs:"Lojas Renner (a confirmar)"},
   {fecha:"2026-10-19",monto:4290,tipo:"Personal",cuenta:"BROU",ts:"2026-10-19T18:05:00.000Z",obs:"Zara (a confirmar)"},
