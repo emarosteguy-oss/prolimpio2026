@@ -529,13 +529,20 @@ const CIERRES_CLAUDE = [
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
   "2026-10-16": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS
+  "2026-10-23": {ventasErp:8015}, // la lectura tomó solo La Pollería; E-Tickets/E-Facturas contado = 3.695+1.014+1.296+1.082+928 (la caja ERP cierra con 8.015)
   "2026-10-20": {tarjetaErp:null, gastosEf:6456, gastosDetalle:"Encomiendas del Litoral 400 y 470; Impacto Carrera 5.000 (correcaminata); Estela Elgues 319; Laurenza Dupont 267"}, // tarjetaErp tomó el saldo de caja ERP; total real del día $108.737 (Macrosoft)
 };
+// el cierre es de hoy o de hace pocos días: una fecha fuera de eso es mala lectura (ej. 23/10/26 leído como 26/10/2023)
+const fechaCierreOk = f => { const hace7=isoDe(new Date(Date.now()-7*864e5)); return (f<=hoyISO()&&f>=hace7)?f:hoyISO(); };
+// si la caja del ERP no cierra, las ventas contado del ERP salen de la cuenta: saldo − apertura − ingreso POS + gastos + depósito
+const arreglarErp = n => { const g=k=>nC(n[k]); if(["aperturaErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>g(k)!=null)){ const calc=g("saldoErp")-g("aperturaErp")-g("salidaPos")+g("gastosEf")+g("deposito");
+  if(calc>0&&Math.abs(calc-(g("ventasErp")||0))>1) n.ventasErp=String(Math.round(calc)); } };
 const textoGastos = g => Array.isArray(g) ? g.map(x=> x&&typeof x==="object" ? [x.concepto||x.detalle||x.descripcion||x.nombre||"", x.monto??x.importe??""].join(" ").trim() : String(x)).join("; ") : (g&&typeof g==="object" ? Object.values(g).join(" ") : String(g||""));
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
   const v=k=>nC(c[k]); const ok=(a,b)=>Math.abs(a-b)<=1; const R=[];
+  if(c.fecha&&c.fecha<isoDe(new Date(Date.now()-7*864e5))) R.push({ok:false,txt:"La fecha del cierre es de hace más de una semana: revisá la fecha",campos:["fecha"]});
   if(c.fecha&&c.fecha>hoyISO()) R.push({ok:false,txt:"La fecha del cierre es posterior a hoy: revisá la fecha",campos:["fecha"]});
   if(v("ventaPos")!=null&&v("efectivoPos")!=null&&v("tarjetasPos")!=null)
     R.push({ok:ok(v("efectivoPos")+v("tarjetasPos"),v("ventaPos")),txt:"Efectivo + tarjetas = venta total POS",campos:["ventaPos","efectivoPos","tarjetasPos"]});
@@ -555,6 +562,7 @@ const reducirFoto = (file) => new Promise((res,rej)=>{ const fr=new FileReader()
   const M=1700; let w=img.width,h=img.height; const k=Math.min(1,M/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
   const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h); res(cv.toDataURL("image/jpeg",0.85)); }; img.src=fr.result; }; fr.readAsDataURL(file); });
 const PROMPT_CIERRE = `Sos un asistente que lee cierres de caja de un local comercial en Uruguay. Las fotos pueden estar giradas o tener varios papeles juntos. Los números usan coma para miles y punto para decimales (ej: 25,438.00 = 25438).
+Las fechas de los tickets vienen como DD/MM/AA (ej: 23/10/26 = 2026-10-23, nunca 2023).
 Papeles posibles:
 1) "Y de Caja" (ticket térmico angosto): Venta Total; Forma Pago-: Efectivo y Tarjetas; Ingresos-: Apertura De Caja; Egresos-: Salida De Caja; "Saldo Caja--Sis" Efectivo; "Caja Final--Caj" Efectivo; "Diferencias--Si" Efectivo; y "Cajero: N-Nombre".
 2) "Z de Caja" (ticket térmico): líneas Efectivo, VISA, MASTERCARD, OCA, MAESTRO u otras tarjetas.
@@ -1242,7 +1250,7 @@ export default function App(){
       setActCierres(new Date().toLocaleTimeString("es-UY",{hour:"2-digit",minute:"2-digit"}));
       setSheetCierres2(rows.map((r,i)=>{const o={_i:i,fecha:r[0],cajero:r[1]||""};CIERRE_CAMPOS.forEach(([k],j)=>{o[k]=r[2+j]===""||r[2+j]==null?null:Number(r[2+j]);});const b=2+CIERRE_CAMPOS.length;o.credito=Number(r[b])||0;o.transferencia=Number(r[b+1])||0;o.gastosDetalle=r[b+2]||"";o.obs=r[b+3]||"";o.ts=r[b+4]||"";if(/\[object Object\]/.test(o.gastosDetalle))o.gastosDetalle="";
         // fecha mal leída: un cierre no puede ser posterior al día en que se guardó
-        if(o.ts){ const dGuard=isoDe(new Date(o.ts)); if(o.fecha>dGuard){ o.fechaLeida=o.fecha; o.fecha=dGuard; } }
+        if(o.ts){ const dGuard=isoDe(new Date(o.ts)), dMin=isoDe(new Date(new Date(o.ts).getTime()-7*864e5)); if(o.fecha>dGuard||o.fecha<dMin){ o.fechaLeida=o.fecha; o.fecha=dGuard; } }
         // "tarjeta en ERP" igual al saldo de caja ERP o a las tarjetas del POS: error de lectura
         if(o.tarjetaErp&&(o.tarjetaErp===o.saldoErp||o.tarjetaErp===o.tarjetasPos)) o.tarjetaErp=null;
         const cx=CIERRES_CORREC[o.fecha];return cx?{...o,...cx}:o;}).filter(o=>o.fecha)
@@ -1383,7 +1391,7 @@ export default function App(){
     if(!r.ok){showToast("No pude leer la foto: completá a mano","er");setLeido({error:r.error,errores:r.errores,fuente:r.fuente});return;}
     const d=r.datos; const n={...cjF};
     CIERRE_CAMPOS.forEach(([k])=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Math.abs(Number(d[k]))*(k==="diferencia"&&Number(d[k])<0?-1:1)); });
-    if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=d.fecha;
+    if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=fechaCierreOk(d.fecha); arreglarErp(n);
     if(d.cajero) n.cajero=String(d.cajero).replace(/^\d+-/,"").trim();
     if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
     setCjF(n); setLeido({modelo:r.modelo}); showToast("✓ Foto leída: revisá los números");
@@ -1395,7 +1403,7 @@ export default function App(){
       const d=JSON.parse(decodeURIComponent(escape(atob(b+"===".slice((b.length+3)%4)))));
       const n={...CIERRE_VACIO()};
       [...CIERRE_CAMPOS.map(([k])=>k),"credito","transferencia"].forEach(k=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Number(d[k])); });
-      if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=d.fecha;
+      if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=fechaCierreOk(d.fecha); arreglarErp(n);
       if(d.cajero) n.cajero=String(d.cajero); if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
       setCjF(n); setLeido({modelo:"Claude (lector de cierres)"}); setTab("control"); showToast("✓ Números del lector cargados: revisá y guardá"); return true;
     }catch(e){ showToast("El código no es válido. Copialo de nuevo desde el lector","er"); return false; }
