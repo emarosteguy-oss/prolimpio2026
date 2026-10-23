@@ -386,49 +386,49 @@ const DEUDA_PAGOS = {
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
 const PENDIENTES_FECHA = "19/10/2026";
 const PENDIENTES = [
-  {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:143420,tipo:"cheque"}, // la planilla decía 149.960; el cheque real fue 143.420 (cobrado 16/10)
-  {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,tipo:"credito"},
-  {mes:"2026-10",prov:"Solsire Sal (210 USD)",monto:8505,tipo:"prov"},
-  {mes:"2026-10",prov:"Unión Disprofarma",monto:55046,tipo:"prov"},
-  {mes:"2026-10",prov:"Jaspe",monto:28812,tipo:"prov"},
-  {mes:"2026-10",prov:"SUBATIR (llegó 02/09)",monto:130066,tipo:"cheque"},
-  {mes:"2026-10",prov:"Jupiter",monto:3961,tipo:"prov"},
-  {mes:"2026-10",prov:"Crédito Santander",monto:53348,tipo:"credito"},
-  {mes:"2026-10",prov:"San Francisco",monto:59546,tipo:"prov"},
-  {mes:"2026-10",prov:"Cameril",monto:55821,tipo:"prov"},
-  {mes:"2026-10",prov:"Estuario Platino",monto:63600,tipo:"prov"},
-  {mes:"2026-10",prov:"SUBATIR (llegó 09/09)",monto:135000,tipo:"cheque"},
-  {mes:"2026-11",prov:"Parque Trébol",monto:16560,tipo:"prov"},
-  {mes:"2026-11",prov:"SUBATIR (llegó 16/09)",monto:164237,tipo:"cheque"},
-  {mes:"2026-11",prov:"Pedro Merla",monto:25108,tipo:"prov"},
-  {mes:"2026-11",prov:"Atersa",monto:24520,tipo:"prov"},
-  {mes:"2026-11",prov:"Solsire",monto:18516,tipo:"prov"},
-  {mes:"2026-11",prov:"Aymi",monto:9934,tipo:"prov"},
-  {mes:"2026-11",prov:"Palmisol",monto:17116,tipo:"prov"},
-  {mes:"2026-11",prov:"Calusil",monto:14976,tipo:"prov"},
-  {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,tipo:"prov"},
-  {mes:"2026-11",prov:"Irmari",monto:11624,tipo:"prov"},
-  {mes:"2026-11",prov:"SUBATIR (llegó 23/09)",monto:149691,tipo:"cheque"}, // planilla: "Mirar wasap, falta un cheque $19.303"
-  {mes:"2026-11",prov:"Estuario Platino",monto:72156,tipo:"prov"},
-  {mes:"2026-11",prov:"Cuota Candela (468 USD)",monto:19618,tipo:"credito"},
-  {mes:"2026-11",prov:"SUBATIR",monto:193210,tipo:"cheque"},
-  {mes:"2026-11",prov:"Estuario Platino",monto:72116,tipo:"prov"},
-  {mes:"2026-11",prov:"Jaspe",monto:19768,tipo:"prov"},
-  {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg)",monto:171694,tipo:"cheque"},
-  {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,tipo:"prov"},
-  {mes:"2026-11",prov:"Crédito Santander",monto:53349,tipo:"credito"},
-  {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,tipo:"prov"},
-  {mes:"2026-12",prov:"Estuario Platino",monto:63310,tipo:"prov"},
-  {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,tipo:"credito"},
-  {mes:"2026-12",prov:"Plazo fijo",monto:313000,tipo:"plazo"},
-  {mes:"2026-12",prov:"Crédito Santander",monto:53350,tipo:"credito"},
-  {mes:"2026-12",prov:"Alido Valiero (2/2)",monto:27600,tipo:"prov"},
-  {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,tipo:"cheque"},
-  {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,tipo:"cheque"},
-  {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,tipo:"cheque"},
-  {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,tipo:"cheque"},
-  {mes:"2027-02",prov:"Enjoy vía SUBATIR — cheque 20/02 (3/3)",monto:95818,tipo:"cheque"},
-  {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,tipo:"cheque"}
+  {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:143420,dia:15,tipo:"cheque"}, // la planilla decía 149.960; el cheque real fue 143.420 (cobrado 16/10)
+  {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,dia:16,tipo:"credito"},
+  {mes:"2026-10",prov:"Solsire Sal (210 USD)",monto:8505,dia:18,tipo:"prov"},
+  {mes:"2026-10",prov:"Unión Disprofarma",monto:55046,dia:19,tipo:"prov"},
+  {mes:"2026-10",prov:"Jaspe",monto:28812,dia:20,tipo:"prov"},
+  {mes:"2026-10",prov:"SUBATIR (llegó 02/09)",monto:130066,dia:22,tipo:"cheque"},
+  {mes:"2026-10",prov:"Jupiter",monto:3961,dia:23,tipo:"prov"},
+  {mes:"2026-10",prov:"Crédito Santander",monto:53348,dia:25,tipo:"credito"},
+  {mes:"2026-10",prov:"San Francisco",monto:59546,dia:26,tipo:"prov"},
+  {mes:"2026-10",prov:"Cameril",monto:55821,dia:27,tipo:"prov"},
+  {mes:"2026-10",prov:"Estuario Platino",monto:63600,dia:28,tipo:"prov"},
+  {mes:"2026-10",prov:"SUBATIR (llegó 09/09)",monto:135000,dia:29,tipo:"cheque"},
+  {mes:"2026-11",prov:"Parque Trébol",monto:16560,dia:2,tipo:"prov"},
+  {mes:"2026-11",prov:"SUBATIR (llegó 16/09)",monto:164237,dia:3,tipo:"cheque"},
+  {mes:"2026-11",prov:"Pedro Merla",monto:25108,dia:4,tipo:"prov"},
+  {mes:"2026-11",prov:"Atersa",monto:24520,dia:5,tipo:"prov"},
+  {mes:"2026-11",prov:"Solsire",monto:18516,dia:6,tipo:"prov"},
+  {mes:"2026-11",prov:"Aymi",monto:9934,dia:8,tipo:"prov"},
+  {mes:"2026-11",prov:"Palmisol",monto:17116,dia:12,tipo:"prov"},
+  {mes:"2026-11",prov:"Calusil",monto:14976,dia:14,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,dia:22,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari",monto:11624,dia:23,tipo:"prov"},
+  {mes:"2026-11",prov:"SUBATIR (llegó 23/09)",monto:149691,dia:10,tipo:"cheque"}, // planilla: "Mirar wasap, falta un cheque $19.303"
+  {mes:"2026-11",prov:"Estuario Platino",monto:72156,dia:15,tipo:"prov"},
+  {mes:"2026-11",prov:"Cuota Candela (468 USD)",monto:19618,dia:16,tipo:"credito"},
+  {mes:"2026-11",prov:"SUBATIR",monto:193210,dia:17,tipo:"cheque"},
+  {mes:"2026-11",prov:"Estuario Platino",monto:72116,dia:18,tipo:"prov"},
+  {mes:"2026-11",prov:"Jaspe",monto:19768,dia:19,tipo:"prov"},
+  {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg)",monto:171694,dia:24,tipo:"cheque"},
+  {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,dia:20,tipo:"prov"},
+  {mes:"2026-11",prov:"Crédito Santander",monto:53349,dia:25,tipo:"credito"},
+  {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:29,tipo:"prov"},
+  {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
+  {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
+  {mes:"2026-12",prov:"Plazo fijo",monto:313000,dia:20,tipo:"plazo"},
+  {mes:"2026-12",prov:"Crédito Santander",monto:53350,dia:25,tipo:"credito"},
+  {mes:"2026-12",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
+  {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
+  {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
+  {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
+  {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,dia:30,tipo:"cheque"},
+  {mes:"2027-02",prov:"Enjoy vía SUBATIR — cheque 20/02 (3/3)",monto:95818,dia:20,tipo:"cheque"},
+  {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
 const COSTOS_PROGRAMADOS = {9:1805402, 10:1498968, 11:718500}; // planilla 19/10 sin cuotas de créditos; dic incluye los cheques de Enjoy e Intex
@@ -1638,10 +1638,20 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
   const pendMes=PENDIENTES.filter(p=>p.mes===mesKey&&!pagadasK.has(clavePend(p)));
   const fijosMesLista=(COSTOS_FIJOS_MES[mesKey]||COSTOS_FIJOS).filter(c=>!c.planilla&&!sheetPagos.find(p=>p.clave===claveFijo(mesKey,c.nombre)));
   const girosSinDebitar=PENDIENTES.filter(p=>/giro hecho/i.test(p.prov)&&!pagadasK.has(clavePend(p)));
-  // peor momento del mes: si todo lo que falta pagar sale antes de que entre otra venta
-  const peorMes=(()=>{const pend=pendMes.reduce((s,p)=>s+p.monto,0), fij=fijosMesLista.reduce((s,c)=>s+c.monto,0);
+  // saldo día por día hasta fin de mes: pagos en su día de vencimiento (planilla), ventas que faltan según la curva
+  // (entran al banco el día hábil siguiente), fijos y retiro repartidos; el resto se ajusta para cerrar igual que la proyección
+  const peorMes=(()=>{const nd=new Date(yAct,mIdx+1,0).getDate(), hoyN=hoyD.getDate();
+    const pend=pendMes.reduce((s,p)=>s+p.monto,0), fij=fijosMesLista.reduce((s,c)=>s+c.monto,0);
     const ret=Math.max(0,(+caja.retiroFijo||0)-(MES_EN_CURSO.idx===mIdx+(yAct-2026)*12?(MES_EN_CURSO.retiradoYa||0)+(saldoHoy.retTodos||0):retiradoMes));
-    const sale=pend+fij+ret; return {pend,fij,ret,sale,saldo:Math.round(saldoHoy.est-sale)};})();
+    const vendidos=new Set(ventasConExtra().filter(v=>String(v.fecha).startsWith(mesKey)&&+v.monto>0).map(v=>v.fecha));
+    const dias=[]; for(let k=hoyN;k<=nd;k++){const d=new Date(yAct,mIdx,k,12); dias.push({k,d,w:vendidos.has(isoDe(d))?0:pesoDia(d)});}
+    const sw=dias.reduce((s,x)=>s+x.w,0)||1, enCursoM=MES_EN_CURSO.idx===mIdx+(yAct-2026)*12, falta=Math.max(0,(RMC.proyeccion||0)-(enCursoM?(MES_EN_CURSO.ventasYa||0)+(saldoHoy.depTodos||0):(RMC.total||0)))*(1-comisionPctEfectiva()/100);
+    const entra={}; dias.forEach(x=>{if(!x.w)return; let k=x.k+1; while(k<=nd&&new Date(yAct,mIdx,k,12).getDay()===0)k++; if(k<=nd) entra[k]=(entra[k]||0)+falta*x.w/sw;});
+    const resto=dias.length; const pagos={}; pendMes.forEach(p=>{const k=Math.max(hoyN,p.dia||hoyN); (pagos[k]=pagos[k]||[]).push(p);});
+    let sal=saldoHoy.est; const fila=dias.map(x=>{const pg=(pagos[x.k]||[]); const sale=pg.reduce((s,p)=>s+p.monto,0)+(fij+ret)/resto; const e=entra[x.k]||0; sal+=e-sale; return {k:x.k,entra:e,sale,pg,saldo:sal};});
+    const ajuste=((proy[0]?.saldo??sal)-sal)/resto; fila.forEach((f,i)=>{f.saldo=Math.round(f.saldo+ajuste*(i+1));});
+    const min=fila.reduce((a,b)=>b.saldo<a.saldo?b:a,fila[0]||{saldo:saldoHoy.est,k:hoyN});
+    return {pend,fij,ret,sale:pend+fij+ret,saldo:min.saldo,dia:min.k,fila,ajuste:ajuste*resto};})();
   const TABS=[{id:"hoy",label:"🏠 Hoy"},{id:"ventas",label:"📈 Ventas"},{id:"control",label:"🧾 Caja"},{id:"pagos",label:"💳 Pagos"},{id:"compras",label:"📦 Compras"},{id:"proy",label:"🔮 Proyección"},{id:"carga",label:"✏️ Cargar"},{id:"informes",label:"📄 Informes"},{id:"historial",label:"📚 Historial"}];
 
 
@@ -1675,7 +1685,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
             <div className="csub">BROU {fmtM(saldoHoy.brou)} · Santander {fmtM(saldoHoy.sant)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""}</div>
             <div className="csub" style={{fontSize:".85rem"}}>Último saldo real al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"} (BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}){saldoHoy.hay?` + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} − retiros ${fmtM(saldoHoy.ret)} cargados después`:""}</div>
-            <div className={`delta ${peorMes.saldo<caja.limite?"dn":peorMes.saldo<caja.alerta?"wr":"up"}`} style={{marginTop:8}}>Peor momento de {MESES[mIdx]}: <b>{fmtM(peorMes.saldo)}</b> si lo que falta pagar ({fmtM(peorMes.sale)}) sale antes de que entren más ventas · a fin de mes {fmtM(proy[0]?.saldo)}</div>
+            <div className={`delta ${peorMes.saldo<caja.limite?"dn":peorMes.saldo<caja.alerta?"wr":"up"}`} style={{marginTop:8}}>Punto más bajo de {MESES[mIdx].toLowerCase()}: <b>{fmtM(peorMes.saldo)}</b> el {String(peorMes.dia).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")} · a fin de mes {fmtM(proy[0]?.saldo)}</div>
             {girosSinDebitar.length>0&&<div className="delta wr" style={{marginTop:8}}>Falta que el banco debite {girosSinDebitar.map(g=>g.prov.split(" (")[0]).join(" y ")}: {fmtM(girosSinDebitar.reduce((s,g)=>s+g.monto,0))}</div>}
           </div>
           <div className="grid2">
@@ -2253,8 +2263,12 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
                 <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div></div>
               <div className="card"><div className="ctitle">Retirado en {yAct}</div><div className="cval">{fmtM(anioRet)}</div><div className="csub">Registrado en la app</div></div>
               <div className="card"><div className="ctitle">Fin de mes más bajo</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
-              <div className="card"><div className="ctitle">Peor momento de {MESES[mIdx]}</div><div className="cval" style={{color:peorMes.saldo<caja.alerta?"#B91C1C":""}}>{fmtM(peorMes.saldo)}</div><div className="csub">Saldo de hoy {fmtM(saldoHoy.est)} − falta pagar {fmtM(peorMes.pend+peorMes.fij)} − retiro que queda {fmtM(peorMes.ret)}, antes de que entren más ventas</div></div>
+              <div className="card"><div className="ctitle">Punto más bajo de {MESES[mIdx]}</div><div className="cval" style={{color:peorMes.saldo<caja.alerta?"#B91C1C":""}}>{fmtM(peorMes.saldo)}</div><div className="csub">el {String(peorMes.dia).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}, con los vencimientos de la planilla</div></div>
             </div>
+            <div className="sh"><span className="st">Saldo día por día · {MESES[mIdx]}</span><span className="ss">Vencimientos de la planilla; ventas que faltan, entran al día hábil siguiente</span></div>
+            <div className="tw"><table><thead><tr><th>Día</th><th style={{textAlign:"right"}}>Entra</th><th>Sale</th><th style={{textAlign:"right"}}>Saldo</th></tr></thead>
+              <tbody>{peorMes.fila.map(f=><tr key={f.k} style={{background:f.k===peorMes.dia?"#FEE2E2":undefined,fontWeight:f.k===peorMes.dia?700:400}}><td>{String(f.k).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}</td><td style={{textAlign:"right"}}>{f.entra?fmtM(f.entra):"—"}</td><td>{f.pg.length?f.pg.map(p=>`${p.prov.split(" (")[0]} ${fmtM(p.monto)}`).join(" · "):"—"}</td><td style={{textAlign:"right",color:f.saldo<caja.limite?"#B91C1C":f.saldo<caja.alerta?"#B45309":""}}>{fmtM(f.saldo)}</td></tr>)}</tbody></table></div>
+            <div className="csub" style={{padding:"4px 16px"}}>Además se reparten en los días que quedan: fijos sin marcar {fmtM(peorMes.fij)}, retiro que queda {fmtM(peorMes.ret)}, y un ajuste de {peorMes.ajuste<0?"−":"+"}{fmtM(Math.abs(peorMes.ajuste))} para que cierre igual que la proyección del mes.</div>
 
             {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
              :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}). Ese mes conviene reducir la parte variable del retiro.</div>
