@@ -1638,6 +1638,10 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
   const pendMes=PENDIENTES.filter(p=>p.mes===mesKey&&!pagadasK.has(clavePend(p)));
   const fijosMesLista=(COSTOS_FIJOS_MES[mesKey]||COSTOS_FIJOS).filter(c=>!c.planilla&&!sheetPagos.find(p=>p.clave===claveFijo(mesKey,c.nombre)));
   const girosSinDebitar=PENDIENTES.filter(p=>/giro hecho/i.test(p.prov)&&!pagadasK.has(clavePend(p)));
+  // peor momento del mes: si todo lo que falta pagar sale antes de que entre otra venta
+  const peorMes=(()=>{const pend=pendMes.reduce((s,p)=>s+p.monto,0), fij=fijosMesLista.reduce((s,c)=>s+c.monto,0);
+    const ret=Math.max(0,(+caja.retiroFijo||0)-(MES_EN_CURSO.idx===mIdx+(yAct-2026)*12?(MES_EN_CURSO.retiradoYa||0)+(saldoHoy.retTodos||0):retiradoMes));
+    const sale=pend+fij+ret; return {pend,fij,ret,sale,saldo:Math.round(saldoHoy.est-sale)};})();
   const TABS=[{id:"hoy",label:"🏠 Hoy"},{id:"ventas",label:"📈 Ventas"},{id:"control",label:"🧾 Caja"},{id:"pagos",label:"💳 Pagos"},{id:"compras",label:"📦 Compras"},{id:"proy",label:"🔮 Proyección"},{id:"carga",label:"✏️ Cargar"},{id:"informes",label:"📄 Informes"},{id:"historial",label:"📚 Historial"}];
 
 
@@ -1671,6 +1675,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
             <div className="csub">BROU {fmtM(saldoHoy.brou)} · Santander {fmtM(saldoHoy.sant)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""}</div>
             <div className="csub" style={{fontSize:".85rem"}}>Último saldo real al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"} (BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}){saldoHoy.hay?` + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} − retiros ${fmtM(saldoHoy.ret)} cargados después`:""}</div>
+            <div className={`delta ${peorMes.saldo<caja.limite?"dn":peorMes.saldo<caja.alerta?"wr":"up"}`} style={{marginTop:8}}>Peor momento de {MESES[mIdx]}: <b>{fmtM(peorMes.saldo)}</b> si lo que falta pagar ({fmtM(peorMes.sale)}) sale antes de que entren más ventas · a fin de mes {fmtM(proy[0]?.saldo)}</div>
             {girosSinDebitar.length>0&&<div className="delta wr" style={{marginTop:8}}>Falta que el banco debite {girosSinDebitar.map(g=>g.prov.split(" (")[0]).join(" y ")}: {fmtM(girosSinDebitar.reduce((s,g)=>s+g.monto,0))}</div>}
           </div>
           <div className="grid2">
@@ -1695,7 +1700,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="card" onClick={()=>setTab("proy")} style={{cursor:"pointer"}}>
               <div className="ctitle">Retiro de {MESES[mIdx]}</div>
               <div className="cval">{fmtM(retiradoMes)} <span className="tsm">de {fmtM(sugerido)}</span></div>
-              <div className="csub">Saldo más bajo proyectado: {minimo?`${fmtM(minimo.saldo)} en ${minimo.mes}`:"—"}</div>
+              <div className="csub">Fin de mes más bajo: {minimo?`${fmtM(minimo.saldo)} en ${minimo.mes}`:"—"} · peor momento de {MESES[mIdx].toLowerCase()} {fmtM(peorMes.saldo)}</div>
               <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div>
             </div>
           </div>
@@ -2247,7 +2252,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="card"><div className="ctitle">Sugerido este mes</div><div className="cval">{fmtM(sugerido)}</div><div className="csub">{(yAct<2027||(yAct===2027&&mIdx===0))?"Monto fijo":`${fmtM(caja.retiroFijo2)} + ${caja.retiroPct}% de ventas`}</div>
                 <div className={`delta ${retiradoMes<=sugerido?"up":"dn"}`}>{retiradoMes<=sugerido?`Disponible ${fmtM(sugerido-retiradoMes)}`:`Excedido ${fmtM(retiradoMes-sugerido)}`}</div></div>
               <div className="card"><div className="ctitle">Retirado en {yAct}</div><div className="cval">{fmtM(anioRet)}</div><div className="csub">Registrado en la app</div></div>
-              <div className="card"><div className="ctitle">Saldo más bajo proyectado</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
+              <div className="card"><div className="ctitle">Fin de mes más bajo</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
+              <div className="card"><div className="ctitle">Peor momento de {MESES[mIdx]}</div><div className="cval" style={{color:peorMes.saldo<caja.alerta?"#B91C1C":""}}>{fmtM(peorMes.saldo)}</div><div className="csub">Saldo de hoy {fmtM(saldoHoy.est)} − falta pagar {fmtM(peorMes.pend+peorMes.fij)} − retiro que queda {fmtM(peorMes.ret)}, antes de que entren más ventas</div></div>
             </div>
 
             {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
