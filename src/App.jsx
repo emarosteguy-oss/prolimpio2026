@@ -529,7 +529,7 @@ const CIERRES_CLAUDE = [
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
   "2026-10-16": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS
-  "2026-10-23": {ventasErp:8015}, // la lectura tomó solo La Pollería; E-Tickets/E-Facturas contado = 3.695+1.014+1.296+1.082+928 (la caja ERP cierra con 8.015)
+  "2026-10-23": {ventasErp:8015, credito:0}, // en la foto no hay venta a crédito (la lectura inventó $747) // la lectura tomó solo La Pollería; E-Tickets/E-Facturas contado = 3.695+1.014+1.296+1.082+928 (la caja ERP cierra con 8.015)
   "2026-10-20": {tarjetaErp:null, gastosEf:6456, gastosDetalle:"Encomiendas del Litoral 400 y 470; Impacto Carrera 5.000 (correcaminata); Estela Elgues 319; Laurenza Dupont 267"}, // tarjetaErp tomó el saldo de caja ERP; total real del día $108.737 (Macrosoft)
 };
 // el cierre es de hoy o de hace pocos días: una fecha fuera de eso es mala lectura (ej. 23/10/26 leído como 26/10/2023)
