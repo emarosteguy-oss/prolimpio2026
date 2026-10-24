@@ -437,7 +437,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1835402, 10:1695253, 11:722226}; // planilla 24/10 (IVA oct 115.000; nov +Norte Sur, Cameril, Emilio Benzo, SUBATIR 165.541; dic +Bettasul) sin cuotas de créditos; dic incluye los cheques de Enjoy e Intex
+const COSTOS_PROGRAMADOS = {9:1837477, 10:1695253, 11:722226}; // planilla 24/10 (IVA oct real 117.075 pagado a DGI, la planilla dice 115.000; nov +Norte Sur, Cameril, Emilio Benzo, SUBATIR 165.541; dic +Bettasul) sin cuotas de créditos; dic incluye los cheques de Enjoy e Intex
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
