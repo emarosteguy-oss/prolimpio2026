@@ -160,6 +160,8 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-10-24",monto:500,tipo:"Personal",cuenta:"BROU",ts:"2026-10-24T15:00:00.000Z",obs:"Retiro Redpagos"},
+  {fecha:"2026-10-23",monto:752,tipo:"Personal",cuenta:"BROU",ts:"2026-10-23T21:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-10-23",monto:8160,tipo:"Personal",cuenta:"BROU",ts:"2026-10-23T13:00:00.000Z",obs:"Pago tarjeta de crédito"},
   {fecha:"2026-10-23",monto:2241,tipo:"Personal",cuenta:"BROU",ts:"2026-10-23T13:05:00.000Z",obs:"Pago tarjeta de crédito"},
   {fecha:"2026-10-22",monto:423,tipo:"Personal",cuenta:"BROU",ts:"2026-10-22T21:00:00.000Z",obs:"Supermercado Italia"},
@@ -178,6 +180,7 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-10-23",clave:"pend|2026-10|Crédito Santander|53348",concepto:"Crédito Santander",monto:53347,mes:"2026-10",ts:"2026-10-23T20:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-23",clave:"pend|2026-10|SUBATIR (llegó 02/09)|130066",concepto:"SUBATIR (llegó 02/09)",monto:130066,mes:"2026-10",ts:"2026-10-23T09:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-22",clave:"fijo|2026-10|IVA (DGI)",concepto:"IVA (DGI)",monto:117075,mes:"2026-10",ts:"2026-10-22T21:00:00.000Z",cuenta:"BROU"},
   {fecha:"2026-10-20",clave:"pend|2026-10|Cuota Candela (468 USD)|19617",concepto:"Cuota Candela (468 USD)",monto:19384,mes:"2026-10",ts:"2026-10-20T21:00:00.000Z",cuenta:"Santander"},
@@ -445,9 +448,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1199260, pagadoYa:1421945, retiradoYa:58930, candelaPagada:true }; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
+const MES_EN_CURSO = { idx:9, desde:"2026-10-19", diasYa:15, ventasMes:1064372, ventasYa:1230840, pagadoYa:1421945, retiradoYa:60182, candelaPagada:true, santanderPagada:true }; // 25/10: + buzonera 14.000 (cierre 23/10) + buzonera 17.000 (cierre 24/10) + transferencia BROU 580; retiros + Super Italia 752 + Redpagos 500; // ventasYa: hasta 08/10 + efectivo 12/10 $16.000 + tarjetas 9-12/10 ≈ $93.052 + ANDA $1.761 + Santander +$40.000 (13–14/10) + tarjetas acreditadas 14/10 $30.363 (≈ $31.302 antes de comisión) + tarjetas 15/10 $39.051 (≈ $40.259) + buzonera Santander 14/10 $30.000 + abono $349 + BROU 15/10 $2.632 (tarjetas) y $13.000 (venta del 15/10 girada por el cliente) + buzonera 17.000 (15/10) + tarjetas 16/10 $26.918 (≈ $27.750) + buzonera 12.000 (cierre 16/10) + transferencia 17/10 $5.357 + buzonera 11.000 (cierre 17/10) + tarjetas vie/sáb $65.742 (≈ $67.775) + buzonera 22.000 (19/10) + tarjetas 20/10 $29.290 (≈ $30.196) ; pagadoYa: proveedores en verde $592.098 + alquiler + sueldos $140.460 + correcaminata $10.000 + proveedor contado $3.782 + BPS $76.051 + contador $9.000 + Cooperativa la Cruz $9.275 (BROU) + Alido Valiero $23.892 (Santander) + cheque clearing $143.420 (16/10, Santander) + OSE $3.129 (19/10, Santander, a confirmar si es del local) + Unión Disprofarma $55.046 + comisión $78 (19/10, Santander) + Antel $2.756 (20/10, débito Santander, a confirmar si es del local) + Solsire Sal $9.402 (19/10, BROU; los $1.814 de SUBATIR fueron un cobro que nos debían, ya están en el saldo); retiradoYa: carne $1.227 + Super Italia $1.306 + panadería $435 + pagos personales $20.953 + $8.164 (13/10, BROU) + $1.500 (14/10, BROU, a confirmar) + Xander Juli $1.228 (15/10, BROU) + chivitería $750 (14/10) + retiro $500 (15/10)
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-10-23", ts:"2026-10-23T15:47:00.000Z", brou:3042, santUyu:-473087, santUsd:0, tc:41.42 }; // 23/10 12:47 reales (capturas). Santander: −495.118 + acreditación de tarjetas 22.031. BROU: 8.529 − retiros para tarjeta de crédito 8.160 y 2.241 + transferencia recibida 4.914
+const SALDO_REF = { fecha:"2026-10-25", ts:"2026-10-25T09:54:00.000Z", brou:2370, santUyu:-495434, santUsd:0, tc:41.42 }; // 25/10 06:54 reales (capturas). Santander: −473.087 + buzoneras 14.000 y 17.000 − cuota crédito 53.347. BROU: 3.042 − Super Italia 752 + transferencia 580 − Redpagos 500
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -764,7 +767,7 @@ const proyectarCaja = (cfg, crecIn) => {
     const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa-(cfg.pagExtra||0)) : costoMes) + comision;
     let deuda = 0;
     if(idx>=9 && idx<=29 && !(enCurso && MES_EN_CURSO.candelaPagada)) deuda += cfg.candela;        // Candela: Oct-26 a Jun-28
-    if(idx>=9 && idx<=11) deuda += cfg.santander;      // Santander: hasta Dic-26
+    if(idx>=9 && idx<=11 && !(enCurso && MES_EN_CURSO.santanderPagada)) deuda += cfg.santander;      // Santander: hasta Dic-26
     if(idx===11 && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo en Dic-26
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
@@ -1660,12 +1663,16 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
     const vendidos=new Set(ventasConExtra().filter(v=>String(v.fecha).startsWith(mesKey)&&+v.monto>0).map(v=>v.fecha));
     const dias=[]; for(let k=hoyN;k<=nd;k++){const d=new Date(yAct,mIdx,k,12); dias.push({k,d,w:vendidos.has(isoDe(d))?0:pesoDia(d)});}
     const sw=dias.reduce((s,x)=>s+x.w,0)||1, enCursoM=MES_EN_CURSO.idx===mIdx+(yAct-2026)*12, falta=Math.max(0,(RMC.proyeccion||0)-(enCursoM?(MES_EN_CURSO.ventasYa||0)+(saldoHoy.depTodos||0):(RMC.total||0)))*(1-comisionPctEfectiva()/100);
-    const entra={}; dias.forEach(x=>{if(!x.w)return; let k=x.k+1; while(k<=nd&&new Date(yAct,mIdx,k,12).getDay()===0)k++; if(k<=nd) entra[k]=(entra[k]||0)+falta*x.w/sw;});
+    const sig=k0=>{let k=k0+1; while(k<=nd&&new Date(yAct,mIdx,k,12).getDay()%6===0)k++; return k;};
+    // lo ya vendido que todavía no llegó al banco (tarjetas y efectivo de los últimos días) entra el próximo día hábil; el resto, a medida que se vende
+    const futuro=Math.min(falta,Math.max(0,(RMC.proyeccion||0)-(RMC.total||0))*(1-comisionPctEfectiva()/100)), yaVendido=falta-futuro;
+    const entra={}; let fuera=0; { let k=hoyN, hab=[]; while(hab.length<3&&k<=nd){ k=sig(k); if(k<=nd) hab.push(k); } hab.forEach(h=>{ entra[h]=(entra[h]||0)+yaVendido/hab.length; }); if(!hab.length) fuera+=yaVendido; }
+    dias.forEach(x=>{if(!x.w)return; const k=sig(x.k); if(k<=nd) entra[k]=(entra[k]||0)+futuro*x.w/sw; else fuera+=futuro*x.w/sw;});
     const resto=dias.length; const pagos={}; pendMes.forEach(p=>{const k=Math.max(hoyN,p.dia||hoyN); (pagos[k]=pagos[k]||[]).push(p);});
     let sal=saldoHoy.est; const fila=dias.map(x=>{const pg=(pagos[x.k]||[]); const sale=pg.reduce((s,p)=>s+p.monto,0)+(fij+ret)/resto; const e=entra[x.k]||0; sal+=e-sale; return {k:x.k,entra:e,sale,pg,saldo:sal};});
-    const ajuste=((proy[0]?.saldo??sal)-sal)/resto; fila.forEach((f,i)=>{f.saldo=Math.round(f.saldo+ajuste*(i+1));});
+    const ajuste=((proy[0]?.saldo??sal)-fuera-sal)/resto; fila.forEach((f,i)=>{f.saldo=Math.round(f.saldo+ajuste*(i+1));});
     const min=fila.reduce((a,b)=>b.saldo<a.saldo?b:a,fila[0]||{saldo:saldoHoy.est,k:hoyN});
-    return {pend,fij,ret,sale:pend+fij+ret,saldo:min.saldo,dia:min.k,fila,ajuste:ajuste*resto};})();
+    return {pend,fij,ret,sale:pend+fij+ret,saldo:min.saldo,dia:min.k,fila,ajuste:ajuste*resto,fuera,fin:fila.length?fila[fila.length-1].saldo:saldoHoy.est};})();
   const TABS=[{id:"hoy",label:"🏠 Hoy"},{id:"ventas",label:"📈 Ventas"},{id:"control",label:"🧾 Caja"},{id:"pagos",label:"💳 Pagos"},{id:"compras",label:"📦 Compras"},{id:"proy",label:"🔮 Proyección"},{id:"carga",label:"✏️ Cargar"},{id:"informes",label:"📄 Informes"},{id:"historial",label:"📚 Historial"}];
 
 
@@ -1699,7 +1706,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="cval" style={{color:saldoHoy.est<0?"#B91C1C":"#14532D"}}>{fmtM(saldoHoy.est)}</div>
             <div className="csub">BROU {fmtM(saldoHoy.brou)} · Santander {fmtM(saldoHoy.sant)}{+caja.santUsd?` · USD ${fmt(caja.santUsd)}`:""}</div>
             <div className="csub" style={{fontSize:".85rem"}}>Último saldo real al {caja.saldoFecha?caja.saldoFecha.split("-").reverse().join("/"):"—"} (BROU {fmtM(caja.brou)} · Santander {fmtM(caja.santUyu)}){saldoHoy.hay?` + depósitos ${fmtM(saldoHoy.dep)} − pagos ${fmtM(saldoHoy.pag)} − retiros ${fmtM(saldoHoy.ret)} cargados después`:""}</div>
-            <div className={`delta ${peorMes.saldo<caja.limite?"dn":peorMes.saldo<caja.alerta?"wr":"up"}`} style={{marginTop:8}}>Punto más bajo de {MESES[mIdx].toLowerCase()}: <b>{fmtM(peorMes.saldo)}</b> el {String(peorMes.dia).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")} · a fin de mes {fmtM(proy[0]?.saldo)}</div>
+            <div className={`delta ${peorMes.saldo<caja.limite?"dn":peorMes.saldo<caja.alerta?"wr":"up"}`} style={{marginTop:8}}>Punto más bajo de {MESES[mIdx].toLowerCase()}: <b>{fmtM(peorMes.saldo)}</b> el {String(peorMes.dia).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")} · el {new Date(yAct,mIdx+1,0).getDate()}/{String(mIdx+1).padStart(2,"0")} en el banco {fmtM(peorMes.fin)}</div>
             {girosSinDebitar.length>0&&<div className="delta wr" style={{marginTop:8}}>Falta que el banco debite {girosSinDebitar.map(g=>g.prov.split(" (")[0]).join(" y ")}: {fmtM(girosSinDebitar.reduce((s,g)=>s+g.monto,0))}</div>}
           </div>
           <div className="grid2">
@@ -2282,7 +2289,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="sh"><span className="st">Saldo día por día · {MESES[mIdx]}</span><span className="ss">Vencimientos de la planilla; ventas que faltan, entran al día hábil siguiente</span></div>
             <div className="tw"><table><thead><tr><th>Día</th><th style={{textAlign:"right"}}>Entra</th><th>Sale</th><th style={{textAlign:"right"}}>Saldo</th></tr></thead>
               <tbody>{peorMes.fila.map(f=><tr key={f.k} style={{background:f.k===peorMes.dia?"#FEE2E2":undefined,fontWeight:f.k===peorMes.dia?700:400}}><td>{String(f.k).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}</td><td style={{textAlign:"right"}}>{f.entra?fmtM(f.entra):"—"}</td><td>{f.pg.length?f.pg.map(p=>`${p.prov.split(" (")[0]} ${fmtM(p.monto)}`).join(" · "):"—"}</td><td style={{textAlign:"right",color:f.saldo<caja.limite?"#B91C1C":f.saldo<caja.alerta?"#B45309":""}}>{fmtM(f.saldo)}</td></tr>)}</tbody></table></div>
-            <div className="csub" style={{padding:"4px 16px"}}>Además se reparten en los días que quedan: fijos sin marcar {fmtM(peorMes.fij)}, retiro que queda {fmtM(peorMes.ret)}, y un ajuste de {peorMes.ajuste<0?"−":"+"}{fmtM(Math.abs(peorMes.ajuste))} para que cierre igual que la proyección del mes.</div>
+            <div className="csub" style={{padding:"4px 16px"}}>Además se reparten en los días que quedan: fijos sin marcar {fmtM(peorMes.fij)}, retiro que queda {fmtM(peorMes.ret)}, y un ajuste de {peorMes.ajuste<0?"−":"+"}{fmtM(Math.abs(peorMes.ajuste))} para que cierre igual que la proyección del mes.{peorMes.fuera>1000?` Lo que se venda los últimos días (≈ ${fmtM(peorMes.fuera)}) entra al banco recién en ${MESES[(mIdx+1)%12].toLowerCase()}.`:""}</div>
 
             {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
              :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}). Ese mes conviene reducir la parte variable del retiro.</div>
