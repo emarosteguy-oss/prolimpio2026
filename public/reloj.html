@@ -710,10 +710,12 @@ async function iniciarPasoCara(){
 }
 
 /* ---- Registro de caras (solo el dueño, desde Funcionarios) ---- */
+// El dueño registra cualquier cara; la encargada, las de los demás (no la propia). Todo queda en el Historial.
+const puedeCara = id => esDueno() || (S.rol==="encargada" && !!S.adminEmp && S.adminEmp.id!==id);
 function filaCara(e){
   const c=caraDe(e.id);
   const est = c? `<span class="chip ok carast">📷 Cara registrada el ${fechaCorta(c.fecha)}/${c.fecha.slice(2,4)}</span>` : `<span class="chip carast">Sin cara registrada</span>`;
-  const bot = esDueno()? `<button class="btn sm ${c?"sec":""}" data-cara="${e.id}" type="button">${c? "Volver a registrar" : "📷 Registrar cara"}</button>${c? `<button class="btn sm danger" data-carad="${e.id}" type="button">Borrar cara</button>`:""}` : "";
+  const bot = puedeCara(e.id)? `<button class="btn sm ${c?"sec":""}" data-cara="${e.id}" type="button">${c? "Volver a registrar" : "📷 Registrar cara"}</button>${c? `<button class="btn sm danger" data-carad="${e.id}" type="button">Borrar cara</button>`:""}` : "";
   return `<div class="row" style="align-items:center">${est}${bot}</div>`;
 }
 function abrirRegistroCara(id){
@@ -966,8 +968,8 @@ document.addEventListener("click", async ev=>{
   }
   const m=t.dataset.m;
   if(m==="cerrar"){ cerrarCamara(); modal(""); return; }
-  if(t.dataset.cara){ if(!esDueno()) return toast("Solo el dueño puede registrar caras."); abrirRegistroCara(t.dataset.cara); return; }
-  if(t.dataset.carad){ if(!esDueno()) return toast("Solo el dueño puede borrar caras.");
+  if(t.dataset.cara){ if(!puedeCara(t.dataset.cara)) return toast("Tu propia cara la registra el dueño."); abrirRegistroCara(t.dataset.cara); return; }
+  if(t.dataset.carad){ if(!puedeCara(t.dataset.carad)) return toast("Tu propia cara la maneja el dueño.");
     if(t.dataset.ok!=="1"){ t.dataset.ok="1"; t.textContent="¿Borrar la cara?"; setTimeout(()=>{ if(t.isConnected){ t.dataset.ok=""; t.textContent="Borrar cara"; } },3000); return; }
     const e=S.empleados.find(x=>x.id===t.dataset.carad); await S.db.doc("caras/"+t.dataset.carad).delete(); await registrar("Borró una cara registrada", e?.nombre||t.dataset.carad); toast("Cara borrada."); return; }
   if(m==="entrarAdmin"){ const c=($("#admPin").value||"").trim();
