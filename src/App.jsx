@@ -388,7 +388,7 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "24/10/2026";
+const PENDIENTES_FECHA = "26/10/2026";
 const PENDIENTES = [
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:143420,dia:15,tipo:"cheque"}, // la planilla decía 149.960; el cheque real fue 143.420 (cobrado 16/10)
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,dia:16,tipo:"credito"},
@@ -412,7 +412,6 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Norte Sur",monto:7058,dia:13,tipo:"prov"},
   {mes:"2026-11",prov:"Cameril",monto:6656,dia:21,tipo:"prov"},
   {mes:"2026-11",prov:"Emilio Benzo",monto:17030,dia:26,tipo:"prov"},
-  {mes:"2026-11",prov:"SUBATIR (fila 31 de la planilla)",monto:165541,dia:30,tipo:"cheque"},
   {mes:"2026-11",prov:"Calusil",monto:14976,dia:14,tipo:"prov"},
   {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,dia:22,tipo:"prov"},
   {mes:"2026-11",prov:"Irmari",monto:11624,dia:23,tipo:"prov"},
@@ -426,6 +425,7 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,dia:20,tipo:"prov"},
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,dia:25,tipo:"credito"},
   {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:29,tipo:"prov"},
+  {mes:"2026-12",prov:"SUBATIR (1/12)",monto:159301,dia:1,tipo:"cheque"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
   {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
   {mes:"2026-12",prov:"Bettasul",monto:3726,dia:19,tipo:"prov"},
@@ -440,7 +440,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1837477, 10:1695253, 11:722226}; // planilla 24/10 (IVA oct real 117.075 pagado a DGI, la planilla dice 115.000; nov +Norte Sur, Cameril, Emilio Benzo, SUBATIR 165.541; dic +Bettasul) sin cuotas de créditos; dic incluye los cheques de Enjoy e Intex
+const COSTOS_PROGRAMADOS = {9:1837477, 10:1559712, 11:881527}; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
