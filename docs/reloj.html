@@ -152,6 +152,15 @@ tr.nuevo td{background:var(--warn-bg)}
 .modalbg{position:fixed;inset:0;background:rgba(3,15,30,.55);display:grid;place-items:center;padding:16px;z-index:40}
 .modal{background:var(--surface);border-radius:var(--radius);padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px}
 .modal h3{margin:0;font-family:var(--display);font-weight:800}
+.camwrap{position:relative;width:100%;max-width:440px;margin:0 auto;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#111}
+.camwrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.camaro{position:absolute;left:24%;right:24%;top:10%;bottom:10%;border:4px dashed rgba(255,255,255,.75);border-radius:50%;pointer-events:none;transition:border-color .2s}
+.camaro.ok{border-style:solid;border-color:var(--leaf)}
+.camest{text-align:center;font-weight:700;min-height:1.4em}
+.carabtn{border:none;border-radius:18px;padding:18px 12px;background:var(--orange);color:#fff;font-family:var(--display);font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;gap:10px}
+.carabtn svg{width:30px;height:30px;flex:none}
+.sep{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem}.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.carast{font-size:.85rem;font-weight:600}
 </style>
 
 <header class="top">
@@ -350,6 +359,7 @@ const S = {
   dias:new Map(),           // key fecha_emp -> {fecha,emp,marcas}
   vista:"kiosco", pin:"", emp:null, paso:"pin", pendiente:null, motivo:"", motivoTxt:"", resultado:null,
   rol:null, adminEmp:null, historial:[],
+  caras:new Map(), caraObjetivo:null, viaCara:null, caraFallo:"",
   tab:"hoy", statDesde:null, statHasta:null, statEmp:"", regFecha:null, extraDias:new Map(), cargandoRango:false
 };
 let liveDesde;
@@ -443,6 +453,7 @@ async function iniciarDB(){
   db.doc("config/ajustes").onSnapshot(s=>{ if(s.exists) S.ajustes={...S.ajustes,...s.data()}; $("#sucursal").textContent=`${S.ajustes.sucursal||"Durazno"} · Reloj de personal`; renderSuave(); }, errDB);
   db.doc("config/feriados").onSnapshot(s=>{ S.feriados = s.exists? ((s.data().lista)||[]).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)) : []; renderSuave(); }, errDB);
   db.collection("historial").orderBy("ts","desc").limit(300).onSnapshot(s=>{ S.historial=s.docs.map(d=>({id:d.id,...d.data()})); if(S.vista==="admin") renderSuave(); }, errDB);
+  db.collection("caras").onSnapshot(s=>{ S.caras=new Map(s.docs.map(d=>[d.id,d.data()])); renderSuave(); precargarCaras(); }, errDB);
   db.collection("empleados").onSnapshot(s=>{
     S.empleados = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.orden??99)-(b.orden??99)||a.nombre.localeCompare(b.nombre));
     renderSuave();
@@ -521,11 +532,22 @@ function vistaKiosco(){
 }
 function panelKiosco(){
   if(S.paso==="pin"){
-    return `<h2>Marcá tu horario</h2><p class="help">Ingresá tu código personal de 4 dígitos.</p>
+    const conCara = modoCara()==="opcion" && hayCaras();
+    return `<h2>Marcá tu horario</h2>
+      ${conCara? `<button class="carabtn" data-act="cara" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/><path d="M9 15c1.6 1.3 4.4 1.3 6 0"/></svg>Marcar con mi cara</button><div class="sep">o con tu código</div>` : ""}
+      <p class="help">${conCara? "Si la cámara no te reconoce, ingresá" : "Ingresá"} tu código personal de 4 dígitos.</p>
       <div class="pinview" id="pinview">${[0,1,2,3].map(i=>`<span class="${i<S.pin.length?"f":""}"></span>`).join("")}</div>
       <div class="msg" id="pinmsg"></div>
       <div class="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}" type="button">${n}</button>`).join("")}
         <button class="key alt" data-k="C" type="button">Borrar</button><button class="key" data-k="0" type="button">0</button><button class="key alt" data-k="B" type="button">⌫</button></div>`;
+  }
+  if(S.paso==="cara"){
+    const obj=S.caraObjetivo;
+    return `<h2>${obj? `${esc(obj.nombre.split(" ")[0])}, mirá a la cámara` : "Mirá a la cámara"}</h2>
+      <p class="help">${obj? "Para confirmar que sos vos." : "Poné la cara dentro del óvalo, de frente y con buena luz."}</p>
+      <div class="camwrap"><video id="camVideo" playsinline muted autoplay></video><div class="camaro" id="camAro"></div></div>
+      <div class="camest" id="camMsg">${esc(S.caraFallo||"Preparando la cámara…")}</div>
+      <div class="acts">${S.caraFallo? `<button class="btn" data-act="cara" type="button">Probar de nuevo</button>` : ""}<button class="btn sec" data-act="cancelar" type="button" ${S.caraFallo?"":`style="grid-column:1/-1"`}>${obj? "Cancelar" : "Usar mi código"}</button></div>`;
   }
   const e=S.emp; const h=ahora();
   if(S.paso==="accion"){
@@ -559,7 +581,7 @@ function panelKiosco(){
   }
   return "";
 }
-function volverPin(){ S.paso="pin"; S.pin=""; S.emp=null; S.pendiente=null; S.motivo=""; S.motivoTxt=""; render(); }
+function volverPin(){ cerrarCamara(); S.paso="pin"; S.pin=""; S.emp=null; S.pendiente=null; S.motivo=""; S.motivoTxt=""; S.caraObjetivo=null; S.viaCara=null; S.caraFallo=""; render(); }
 let kioskTimer;
 function armarTimeout(ms){ clearTimeout(kioskTimer); kioskTimer=setTimeout(()=>{ if(S.vista==="kiosco" && S.paso!=="pin") volverPin(); }, ms); }
 
@@ -568,7 +590,9 @@ function teclear(k){
   if(k==="C") S.pin=""; else if(k==="B") S.pin=S.pin.slice(0,-1); else if(S.pin.length<4) S.pin+=k;
   if(S.pin.length===4){
     const e=S.empleados.find(x=>x.activo!==false && String(x.pin)===S.pin);
-    if(e){ S.emp=e; S.paso="accion"; S.pin=""; render(); armarTimeout(45000); return; }
+    if(e){ S.pin="";
+      if(modoCara()==="ambos" && caraDe(e.id)){ S.caraObjetivo=e; iniciarPasoCara(); return; }
+      S.emp=e; S.paso="accion"; render(); armarTimeout(45000); return; }
     render(); const pv=$("#pinview"); pv.classList.add("err"); $("#pinmsg").textContent = S.empleados.length? "Código incorrecto. Probá de nuevo." : "No hay funcionarios cargados todavía.";
     setTimeout(()=>{ S.pin=""; render(); },900); return;
   }
@@ -591,9 +615,149 @@ async function marcar(tipo, extraMotivo){
     else if(t && extra>=umbral && extra>0) { aviso=`Hora extra: ${hm(extra)}`; avisoClase="ok"; }
   }
   const marca={tipo, hora:h.hora, ts:h.ts}; if(extraMotivo) marca.motivo=extraMotivo;
+  marca.via = S.viaCara ? (S.viaCara.conCodigo? "codigo+cara" : "cara") : "codigo"; if(S.viaCara) marca.dCara=S.viaCara.d;
   try{ await guardarMarca(e,marca,h.fecha); if(!tokenVigente() && yaConecto()) conectarGoogle("auto"); }
   catch(err){ toast(err?.code==="quota_exceeded"? "La base de datos está llena. Avisá al encargado." : "No se pudo guardar la marca. Probá otra vez."); return; }
   S.resultado={tipo, hora:h.hora, nombre:e.nombre, aviso, avisoClase}; S.paso="listo"; render(); armarTimeout(4000);
+}
+
+
+/* ================== RECONOCIMIENTO FACIAL ==================
+   Corre entero en el equipo (face-api + modelos en la carpeta face/). No se guardan fotos:
+   de cada cara se guardan 5 "huellas" de 128 números (hoja Reloj, documento caras/<id>). */
+const CARA = { listo:false, cargando:null, stream:null, loop:null, token:0 };
+const modoCara = () => S.ajustes.modoCara || "opcion";
+const umbralCara = () => Number(S.ajustes.umbralCara) || 0.48;
+const caraDe = id => { const c=S.caras.get(id); return c?.muestras?.length ? c : null; };
+const hayCaras = () => S.empleados.some(e=>e.activo!==false && caraDe(e.id));
+function cargarModelos(){
+  if(CARA.listo) return Promise.resolve();
+  if(!CARA.cargando) CARA.cargando = (async()=>{
+    if(!window.faceapi) await new Promise((ok,mal)=>{ const sc=document.createElement("script"); sc.src="face/face-api.js"; sc.onload=ok; sc.onerror=()=>mal(new Error("no cargó face-api")); document.head.appendChild(sc); });
+    const tf=faceapi.tf; let ok=false;
+    for(const be of ["webgl","cpu"]){ try{ if(await tf.setBackend(be)){ await tf.ready(); ok=true; break; } }catch(e){} }
+    if(!ok) await tf.ready();
+    const u="face/modelos";
+    await faceapi.nets.tinyFaceDetector.loadFromUri(u);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(u);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(u);
+    CARA.listo=true;
+  })().catch(e=>{ CARA.cargando=null; throw e; });
+  return CARA.cargando;
+}
+function precargarCaras(){ if(!CARA.listo && !CARA.cargando && modoCara()!=="no" && hayCaras()) setTimeout(()=>cargarModelos().catch(()=>{}), 3000); }
+async function abrirCamara(video){
+  if(!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error("Este navegador no permite usar la cámara."),{name:"NoCam"});
+  const st = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:640}, height:{ideal:480}}, audio:false});
+  CARA.stream=st; video.srcObject=st; try{ await video.play(); }catch(e){}
+  if(!video.videoWidth) await new Promise(r=>{ video.onloadeddata=r; setTimeout(r,2500); });
+}
+function cerrarCamara(){ CARA.token++; clearTimeout(CARA.loop); CARA.loop=null; if(CARA.stream){ CARA.stream.getTracks().forEach(t=>t.stop()); CARA.stream=null; } setTimeout(renderPendiente,0); }
+async function leerCara(video){
+  const r = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({inputSize:320, scoreThreshold:0.5})).withFaceLandmarks().withFaceDescriptor();
+  if(!r) return null;
+  const b=r.detection.box, vw=video.videoWidth||640;
+  return { desc:Array.from(r.descriptor), score:r.detection.score, ancho:b.width/vw };
+}
+function distCara(a,b){ let s=0; for(let i=0;i<128;i++){ const d=a[i]-b[i]; s+=d*d; } return Math.sqrt(s); }
+function candidatos(desc, soloId){
+  const res=[];
+  for(const e of S.empleados){ if(e.activo===false || (soloId && e.id!==soloId)) continue; const c=caraDe(e.id); if(!c) continue;
+    const ds=c.muestras.map(m=>distCara(desc,m)).sort((x,y)=>x-y);
+    res.push({e, d: ds.length>1? (ds[0]+ds[1])/2 : ds[0]}); }
+  return res.sort((x,y)=>x.d-y.d);
+}
+function msgCam(t, ok){ const m=$("#camMsg"); if(m) m.textContent=t; const a=$("#camAro"); if(a) a.classList.toggle("ok",!!ok); }
+function errorCamara(e){
+  if(e?.name==="NotAllowedError") return "La cámara está bloqueada. Permití la cámara para esta página en el navegador.";
+  if(e?.name==="NotFoundError") return "No se encontró una cámara en este equipo.";
+  if(e?.name==="NotReadableError") return "Otra aplicación está usando la cámara.";
+  return "No se pudo usar la cámara" + (e?.message? ` (${e.message})` : "") + ".";
+}
+async function iniciarPasoCara(){
+  cerrarCamara(); S.caraFallo=""; S.paso="cara"; render(); armarTimeout(60000);
+  const tk=++CARA.token, fallar=t=>{ cerrarCamara(); S.caraFallo=t; if(S.paso==="cara"){ render(); armarTimeout(30000); } };
+  try{
+    if(!CARA.listo) msgCam("Preparando el reconocimiento (la primera vez tarda unos segundos)…");
+    await cargarModelos(); if(tk!==CARA.token) return;
+    const v=$("#camVideo"); if(!v) return;
+    msgCam("Abriendo la cámara…"); await abrirCamara(v); if(tk!==CARA.token){ cerrarCamara(); return; }
+  }catch(e){ return fallar(e?.message==="no cargó face-api"? "No se pudo cargar el reconocimiento facial. Revisá la conexión a internet." : errorCamara(e)); }
+  msgCam("Buscando tu cara…");
+  const inicio=Date.now(), obj=S.caraObjetivo, U=umbralCara(); let previo=null, seguidas=0;
+  const ciclo=async()=>{
+    if(tk!==CARA.token || S.paso!=="cara") return;
+    const v=$("#camVideo"); if(!v) return cerrarCamara();
+    let r=null; try{ r=await leerCara(v); }catch(e){}
+    if(tk!==CARA.token) return;
+    if(r && r.ancho<0.18){ msgCam("Acercate un poco más."); previo=null; seguidas=0; }
+    else if(r){
+      const lista=candidatos(r.desc, obj?.id), b=lista[0];
+      const segundo = obj? null : candidatos(r.desc)[1];
+      const claro = b && b.d<U && (!segundo || segundo.e.id===b.e.id || segundo.d-b.d>0.05);
+      if(claro){
+        seguidas = previo===b.e.id ? seguidas+1 : 1; previo=b.e.id;
+        msgCam(`Reconociendo… ${b.e.nombre.split(" ")[0]}`, true);
+        if(seguidas>=3){
+          cerrarCamara(); S.viaCara={d:Math.round(b.d*1000)/1000, conCodigo:!!obj}; S.emp=b.e; S.caraObjetivo=null; S.paso="accion"; render(); armarTimeout(45000); return;
+        }
+      } else { previo=null; seguidas=0; msgCam(obj? "No coincide con tu cara registrada. Mirá de frente a la cámara." : "Todavía no te reconozco. Mirá de frente, con la cara bien iluminada."); }
+    } else msgCam("Buscando tu cara…");
+    if(Date.now()-inicio > 25000) return fallar(obj? "No se pudo confirmar tu cara. Avisale al encargado." : "No te reconocí. Probá de nuevo o usá tu código.");
+    CARA.loop=setTimeout(ciclo, 200);
+  };
+  ciclo();
+}
+
+/* ---- Registro de caras (solo el dueño, desde Funcionarios) ---- */
+function filaCara(e){
+  const c=caraDe(e.id);
+  const est = c? `<span class="chip ok carast">📷 Cara registrada el ${fechaCorta(c.fecha)}/${c.fecha.slice(2,4)}</span>` : `<span class="chip carast">Sin cara registrada</span>`;
+  const bot = esDueno()? `<button class="btn sm ${c?"sec":""}" data-cara="${e.id}" type="button">${c? "Volver a registrar" : "📷 Registrar cara"}</button>${c? `<button class="btn sm danger" data-carad="${e.id}" type="button">Borrar cara</button>`:""}` : "";
+  return `<div class="row" style="align-items:center">${est}${bot}</div>`;
+}
+function abrirRegistroCara(id){
+  const e=S.empleados.find(x=>x.id===id); if(!e) return;
+  modal(`<h3>Registrar la cara de ${esc(e.nombre)}</h3>
+    <p class="note">Que se ponga frente a la cámara con buena luz, sin lentes de sol ni gorro. Se toman 5 muestras: que mueva apenas la cabeza entre una y otra.</p>
+    <div class="camwrap"><video id="enrVideo" playsinline muted autoplay></video><div class="camaro" id="enrAro"></div></div>
+    <div class="camest" id="enrMsg">Preparando…</div>
+    <div class="row" style="justify-content:flex-end"><button class="btn sec" data-m="cerrar" type="button">Cancelar</button></div>`);
+  registrarCara(e);
+}
+async function registrarCara(e){
+  const tk=++CARA.token, msg=(t,ok)=>{ const m=$("#enrMsg"); if(m) m.textContent=t; const a=$("#enrAro"); if(a) a.classList.toggle("ok",!!ok); };
+  try{ msg("Cargando el reconocimiento facial…"); await cargarModelos(); if(tk!==CARA.token) return;
+    const v=$("#enrVideo"); if(!v) return; msg("Abriendo la cámara…"); await abrirCamara(v); if(tk!==CARA.token){ cerrarCamara(); return; } }
+  catch(err){ cerrarCamara(); return msg(err?.message==="no cargó face-api"? "No se pudo cargar el reconocimiento facial." : errorCamara(err)); }
+  const muestras=[]; let ultimo=0;
+  const ciclo=async()=>{
+    if(tk!==CARA.token) return;
+    const v=$("#enrVideo"); if(!v) return cerrarCamara();
+    let r=null; try{ r=await leerCara(v); }catch(x){}
+    if(tk!==CARA.token) return;
+    if(!r) msg(`Buscando la cara… (${muestras.length} de 5)`);
+    else if(r.ancho<0.2) msg("Que se acerque un poco más a la cámara.");
+    else if(r.score<0.7) msg("Falta luz o no está de frente.");
+    else if(Date.now()-ultimo>700 && (!muestras.length || Date.now()-ultimo>1500 || distCara(r.desc, muestras[muestras.length-1])>0.03)){
+      muestras.push(r.desc); ultimo=Date.now(); msg(`Muestra ${muestras.length} de 5 ✓`, true);
+      if(muestras.length>=5) return terminar();
+    }
+    CARA.loop=setTimeout(ciclo, 250);
+  };
+  const terminar=async()=>{
+    cerrarCamara();
+    // ¿se parece demasiado a otra persona ya registrada?
+    const parecido = S.empleados.filter(x=>x.id!==e.id && caraDe(x.id)).map(x=>({x, d:Math.min(...muestras.map(m=>Math.min(...caraDe(x.id).muestras.map(n=>distCara(m,n)))))})).sort((a,b)=>a.d-b.d)[0];
+    if(parecido && parecido.d < umbralCara()){ msg(`Esta cara se parece demasiado a la de ${parecido.x.nombre}. Probá de nuevo con mejor luz, o revisá que sea la persona correcta.`); return; }
+    const h=ahora(), habia=!!caraDe(e.id);
+    try{
+      await S.db.doc("caras/"+e.id).set({emp:e.id, nombre:e.nombre, fecha:h.fecha, hora:h.hora, muestras:muestras.map(m=>m.map(x=>Math.round(x*10000)/10000))});
+      await registrar(habia? "Volvió a registrar una cara" : "Registró una cara", `${e.nombre} (5 muestras)`);
+      modal(""); toast(`Cara de ${e.nombre.split(" ")[0]} registrada.`);
+    }catch(x){ msg("No se pudo guardar. Probá otra vez."); }
+  };
+  msg("Buscando la cara… (0 de 5)"); ciclo();
 }
 
 /* ================== ADMINISTRACIÓN ================== */
@@ -681,7 +845,7 @@ function tabReg(){
     if(e.activo===false && !ms.length) return "";
     const ts=turnos(e,S.regFecha); const bloq = !esDueno() && S.adminEmp?.id===e.id;
     return `<div class="empcard"><div class="h"><span class="nm">${esc(e.nombre)}</span><span class="note num">${ts.map(t=>`${t.ini}–${t.fin}`).join(" / ")||"Libre"}</span></div>
-      <div>${ms.map(m=>`<span class="mk ${m.tipo==="entrada"?"e":"s"}"><b>${m.tipo==="entrada"?"Entrada":"Salida"}</b> ${m.hora}${m.manual?" ✎":""}${m.motivo?` · ${esc(m.motivo)}`:""}${bloq?"":`<button type="button" title="Borrar marca" data-del="${e.id}|${m.ts}">×</button>`}</span>`).join("")||`<span class="note">Sin marcas</span>`}</div>
+      <div>${ms.map(m=>`<span class="mk ${m.tipo==="entrada"?"e":"s"}"><b>${m.tipo==="entrada"?"Entrada":"Salida"}</b> ${m.hora}${m.manual?" ✎":""}${m.via&&m.via!=="codigo"?` <span title="Marcó con reconocimiento facial">📷</span>`:""}${m.motivo?` · ${esc(m.motivo)}`:""}${bloq?"":`<button type="button" title="Borrar marca" data-del="${e.id}|${m.ts}">×</button>`}</span>`).join("")||`<span class="note">Sin marcas</span>`}</div>
       ${bloq? `<p class="note">Tus propias marcas solo las puede corregir el dueño.</p></div>` : `<div class="row"><select id="nt_${e.id}"><option value="entrada">Entrada</option><option value="salida">Salida</option></select><input type="time" id="nh_${e.id}"><input id="nm_${e.id}" placeholder="Motivo (si es hora extra u olvido)"><button class="btn sm" data-add="${e.id}" type="button">Agregar marca</button></div></div>`}`; }).join("");
   return `<div class="card"><div class="row"><label class="field">Día<input type="date" id="regFecha" value="${S.regFecha}" max="${h.fecha}"></label>
     <span class="note">Corregí olvidos: agregá la marca que faltó o borrá una duplicada. Las marcas agregadas a mano quedan señaladas con ✎.</span></div></div>
@@ -695,6 +859,7 @@ function tabFunc(){
       <label class="field" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="fa_${e.id}" ${e.activo!==false?"checked":""}> Activo</label>
       ${esDueno()? `<label class="field" style="flex-direction:row;align-items:center;gap:6px" title="Dejalo vacío si no entra a Administración">Código encargado/a <input id="fpa_${e.id}" value="${esc(e.pinAdmin||"")}" inputmode="numeric" maxlength="6" style="width:90px" placeholder="—"></label>` : (e.pinAdmin? `<span class="rolchip">Encargada</span>`:"")}
       <button class="btn sm" data-save="${e.id}" type="button">Guardar</button></div>
+    ${filaCara(e)}
     ${(e.reglas||[]).map((r,i)=>`<div class="regla"><span>${esc(describirRegla(r))}</span><button class="btn sm danger" data-rdel="${e.id}|${i}" type="button">Quitar</button></div>`).join("")}
     <details><summary class="note" style="cursor:pointer">Agregar una excepción de horario</summary>
       <div class="row" style="margin-top:8px"><select id="rt_${e.id}"><option value="sinSabado">No trabaja sábados</option><option value="salidaTarde">Sale antes/después de lun a vie</option><option value="entradaManana">Entra a otra hora de lun a vie</option></select>
@@ -715,6 +880,14 @@ function tabAjustes(){
       <label class="field">Hora extra a partir de (min)<input type="number" min="0" max="120" id="ajUmb" value="${a.umbralExtraMin??10}" style="width:120px"></label>
       <label class="field">Sucursal<input id="ajSuc" value="${esc(a.sucursal||"Durazno")}"></label>
       <label class="field">Código de administrador<input id="ajPin" value="${esc(a.adminPin||"0000")}" inputmode="numeric" style="width:130px"></label>
+      <label class="field">Reconocimiento facial<select id="ajCara">
+        <option value="opcion" ${modoCara()==="opcion"?"selected":""}>Cara o código</option>
+        <option value="ambos" ${modoCara()==="ambos"?"selected":""}>Código y cara (doble control)</option>
+        <option value="no" ${modoCara()==="no"?"selected":""}>Apagado (solo código)</option></select></label>
+      <label class="field">Exigencia de la cara<select id="ajCaraU">
+        <option value="0.42" ${umbralCara()===0.42?"selected":""}>Estricta</option>
+        <option value="0.48" ${umbralCara()===0.48?"selected":""}>Normal</option>
+        <option value="0.54" ${umbralCara()===0.54?"selected":""}>Flexible</option></select></label>
       <button class="btn" data-a="guardarAj" type="button">Guardar ajustes</button></div>
       <p class="note">Tolerancia: minutos de gracia antes de contar la llegada como tarde (si llega pasada la tolerancia se cuentan todos los minutos). Hora extra: si alguien se va más tarde que esto después de su hora de salida, el reloj le pide el motivo.</p></div>
     <div class="card"><h3>Horarios del local</h3><div class="tw"><table><thead><tr><th>Temporada</th><th>Lunes a viernes</th><th>Sábados</th></tr></thead><tbody>
@@ -781,6 +954,7 @@ document.addEventListener("click", async ev=>{
   if(t.dataset.k!==undefined){ teclear(t.dataset.k); return; }
   const act=t.dataset.act;
   if(act==="cancelar"){ volverPin(); return; }
+  if(act==="cara"){ iniciarPasoCara(); return; }
   if(act==="entrada"||act==="salida"){ t.disabled=true; await marcar(act); return; }
   if(t.dataset.mot){ S.motivo=t.dataset.mot; S.motivoTxt=$("#motTxt")?.value||""; render(); armarTimeout(120000); return; }
   if(act==="confirmarExtra"){
@@ -791,7 +965,11 @@ document.addEventListener("click", async ev=>{
     t.disabled=true; await marcar("salida", mot); return;
   }
   const m=t.dataset.m;
-  if(m==="cerrar"){ modal(""); return; }
+  if(m==="cerrar"){ cerrarCamara(); modal(""); return; }
+  if(t.dataset.cara){ if(!esDueno()) return toast("Solo el dueño puede registrar caras."); abrirRegistroCara(t.dataset.cara); return; }
+  if(t.dataset.carad){ if(!esDueno()) return toast("Solo el dueño puede borrar caras.");
+    if(t.dataset.ok!=="1"){ t.dataset.ok="1"; t.textContent="¿Borrar la cara?"; setTimeout(()=>{ if(t.isConnected){ t.dataset.ok=""; t.textContent="Borrar cara"; } },3000); return; }
+    const e=S.empleados.find(x=>x.id===t.dataset.carad); await S.db.doc("caras/"+t.dataset.carad).delete(); await registrar("Borró una cara registrada", e?.nombre||t.dataset.carad); toast("Cara borrada."); return; }
   if(m==="entrarAdmin"){ const c=($("#admPin").value||"").trim();
     if(c && c===String(S.ajustes.adminPin||"0000")){ S.rol="dueno"; S.adminEmp=null; }
     else { const enc=S.empleados.find(e=>e.activo!==false && e.pinAdmin && String(e.pinAdmin)===c); if(!enc){ $("#admMsg").textContent="Código incorrecto."; return; } S.rol="encargada"; S.adminEmp=enc; }
@@ -799,7 +977,7 @@ document.addEventListener("click", async ev=>{
   if(t.dataset.tab){ S.tab=t.dataset.tab; render(); return; }
   if(t.dataset.semp){ S.statEmp = S.statEmp===t.dataset.semp? "" : t.dataset.semp; render(); return; }
   const a=t.dataset.a;
-  if(a==="salir"){ S.vista="kiosco"; S.rol=null; S.adminEmp=null; volverPin(); return; }
+  if(a==="salir"){ cerrarCamara(); modal(""); S.vista="kiosco"; S.rol=null; S.adminEmp=null; volverPin(); return; }
   if(a==="visto" && esDueno() && S.db){ t.disabled=true; for(const h of sinRevisar()){ try{ await S.db.doc("historial/"+h.id).update({visto:true}); }catch(e){} } toast("Historial revisado."); return; }
   if(a==="csv"){ exportarCSV(); return; }
   if(!S.db && (a||t.dataset.fdel!==undefined||t.dataset.save||t.dataset.add||t.dataset.del||t.dataset.radd||t.dataset.rdel)){ toast("Sin conexión con la base de datos."); return; }
@@ -856,13 +1034,14 @@ document.addEventListener("click", async ev=>{
     if(t.dataset.fdel!==undefined){ const i=Number(t.dataset.fdel); const f=S.feriados[i]; await guardarFeriados(S.feriados.filter((_,k)=>k!==i)); if(f) await registrar("Quitó un feriado", `${fechaCorta(f.fecha)}/${f.fecha.slice(0,4)} ${f.nombre}`); toast("Feriado quitado."); return; }
     if(a==="guardarAj"){
       const adminPin=$("#ajPin").value.trim(); if(adminPin.length<4) return toast("El código de administrador debe tener al menos 4 caracteres.");
-      await S.db.doc("config/ajustes").set({...S.ajustes, toleranciaMin:Math.max(0,Number($("#ajTol").value)||0), umbralExtraMin:Math.max(0,Number($("#ajUmb").value)||0), sucursal:$("#ajSuc").value.trim()||"Durazno", adminPin});
-      await registrar("Cambió los ajustes", `tolerancia ${$("#ajTol").value} min, hora extra desde ${$("#ajUmb").value} min`); toast("Ajustes guardados."); return; }
+      await S.db.doc("config/ajustes").set({...S.ajustes, toleranciaMin:Math.max(0,Number($("#ajTol").value)||0), umbralExtraMin:Math.max(0,Number($("#ajUmb").value)||0), sucursal:$("#ajSuc").value.trim()||"Durazno", adminPin, modoCara:$("#ajCara").value, umbralCara:Number($("#ajCaraU").value)});
+      await registrar("Cambió los ajustes", `tolerancia ${$("#ajTol").value} min, hora extra desde ${$("#ajUmb").value} min, reconocimiento facial: ${$("#ajCara").selectedOptions[0].text} (${$("#ajCaraU").selectedOptions[0].text.toLowerCase()})`); toast("Ajustes guardados."); return; }
   }catch(e){ toast(e?.code==="invalid_argument"? "No tenés permiso para cambiar estos datos." : "No se pudo guardar. Probá otra vez."); }
 });
 let pendRender=false;
-function renderSuave(){ const a=document.activeElement; if(a && a.matches("input,select,textarea") && (S.vista==="admin" || S.paso==="motivo")){ pendRender=true; return; } render(); }
-document.addEventListener("focusout", ()=>{ if(pendRender){ pendRender=false; setTimeout(()=>{ const a=document.activeElement; if(!(a && a.matches("input,select,textarea"))) render(); else pendRender=true; },0); } });
+function renderSuave(){ if(CARA.stream || (S.vista==="kiosco" && S.paso==="cara")){ pendRender=true; return; } const a=document.activeElement; if(a && a.matches("input,select,textarea") && (S.vista==="admin" || S.paso==="motivo")){ pendRender=true; return; } render(); }
+function renderPendiente(){ if(pendRender){ pendRender=false; render(); } }
+document.addEventListener("focusout", ()=>{ if(pendRender && !CARA.stream){ pendRender=false; setTimeout(()=>{ const a=document.activeElement; if(!(a && a.matches("input,select,textarea"))) render(); else pendRender=true; },0); } });
 document.addEventListener("input", ev=>{ if(ev.target.id==="motTxt") S.motivoTxt=ev.target.value; });
 function stripId(e){ const {id,...r}=e; return r; }
 document.addEventListener("change", ev=>{
