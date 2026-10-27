@@ -198,6 +198,7 @@ details summary{cursor:pointer;color:var(--ac2);font-weight:600;margin:6px 0}
 <div id="toast"></div>
 
 <script>
+// ID de cliente de Google (OAuth). Si el local usa su propio proyecto de Google Cloud, se cambia solo esta línea.
 const CLIENT_ID="590485373332-ft5l9d7md2ggoluku7pa8936cu6qlilg.apps.googleusercontent.com";
 const SCOPES="https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email";
 const HOJA="CierresCaja";
@@ -336,7 +337,9 @@ async function fotoMail(){
 async function leerIA(onEstado){
   const key=cfg.key; if(!key) throw new Error("Falta la clave de OpenRouter (Ajustes)");
   const PAGO=["google/gemini-2.5-flash","google/gemini-2.5-flash-lite","openai/gpt-4.1-mini","openai/gpt-4o-mini"];
-  let modelos=[...PAGO.slice(0,2)];
+  // sin saldo en OpenRouter se usan solo los modelos gratuitos (se recuerda una semana para no perder tiempo)
+  const sinSaldoAntes=(LS.get("cierres_sinsaldo",0)||0)>Date.now()-7*864e5;
+  let modelos=sinSaldoAntes?[]:[...PAGO.slice(0,2)];
   try{ const j=await fetch("https://openrouter.ai/api/v1/models").then(r=>r.json()); const gratis=(j.data||[]).filter(m=>m.id.endsWith(":free")&&(m.architecture?.input_modalities||[]).includes("image")&&!/safety|guard|embed|moderat|reason|think/i.test(m.id)).map(m=>m.id).slice(0,5); modelos=[...modelos,...gratis]; }catch(e){ modelos.push("qwen/qwen2.5-vl-72b-instruct:free","google/gemma-3-27b-it:free"); }
   const errores=[]; let sinSaldo=false, chicas=null;
   const pedir=async(model,imgs)=>{ const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),45000);
@@ -347,7 +350,7 @@ async function leerIA(onEstado){
     return JSON.parse((m[1]||m[0]).replace(/```json|```/g,"").trim()); };
   for(const model of modelos){ const pago=!model.endsWith(":free"); if(pago&&sinSaldo) continue;
     try{ onEstado("Leyendo con "+model.replace(":free","")+"…"); return {datos:await pedir(model,fotos),model}; }
-    catch(e){ const m=String(e.message||e); if(pago&&/credit|insufficient|402|balance|payment/i.test(m)){ sinSaldo=true; errores.push("La cuenta de OpenRouter no tiene saldo"); continue; }
+    catch(e){ const m=String(e.message||e); if(pago&&/credit|insufficient|402|balance|payment/i.test(m)){ sinSaldo=true; LS.set("cierres_sinsaldo",Date.now()); errores.push("La cuenta de OpenRouter no tiene saldo"); continue; }
       if(/45 segundos|rate|429|No endpoints|not a valid/i.test(m)){ errores.push(model+": "+m); continue; }
       try{ if(!chicas) chicas=await Promise.all(fotos.map(u=>achicar(u,1100))); return {datos:await pedir(model,chicas),model}; }catch(e2){ errores.push(model+": "+(e2.message||e2)); } } }
   throw new Error(errores.slice(-2).join(" · ")||"No pude leer la foto");
@@ -464,7 +467,7 @@ $("gbtn").onclick=()=>{ if(cfg&&cfg.sheetId) conectar(false); };
 $("aGuardar").onclick=()=>{ cfg={...cfg,local:$("aLocal").value.trim()||cfg.local,cajeras:$("aCajeras").value.split(",").map(x=>x.trim()).filter(Boolean),key:$("aKey").value.trim(),mails:$("aMails").value.trim(),comision:Number($("aCom").value.replace(",","."))||3}; LS.set("cierres_cfg",cfg); pintarCabecera(); armarForm(); toast("✓ Ajustes guardados"); };
 $("aScript").onclick=async()=>{ const mails=$("aMails").value.split(",").map(x=>x.trim()).filter(Boolean).join(","); if(!mails){ toast("Poné al menos un mail"); return; }
   cfg.mails=mails; LS.set("cierres_cfg",cfg);
-  const com=Number(cfg.comision)||3; const txt=SCRIPT_MAIL.replace('"Colonia"',JSON.stringify(cfg.local)).replace('"dueña@gmail.com,local@prolimpio.com.uy"',JSON.stringify(mails)).replace("const COMISION_TARJETAS = 0.03;","const COMISION_TARJETAS = "+(com/100)+";");
+  const com=Number(cfg.comision)||3; const txt=SCRIPT_MAIL.replace('"Colonia"',JSON.stringify(cfg.local)).replace('"dueña@gmail.com,local@prolimpio.com.uy"',JSON.stringify(mails)).replace("https://emarosteguy-oss.github.io/prolimpio2026/cierres/",location.origin+location.pathname).replace("const COMISION_TARJETAS = 0.03;","const COMISION_TARJETAS = "+(com/100)+";");
   try{ await navigator.clipboard.writeText(txt); toast("✓ Programa copiado: pegalo en Extensiones → Apps Script de la planilla",5000); }catch(e){ const w=window.open("","_blank"); if(w){ w.document.write("<pre>"+txt.replace(/</g,"&lt;")+"</pre>"); } } };
 $("aAbrir").onclick=()=>window.open("https://docs.google.com/spreadsheets/d/"+cfg.sheetId,"_blank");
 const linkCfg=()=>location.origin+location.pathname+"#config="+b64e(cfg);
