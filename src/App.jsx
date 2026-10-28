@@ -412,7 +412,7 @@ const PENDIENTES = [
   {mes:"2026-10",prov:"Crédito Santander",monto:53348,dia:25,tipo:"credito"},
   {mes:"2026-10",prov:"San Francisco",monto:59546,dia:26,tipo:"prov"},
   {mes:"2026-10",prov:"Cameril",monto:55821,dia:27,tipo:"prov"},
-  {mes:"2026-10",prov:"Estuario Platino",monto:63600,dia:28,tipo:"prov"},
+  {mes:"2026-11",prov:"Estuario Platino (de octubre, se paga el lunes 2/11)",monto:63600,dia:2,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 09/09)",monto:135000,dia:29,tipo:"cheque"},
   {mes:"2026-11",prov:"Parque Trébol",monto:16560,dia:2,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 16/09)",monto:164237,dia:3,tipo:"cheque"},
@@ -452,7 +452,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1837477, 10:1559712, 11:881527}; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1623312, 11:881527}; // Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
