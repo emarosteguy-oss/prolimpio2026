@@ -160,7 +160,7 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
-  {fecha:"2026-10-28",monto:1029,tipo:"Personal",cuenta:"BROU",ts:"2026-10-28T20:00:00.000Z",obs:"Lider Gas (a confirmar)"},
+  {fecha:"2026-10-28",monto:1029,tipo:"Personal",cuenta:"BROU",ts:"2026-10-28T20:00:00.000Z",obs:"Lider Gas (gas para casa)"},
   {fecha:"2026-10-28",monto:4477,tipo:"Personal",cuenta:"BROU",ts:"2026-10-28T09:40:00.000Z",obs:"Pago tarjeta OCA Master"},
   {fecha:"2026-10-28",monto:2026,tipo:"Personal",cuenta:"BROU",ts:"2026-10-28T09:41:00.000Z",obs:"Pago tarjeta OCA Master"},
   {fecha:"2026-10-27",monto:460,tipo:"Personal",cuenta:"BROU",ts:"2026-10-27T15:00:00.000Z",obs:"Asociación médica"},
