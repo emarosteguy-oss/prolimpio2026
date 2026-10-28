@@ -414,6 +414,7 @@ const PENDIENTES = [
   {mes:"2026-10",prov:"Cameril",monto:55821,dia:27,tipo:"prov"},
   {mes:"2026-11",prov:"Estuario Platino (de octubre, se paga el lunes 2/11)",monto:63600,dia:2,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 09/09)",monto:135000,dia:29,tipo:"cheque"},
+  {mes:"2026-11",prov:"Sueldos de octubre",monto:125000,dia:6,tipo:"sueldo"},
   {mes:"2026-11",prov:"Parque Trébol",monto:16560,dia:2,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 16/09)",monto:164237,dia:3,tipo:"cheque"},
   {mes:"2026-11",prov:"Pedro Merla",monto:25108,dia:4,tipo:"prov"},
@@ -968,7 +969,7 @@ const generarInforme = (tipo, mIdx, anio, ctx) => {
     const meses=[...new Set(PENDIENTES.map(p=>p.mes))];const S=(f)=>PENDIENTES.filter(f).reduce((s,p)=>s+p.monto,0);
     const nom=k=>{const [a,b]=k.split("-");return `${MESES[+b-1]} ${a}`;};
     tabla(["Mes","Proveedores","Cheques SUBATIR","Créditos / plazo fijo","Total"],[...meses.map(k=>[nom(k),P$(S(p=>p.mes===k&&p.tipo==="prov")),P$(S(p=>p.mes===k&&p.tipo==="cheque")),P$(S(p=>p.mes===k&&(p.tipo==="credito"||p.tipo==="plazo"))),P$(S(p=>p.mes===k))]),["Total",P$(S(p=>p.tipo==="prov")),P$(S(p=>p.tipo==="cheque")),P$(S(p=>p.tipo==="credito"||p.tipo==="plazo")),P$(S(()=>true))]],{cols:{1:der,2:der,3:der,4:der}});
-    tabla(["Mes","Concepto","Tipo","Monto"],PENDIENTES.map(p=>[nom(p.mes),p.prov,p.tipo==="prov"?"Proveedor":p.tipo==="cheque"?"Cheque SUBATIR":p.tipo==="plazo"?"Plazo fijo":"Crédito",P$(p.monto)]),{cols:{3:der}});
+    tabla(["Mes","Concepto","Tipo","Monto"],PENDIENTES.map(p=>[nom(p.mes),p.prov,p.tipo==="prov"?"Proveedor":p.tipo==="cheque"?"Cheque SUBATIR":p.tipo==="plazo"?"Plazo fijo":p.tipo==="sueldo"?"Sueldos":"Crédito",P$(p.monto)]),{cols:{3:der}});
     const ra=(ctx.retiros||[]).filter(r=>String(r.fecha).startsWith(String(new Date().getFullYear())));
     seccion(`Retiros registrados en ${new Date().getFullYear()}`);
     if(ra.length) tabla(["Fecha","Tipo","Observación","Monto"],[...ra.map(r=>[PF(r.fecha),r.tipo||"",r.obs||"",P$(+r.monto)]),["Total","","",P$(ra.reduce((s,r)=>s+(+r.monto||0),0))]],{cols:{3:der}});
@@ -2087,7 +2088,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               const meses=[...new Set(PENDIENTES.map(p=>p.mes))];
               const nom=k=>{const [y,m]=k.split("-");return `${MESES[Number(m)-1]} ${y}`;};
               const pagadas=new Set(sheetPagos.map(x=>x.clave));const sum=(f)=>PENDIENTES.filter(p=>!pagadas.has(clavePend(p))).filter(f).reduce((s,p)=>s+p.monto,0);
-              const tipos=[["prov","🟡 Proveedores sin pagar"],["cheque","🟣 Cheques SUBATIR"],["credito","Cuotas de créditos"],["plazo","Plazo fijo"]];
+              const tipos=[["prov","🟡 Proveedores sin pagar"],["cheque","🟣 Cheques SUBATIR"],["credito","Cuotas de créditos"],["plazo","Plazo fijo"],["sueldo","Sueldos"]];
               return <>
               <div className="grid4">
                 {tipos.map(([t,l])=>{const v=sum(p=>p.tipo===t);return v?<div key={t} className="card"><div className="ctitle">{l}</div><div className="cval">{fmtM(v)}</div><div className="csub">{PENDIENTES.filter(p=>p.tipo===t).length} pagos</div></div>:null;})}
@@ -2105,7 +2106,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <details className="card" open><summary style={{cursor:"pointer",color:"var(--text2)",fontSize:".95rem",fontWeight:600}}>Detalle — tocá un pago para marcarlo pagado</summary>
                 <div className="tw" style={{marginTop:10}}><table><thead><tr><th>Mes</th><th>Concepto</th><th>Tipo</th><th>Monto</th></tr></thead>
                 <tbody>{PENDIENTES.map((p,i)=>{const K=clavePend(p);const pg=sheetPagos.find(x=>x.clave===K);return <React.Fragment key={i}><tr onClick={()=>{if(pg){if(window.confirm("¿Desmarcar este pago?"))deleteRow("Pagos",pg._i);}else setPagoEdit({clave:K,concepto:p.prov,monto:p.monto,mes:p.mes,fecha:hoyISO()});}} style={{cursor:"pointer",opacity:pg?0.6:1}}><td>{nom(p.mes)}</td><td style={{textDecoration:pg?"line-through":"none"}}>{pg?"✅ ":"⬜ "}{p.prov}</td>
-                  <td>{pg?<span className="tag tg">Pagado {pg.fecha.split("-").reverse().slice(0,2).join("/")}</span>:<span className={`tag ${p.tipo==="cheque"?"tr":p.tipo==="prov"?"ty":"tg"}`}>{p.tipo==="prov"?"Proveedor":p.tipo==="cheque"?"Cheque":p.tipo==="plazo"?"Plazo fijo":"Crédito"}</span>}</td>
+                  <td>{pg?<span className="tag tg">Pagado {pg.fecha.split("-").reverse().slice(0,2).join("/")}</span>:<span className={`tag ${p.tipo==="cheque"?"tr":p.tipo==="prov"?"ty":"tg"}`}>{p.tipo==="prov"?"Proveedor":p.tipo==="cheque"?"Cheque":p.tipo==="plazo"?"Plazo fijo":p.tipo==="sueldo"?"Sueldos":"Crédito"}</span>}</td>
                   <td className="tac">{fmtM(p.monto)}</td></tr>
                   {pagoEdit&&pagoEdit.clave===K&&<tr><td colSpan={4}>{<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:8,alignItems:"center"}}>
                     <input type="date" className="finput" style={{maxWidth:160}} value={pagoEdit.fecha} onChange={e=>setPagoEdit(p=>({...p,fecha:e.target.value}))}/>
