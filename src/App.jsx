@@ -760,6 +760,8 @@ const crecEscenario = (cfg,k) => { const e=ESCENARIOS.find(x=>x.k===k)||ESCENARI
 // Costos = gastos fijos (suben con la inflación desde enero) + variables (mercadería + IVA, % de las ventas)
 // + comisión de bancos. La mercadería se paga mitad en el mes y mitad el mes siguiente (plazos de 30 a 60 días).
 // Oct–dic 2026: como mínimo, los gastos ya programados en la planilla.
+// Intereses del sobregiro Santander: el 30/10/2026 cobró $11.993 por octubre (saldo promedio ~−$480.000) ≈ 2,5% mensual del saldo negativo
+const TASA_SOBREGIRO = 0.025;
 const proyectarCaja = (cfg, crecIn) => {
   const crec = (crecIn==null? crecEscenario(cfg,cfg.escSel||"medio") : crecIn)/100;
   const varP=(Number(cfg.varPct)||68)/100, fijos=Number(cfg.fijosMes)||370000, inf=(Number(cfg.infFijos)||0)/100;
@@ -783,7 +785,9 @@ const proyectarCaja = (cfg, crecIn) => {
     const costos = (enCurso ? Math.max(0, costoMes-MES_EN_CURSO.pagadoYa-(cfg.pagExtra||0)) : costoMes) + comision;
     let deuda = 0;
     if(idx>=9 && idx<=29 && !(enCurso && MES_EN_CURSO.candelaPagada)) deuda += cfg.candela;        // Candela: Oct-26 a Jun-28
-    if(idx>=9 && idx<=11 && !(enCurso && MES_EN_CURSO.santanderPagada)) deuda += cfg.santander;      // Santander: hasta Dic-26
+    if(idx>=9 && idx<=11 && !(enCurso && MES_EN_CURSO.santanderPagada)) deuda += cfg.santander;
+    // intereses del sobregiro: se cobran a fin de mes sobre el saldo negativo (octubre 2026 ya cobrado)
+    if(saldo<0 && !(enCurso && idx===9)) deuda += Math.round(-saldo*TASA_SOBREGIRO);      // Santander: hasta Dic-26
     if(idx===11 && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo en Dic-26
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
