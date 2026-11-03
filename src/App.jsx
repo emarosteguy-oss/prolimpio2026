@@ -455,13 +455,13 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
   {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
   {mes:"2026-12",prov:"Bettasul",monto:3726,dia:19,tipo:"prov"},
-  {mes:"2026-12",prov:"Plazo fijo",monto:313000,dia:20,tipo:"plazo"},
   {mes:"2026-12",prov:"Crédito Santander",monto:53350,dia:25,tipo:"credito"},
   {mes:"2026-12",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
   {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,dia:30,tipo:"cheque"},
+  {mes:"2027-03",prov:"Plazo fijo (corrido de diciembre)",monto:313000,dia:20,tipo:"plazo"},
   {mes:"2027-02",prov:"Enjoy vía SUBATIR — cheque 20/02 (3/3)",monto:95818,dia:20,tipo:"cheque"},
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
@@ -776,6 +776,7 @@ const crecEscenario = (cfg,k) => { const e=ESCENARIOS.find(x=>x.k===k)||ESCENARI
 // Oct–dic 2026: como mínimo, los gastos ya programados en la planilla.
 // Intereses del sobregiro Santander: el 30/10/2026 cobró $11.993 por octubre (saldo promedio ~−$480.000) ≈ 2,5% mensual del saldo negativo
 const TASA_SOBREGIRO = 0.025;
+const PLAZO_FIJO_IDX = 14; // marzo 2027 (antes diciembre 2026: idx 11)
 // Cómo se cobra lo vendido (cierres de caja 12/10 a 02/11/2026, $1,2M): tarjetas 47,3% (Getnet acredita el día hábil siguiente, ~95,5% neto),
 // efectivo 37,5% (buzonera; se deposita ~83%, el resto se va en gastos pagados con la caja), crédito 11,4% (se cobra por BROU ~17 días después),
 // transferencias 3,8% (entran el mismo día).
@@ -809,7 +810,7 @@ const proyectarCaja = (cfg, crecIn) => {
     if(idx>=9 && idx<=11 && !(enCurso && MES_EN_CURSO.santanderPagada)) deuda += cfg.santander;
     // intereses del sobregiro: se cobran a fin de mes sobre el saldo negativo (octubre 2026 ya cobrado)
     if(saldo<0 && !(enCurso && idx===9)) deuda += Math.round(-saldo*TASA_SOBREGIRO);      // Santander: hasta Dic-26
-    if(idx===11 && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo en Dic-26
+    if(idx===PLAZO_FIJO_IDX && cfg.pagaPF) deuda += cfg.plazoFijo; // plazo fijo: se corre de dic-26 a mar-27 (decisión de Esteban, 03/11/2026)
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
     const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)-(cfg.retExtra||0)) : retiro;
@@ -1008,7 +1009,7 @@ const generarInforme = (tipo, mIdx, anio, ctx) => {
     tabla(["Mes","Ventas est.","Costos est.","Deudas","Retiro","Saldo"],pr.map(p=>[p.mes,P$(p.ventas),P$(p.costos),P$(p.deuda),P$(p.retiro),P$(p.saldo)]),{cols:{1:der,2:der,3:der,4:der,5:der},extra:{didParseCell:(d)=>{if(d.section==="body"&&d.column.index===5){const v=pr[d.row.index].saldo;d.cell.styles.textColor=v<c.limite?[185,28,28]:v<c.alerta?[180,83,9]:v<0?[146,64,14]:[20,83,45];d.cell.styles.fontStyle="bold";}}}});
     { const CRp=crecimientoReal(); const esc=ESCENARIOS.find(e=>e.k===(c.escSel||"medio"))||ESCENARIOS[1];
       parrafos([`Escenario: ${esc.n}, ventas +${PN(crecEscenario(c,esc.k),1)}% contra el mismo mes del año anterior (tendencia real de los últimos 3 meses: ${PN(CRp.tend,1)}%). Al final del período: ${ESCENARIOS.map(e=>`${e.n} (${PN(crecEscenario(c,e.k),1)}%) ${P$(proyectarCaja(c,crecEscenario(c,e.k)).slice(-1)[0].saldo)}`).join(" · ")}.`,
-        `Supuestos: gastos fijos ${P$(c.fijosMes)} por mes (+${PN(c.infFijos,1)}% desde enero), mercadería e IVA ${PN(c.varPct,1)}% de las ventas (mitad se paga el mes siguiente), comisión de bancos ${PN(comisionPctEfectiva(),1)}% de las ventas; para oct–dic 2026 se usan los gastos ya programados si son mayores. Retiro de ${P$(c.retiroFijo)} hasta enero y luego ${P$(c.retiroFijo2)}${+c.retiroPct?` + ${PN(c.retiroPct,1)}% de las ventas`:""}. Plazo fijo de diciembre: ${c.pagaPF?"se paga":"se renueva"}.`]); }
+        `Supuestos: gastos fijos ${P$(c.fijosMes)} por mes (+${PN(c.infFijos,1)}% desde enero), mercadería e IVA ${PN(c.varPct,1)}% de las ventas (mitad se paga el mes siguiente), comisión de bancos ${PN(comisionPctEfectiva(),1)}% de las ventas; para oct–dic 2026 se usan los gastos ya programados si son mayores. Retiro de ${P$(c.retiroFijo)} hasta enero y luego ${P$(c.retiroFijo2)}${+c.retiroPct?` + ${PN(c.retiroPct,1)}% de las ventas`:""}. Plazo fijo (marzo 2027): ${c.pagaPF?"se paga":"se renueva"}.`]); }
   }
   const np=doc.getNumberOfPages();
   for(let i=1;i<=np;i++){doc.setPage(i);doc.setFillColor(...NAR);doc.rect(0,0,W,20,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("PROlimpio Durazno",M,13);doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.text(`Generado el ${fHoy}`,W-M,13,{align:"right"});doc.setFontSize(8.5);doc.setTextColor(...MAR);doc.text(`PROlimpio Durazno - ${titulos[tipo]}`,M,292);doc.text(`Página ${i} de ${np}`,W-M,292,{align:"right"});}
@@ -2376,8 +2377,8 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
             <div className="card"><div className="fg">
 
               <div className="fl"><label className="flabel">Cobros pendientes (nov.)</label><input type="number" className="finput" value={caja.cobros} onChange={num("cobros")}/></div>
-              <div className="fl"><label className="flabel">Plazo fijo diciembre</label><input type="number" className="finput" value={caja.plazoFijo} onChange={num("plazoFijo")}/></div>
-              <div className="fl"><label className="flabel">¿Pagar plazo fijo en dic.?</label><select className="finput" value={caja.pagaPF?"si":"no"} onChange={e=>setCaja({pagaPF:e.target.value==="si"})}><option value="si">Sí, pagarlo</option><option value="no">No, renovarlo</option></select></div>
+              <div className="fl"><label className="flabel">Plazo fijo (marzo 2027)</label><input type="number" className="finput" value={caja.plazoFijo} onChange={num("plazoFijo")}/></div>
+              <div className="fl"><label className="flabel">¿Pagar plazo fijo en marzo?</label><select className="finput" value={caja.pagaPF?"si":"no"} onChange={e=>setCaja({pagaPF:e.target.value==="si"})}><option value="si">Sí, pagarlo</option><option value="no">No, renovarlo</option></select></div>
               <div className="fl"><label className="flabel">Retiro fijo hasta enero</label><input type="number" className="finput" value={caja.retiroFijo} onChange={num("retiroFijo")}/></div>
               <div className="fl"><label className="flabel">Retiro fijo desde febrero</label><input type="number" className="finput" value={caja.retiroFijo2} onChange={num("retiroFijo2")}/></div>
               <div className="fl"><label className="flabel">+ % de ventas desde febrero</label><input type="number" className="finput" value={caja.retiroPct} onChange={num("retiroPct")}/></div>
