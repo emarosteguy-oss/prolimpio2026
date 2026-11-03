@@ -428,7 +428,6 @@ const PENDIENTES = [
   {mes:"2026-10",prov:"Cameril",monto:55821,dia:27,tipo:"prov"},
   {mes:"2026-11",prov:"Estuario Platino (de octubre, se paga el lunes 2/11)",monto:63600,dia:2,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 09/09)",monto:135000,dia:29,tipo:"cheque"},
-  {mes:"2026-11",prov:"Sueldos de octubre",monto:125000,dia:6,tipo:"sueldo"},
   {mes:"2026-11",prov:"Parque Trébol",monto:16560,dia:2,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 16/09)",monto:164237,dia:3,tipo:"cheque"},
   {mes:"2026-11",prov:"Pedro Merla",monto:25108,dia:4,tipo:"prov"},
@@ -519,7 +518,7 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Alquiler",monto:65370},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS",monto:220000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:90000},{nombre:"Otros gastos",monto:45000}],
+  "2026-11":[{nombre:"Sueldos de octubre",monto:125000,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"Luz",monto:11544,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:95000,dia:20},{nombre:"IVA (DGI)",monto:120000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 26/10: Empleados 220.000 = sueldos ~125.000 (los paga el 6) + BPS ~95.000 (cerca del 20); IVA 120.000
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
@@ -621,6 +620,7 @@ const fotoParaMail = async (urls) => {
 };
 const achicarFoto = (url, M) => new Promise(res=>{ const img=new Image(); img.onload=()=>{ let w=img.width,h=img.height; const k=Math.min(1,M/Math.max(w,h)); const cv=document.createElement("canvas"); cv.width=Math.round(w*k); cv.height=Math.round(h*k); cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height); res(cv.toDataURL("image/jpeg",0.8)); }; img.onerror=()=>res(url); img.src=url; });
 let CANCELAR_LECTURA = null;
+let GUARDANDO_CIERRE = false;
 const leerCierreConIA = async (fotos, orKey, onEstado) => {
   let cancelado=false; CANCELAR_LECTURA=()=>{cancelado=true; if(ctrlActual) ctrlActual.abort();}; let ctrlActual=null;
   let modelos=[], fuente="lista", pagos=[];
@@ -773,6 +773,13 @@ const crecEscenario = (cfg,k) => { const e=ESCENARIOS.find(x=>x.k===k)||ESCENARI
 // Oct–dic 2026: como mínimo, los gastos ya programados en la planilla.
 // Intereses del sobregiro Santander: el 30/10/2026 cobró $11.993 por octubre (saldo promedio ~−$480.000) ≈ 2,5% mensual del saldo negativo
 const TASA_SOBREGIRO = 0.025;
+// Cómo se cobra lo vendido (cierres de caja 12/10 a 02/11/2026, $1,2M): tarjetas 47,3% (Getnet acredita el día hábil siguiente, ~95,5% neto),
+// efectivo 37,5% (buzonera; se deposita ~83%, el resto se va en gastos pagados con la caja), crédito 11,4% (se cobra por BROU ~17 días después),
+// transferencias 3,8% (entran el mismo día).
+const MIX_COBRO = { tarjeta:0.473, efectivo:0.375, credito:0.114, transf:0.038 };
+const NETO_COBRO = { tarjeta:0.955, efectivo:0.83, credito:1, transf:1 };
+const DIAS_CREDITO = 17;
+const CRED_LAG = MIX_COBRO.credito*DIAS_CREDITO/30; // parte de las ventas del mes que se cobra el mes siguiente
 const proyectarCaja = (cfg, crecIn) => {
   const crec = (crecIn==null? crecEscenario(cfg,cfg.escSel||"medio") : crecIn)/100;
   const varP=(Number(cfg.varPct)||68)/100, fijos=Number(cfg.fijosMes)||370000, inf=(Number(cfg.infFijos)||0)/100;
@@ -803,7 +810,8 @@ const proyectarCaja = (cfg, crecIn) => {
     const cobros = idx===10 ? cfg.cobros : 0;          // cobros en Nov-26
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
     const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)-(cfg.retExtra||0)) : retiro;
-    saldo = saldo + ventasMes - costos - deuda + cobros - retiroMes;
+    const corrimiento = Math.round(CRED_LAG*(ventasAnt-ventas)); // el crédito de fin de mes se cobra el mes siguiente
+    saldo = saldo + ventasMes + corrimiento - costos - deuda + cobros - retiroMes;
     out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, fijos:fijoMes, deuda, retiro, saldo:Math.round(saldo) });
     m++; if(m>11){m=0;y++;}
   }
@@ -1451,11 +1459,15 @@ export default function App(){
   useEffect(()=>{ if(location.hash.startsWith("#cierre=")){ const c=location.hash; try{history.replaceState(null,"",location.pathname+location.search);}catch(e){} aplicarCodigoLector(c); } },[]);
   const [codLector,setCodLector]=useState("");
   const guardarCierre2 = async () => {
+    if(GUARDANDO_CIERRE){showToast("Ya se está guardando, esperá un momento");return;}
     if(!token){showToast("Conectate a Google primero","er");return;}
+    { const prev=sheetCierres2.find(c=>c.fecha===cjF.fecha); if(prev){ const h=prev.ts?new Date(prev.ts).toLocaleTimeString("es-UY",{hour:"2-digit",minute:"2-digit"}):"";
+      if(!window.confirm(`Ya hay un cierre guardado del ${cjF.fecha.split("-").reverse().join("/")}${h?` (a las ${h})`:""}. ¿Guardarlo de nuevo? Queda el último.`)) return; } }
     if(!cjF.fecha||nC(cjF.ventaPos)==null){showToast("Falta la fecha o la venta total","er");return;}
     const malos=chequearCierre(cjF).filter(x=>!x.ok);
     if(malos.length&&!window.confirm(`Hay ${malos.length} control(es) que no cierran. ¿Guardar igual?`)) return;
     const sid=sidCierres||SHEET_ID;
+    GUARDANDO_CIERRE=true; setTimeout(()=>{GUARDANDO_CIERRE=false;},20000);
     setSyncStatus("syncing");
     const okS=await gapi_ensure_sheet(token,"CierresCaja",HEAD_CIERRES,sid);
     const fila=[cjF.fecha,cjF.cajero||"",...CIERRE_CAMPOS.map(([k])=>nC(cjF[k])==null?"":String(nC(cjF[k]))),String(nC(cjF.credito)||0),String(nC(cjF.transferencia)||0),textoGastos(cjF.gastosDetalle),cjF.obs||"",new Date().toISOString()];
@@ -1465,7 +1477,7 @@ export default function App(){
         const hj=(meta.sheets||[]).find(x=>x.properties.title==="CierresCaja"); const fal=26+partes.length-(hj?.properties?.gridProperties?.columnCount||26);
         if(hj&&fal>0) await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({requests:[{appendDimension:{sheetId:hj.properties.sheetId,dimension:"COLUMNS",length:fal+2}}]})});
         fila.push(...partes.map(x=>"img:"+x)); } }catch(e){}
-    const ok=okS&&await gapi_append(token,"CierresCaja",fila,sid);
+    const ok=okS&&await gapi_append(token,"CierresCaja",fila,sid); GUARDANDO_CIERRE=false;
     if(ok){ setSyncStatus("ok"); setUltimoCierre({...cjF}); setCjF(CIERRE_VACIO()); setFotos([]); setLeido(null); await loadCierres2(token); window.scrollTo({top:0,behavior:"smooth"}); }
     else { setSyncStatus("error"); showToast("No se pudo guardar: revisá la conexión","er"); }
   };
@@ -1686,24 +1698,39 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
   const pendMes=PENDIENTES.filter(p=>p.mes===mesKey&&!pagadasK.has(clavePend(p)));
   const fijosMesLista=(COSTOS_FIJOS_MES[mesKey]||COSTOS_FIJOS).filter(c=>!c.planilla&&!sheetPagos.find(p=>p.clave===claveFijo(mesKey,c.nombre)));
   const girosSinDebitar=PENDIENTES.filter(p=>/giro hecho/i.test(p.prov)&&!pagadasK.has(clavePend(p)));
-  // saldo día por día hasta fin de mes: pagos en su día de vencimiento (planilla), ventas que faltan según la curva
-  // (entran al banco el día hábil siguiente), fijos y retiro repartidos; el resto se ajusta para cerrar igual que la proyección
-  const peorMes=(()=>{const nd=new Date(yAct,mIdx+1,0).getDate(), hoyN=hoyD.getDate();
+  // saldo día por día hasta fin de mes, separando cómo se cobra cada venta:
+  // tarjetas al día hábil siguiente (lo del viernes y sábado, el lunes), efectivo por buzonera al día siguiente (neto de gastos de caja),
+  // transferencias el mismo día y crédito ~17 días después. Usa los cierres guardados (tarjetas y crédito que todavía no entraron)
+  // y, para los días que faltan, la venta esperada según la curva del mes. Pagos en su día de vencimiento; fijos y retiro repartidos.
+  const peorMes=(()=>{const nd=new Date(yAct,mIdx+1,0).getDate(), hoyIso=hoyISO(), hoyN=hoyD.getDate(), finIso=isoDe(new Date(yAct,mIdx,nd,12));
     const pend=pendMes.reduce((s,p)=>s+p.monto,0), fij=fijosMesLista.reduce((s,c)=>s+c.monto,0);
     const ret=Math.max(0,(+caja.retiroFijo||0)-(MES_EN_CURSO.idx===mIdx+(yAct-2026)*12?(MES_EN_CURSO.retiradoYa||0)+(saldoHoy.retTodos||0):retiradoMes));
-    const vendidos=new Set(ventasConExtra().filter(v=>String(v.fecha).startsWith(mesKey)&&+v.monto>0).map(v=>v.fecha));
-    const dias=[]; for(let k=hoyN;k<=nd;k++){const d=new Date(yAct,mIdx,k,12); dias.push({k,d,w:vendidos.has(isoDe(d))?0:pesoDia(d)});}
-    const sw=dias.reduce((s,x)=>s+x.w,0)||1, enCursoM=MES_EN_CURSO.idx===mIdx+(yAct-2026)*12, falta=Math.max(0,(RMC.proyeccion||0)-(enCursoM?(MES_EN_CURSO.ventasYa||0)+(saldoHoy.depTodos||0):(RMC.total||0)))*(1-comisionPctEfectiva()/100);
-    const sig=k0=>{let k=k0+1; while(k<=nd&&new Date(yAct,mIdx,k,12).getDay()%6===0)k++; return k;};
-    // lo ya vendido que todavía no llegó al banco (tarjetas y efectivo de los últimos días) entra el próximo día hábil; el resto, a medida que se vende
-    const futuro=Math.min(falta,Math.max(0,(RMC.proyeccion||0)-(RMC.total||0))*(1-comisionPctEfectiva()/100)), yaVendido=falta-futuro;
-    const entra={}; let fuera=0; { let k=hoyN, hab=[]; while(hab.length<3&&k<=nd){ k=sig(k); if(k<=nd) hab.push(k); } hab.forEach(h=>{ entra[h]=(entra[h]||0)+yaVendido/hab.length; }); if(!hab.length) fuera+=yaVendido; }
-    dias.forEach(x=>{if(!x.w)return; const k=sig(x.k); if(k<=nd) entra[k]=(entra[k]||0)+futuro*x.w/sw; else fuera+=futuro*x.w/sw;});
+    const desde=caja.saldoFecha||hoyIso; const habil=iso=>{const d=new Date(iso+"T12:00:00");return d.getDay()%6!==0&&!FERIADOS_BANCO.has(iso);};
+    const hab0=iso=>habil(iso)?iso:diaHabilBancoSig(iso); const masDias=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return isoDe(d);};
+    const entra={}, det={}; let fuera=0;
+    const suma=(iso,m,tipo)=>{ if(m<=0) return; if(iso<hoyIso) iso=hab0(hoyIso); if(iso>finIso){fuera+=m;return;} entra[iso]=(entra[iso]||0)+m; (det[iso]=det[iso]||{})[tipo]=((det[iso]||{})[tipo]||0)+m; };
+    // 1) cierres ya guardados: tarjetas y crédito que todavía no llegaron al banco
+    const cierres={}; sheetCierres2.forEach(c=>{cierres[c.fecha]=c;});
+    Object.values(cierres).forEach(c=>{ if(!c.fecha||c.fecha<masDias(hoyIso,-40)) return;
+      const tj=(+c.tarjetasPos||0)+(c.tarjetaErp&&c.tarjetaErp!==c.tarjetasPos?(+c.tarjetaErp||0):0);
+      const dTj=diaHabilBancoSig(c.fecha); if(dTj>desde) suma(dTj,tj*NETO_COBRO.tarjeta,"tarjetas");
+      const dCr=hab0(masDias(c.fecha,DIAS_CREDITO)); if(dCr>desde) suma(dCr,+c.credito||0,"crédito"); });
+    // 2) días que faltan vender (sin cierre guardado), con la venta esperada de la curva del mes
+    const dias=[]; for(let k=hoyN;k<=nd;k++){const d=new Date(yAct,mIdx,k,12); const iso=isoDe(d); dias.push({k,iso,w:cierres[iso]?0:pesoDia(d)});}
+    const sw=dias.reduce((s,x)=>s+x.w,0)||1, ventaMesEsp=(RMC.dias>=5&&RMC.proyeccion)?RMC.proyeccion:Math.max(RMC.proyeccion||0,proy[0]?.ventas||0), falta=Math.max(0,ventaMesEsp-(RMC.total||0));
+    dias.forEach(x=>{ if(!x.w) return; const v=falta*x.w/sw;
+      suma(diaHabilBancoSig(x.iso),v*MIX_COBRO.tarjeta*NETO_COBRO.tarjeta,"tarjetas");
+      suma(diaHabilBancoSig(x.iso),v*MIX_COBRO.efectivo*NETO_COBRO.efectivo,"efectivo");
+      suma(hab0(x.iso),v*MIX_COBRO.transf,"transferencias");
+      suma(hab0(masDias(x.iso,DIAS_CREDITO)),v*MIX_COBRO.credito,"crédito"); });
     const resto=dias.length; const pagos={}; pendMes.forEach(p=>{const k=Math.max(hoyN,p.dia||hoyN); (pagos[k]=pagos[k]||[]).push(p);});
-    let sal=saldoHoy.est; const fila=dias.map(x=>{const pg=(pagos[x.k]||[]); const sale=pg.reduce((s,p)=>s+p.monto,0)+(fij+ret)/resto; const e=entra[x.k]||0; sal+=e-sale; return {k:x.k,entra:e,sale,pg,saldo:sal};});
-    const ajuste=((proy[0]?.saldo??sal)-fuera-sal)/resto; fila.forEach((f,i)=>{f.saldo=Math.round(f.saldo+ajuste*(i+1));});
+    fijosMesLista.filter(c=>c.dia).forEach(c=>{const k=Math.max(hoyN,c.dia); (pagos[k]=pagos[k]||[]).push({prov:c.nombre,monto:c.monto});});
+    const fijRep=fijosMesLista.filter(c=>!c.dia).reduce((s,c)=>s+c.monto,0);
+    let sal=saldoHoy.est; const fila=dias.map((x,i)=>{const pg=(pagos[x.k]||[]); let sale=pg.reduce((s,p)=>s+p.monto,0)+(fijRep+ret)/resto;
+      if(i===dias.length-1&&sal<0) sale+=Math.round(-sal*TASA_SOBREGIRO); // intereses del sobregiro a fin de mes
+      const e=entra[x.iso]||0; sal+=e-sale; return {k:x.k,entra:e,det:det[x.iso]||{},sale,pg,saldo:Math.round(sal)};});
     const min=fila.reduce((a,b)=>b.saldo<a.saldo?b:a,fila[0]||{saldo:saldoHoy.est,k:hoyN});
-    return {pend,fij,ret,sale:pend+fij+ret,saldo:min.saldo,dia:min.k,fila,ajuste:ajuste*resto,fuera,fin:fila.length?fila[fila.length-1].saldo:saldoHoy.est};})();
+    return {pend,fij,fijRep,ret,sale:pend+fij+ret,saldo:min.saldo,dia:min.k,fila,fuera,fin:fila.length?fila[fila.length-1].saldo:saldoHoy.est};})();
   const TABS=[{id:"hoy",label:"🏠 Hoy"},{id:"ventas",label:"📈 Ventas"},{id:"control",label:"🧾 Caja"},{id:"pagos",label:"💳 Pagos"},{id:"compras",label:"📦 Compras"},{id:"proy",label:"🔮 Proyección"},{id:"carga",label:"✏️ Cargar"},{id:"informes",label:"📄 Informes"},{id:"historial",label:"📚 Historial"}];
 
 
@@ -2317,10 +2344,10 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               <div className="card"><div className="ctitle">Fin de mes más bajo</div><div className="cval" style={{color:minimo&&minimo.saldo<caja.alerta?"#B91C1C":""}}>{minimo?fmtM(minimo.saldo):"—"}</div><div className="csub">{minimo?.mes}</div></div>
               <div className="card"><div className="ctitle">Punto más bajo de {MESES[mIdx]}</div><div className="cval" style={{color:peorMes.saldo<caja.alerta?"#B91C1C":""}}>{fmtM(peorMes.saldo)}</div><div className="csub">el {String(peorMes.dia).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}, con los vencimientos de la planilla</div></div>
             </div>
-            <div className="sh"><span className="st">Saldo día por día · {MESES[mIdx]}</span><span className="ss">Vencimientos de la planilla; ventas que faltan, entran al día hábil siguiente</span></div>
+            <div className="sh"><span className="st">Saldo día por día · {MESES[mIdx]}</span><span className="ss">Vencimientos de la planilla; cada venta entra según cómo se cobra</span></div>
             <div className="tw"><table><thead><tr><th>Día</th><th style={{textAlign:"right"}}>Entra</th><th>Sale</th><th style={{textAlign:"right"}}>Saldo</th></tr></thead>
-              <tbody>{peorMes.fila.map(f=><tr key={f.k} style={{background:f.k===peorMes.dia?"#FEE2E2":undefined,fontWeight:f.k===peorMes.dia?700:400}}><td>{String(f.k).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}</td><td style={{textAlign:"right"}}>{f.entra?fmtM(f.entra):"—"}</td><td>{f.pg.length?f.pg.map(p=>`${p.prov.split(" (")[0]} ${fmtM(p.monto)}`).join(" · "):"—"}</td><td style={{textAlign:"right",color:f.saldo<caja.limite?"#B91C1C":f.saldo<caja.alerta?"#B45309":""}}>{fmtM(f.saldo)}</td></tr>)}</tbody></table></div>
-            <div className="csub" style={{padding:"4px 16px"}}>Además se reparten en los días que quedan: fijos sin marcar {fmtM(peorMes.fij)}, retiro que queda {fmtM(peorMes.ret)}, y un ajuste de {peorMes.ajuste<0?"−":"+"}{fmtM(Math.abs(peorMes.ajuste))} para que cierre igual que la proyección del mes.{peorMes.fuera>1000?` Lo que se venda los últimos días (≈ ${fmtM(peorMes.fuera)}) entra al banco recién en ${MESES[(mIdx+1)%12].toLowerCase()}.`:""}</div>
+              <tbody>{peorMes.fila.map(f=><tr key={f.k} style={{background:f.k===peorMes.dia?"#FEE2E2":undefined,fontWeight:f.k===peorMes.dia?700:400}}><td>{String(f.k).padStart(2,"0")}/{String(mIdx+1).padStart(2,"0")}</td><td style={{textAlign:"right"}}>{f.entra?<>{fmtM(f.entra)}<div style={{fontSize:".72rem",color:"#7A2E0A"}}>{Object.entries(f.det).map(([t,m])=>`${t} ${fmtM(m)}`).join(" · ")}</div></>:"—"}</td><td>{f.pg.length?f.pg.map(p=>`${p.prov.split(" (")[0]} ${fmtM(p.monto)}`).join(" · "):"—"}</td><td style={{textAlign:"right",color:f.saldo<caja.limite?"#B91C1C":f.saldo<caja.alerta?"#B45309":""}}>{fmtM(f.saldo)}</td></tr>)}</tbody></table></div>
+            <div className="csub" style={{padding:"4px 16px"}}>Cómo se cobra lo vendido (cierres desde el 12/10): tarjetas 47% al día hábil siguiente (lo del viernes y sábado, el lunes), efectivo 38% por buzonera (se deposita ~83%, el resto se va en gastos de caja), crédito 11% unos 17 días después, transferencias 4% el mismo día. Los fijos con fecha (sueldos, alquiler, BPS, IVA) van en su día; se reparten los otros gastos sin marcar {fmtM(peorMes.fijRep)} y el retiro que queda {fmtM(peorMes.ret)}; el último día se suman los intereses del sobregiro.{peorMes.fuera>1000?` Lo que entra después de fin de mes (≈ ${fmtM(peorMes.fuera)}, sobre todo crédito) queda para ${MESES[(mIdx+1)%12].toLowerCase()}.`:""} La proyección mensual da {fmtM(proy[0]?.saldo)} a fin de mes.</div>
 
             {enLimite?<div className="banner" style={{borderColor:"#B91C1C",color:"#B91C1C"}}>🔴 Con este plan, en {enLimite.mes} el saldo proyectado ({fmtM(enLimite.saldo)}) pasa el límite del sobregiro ({fmtM(caja.limite)}). Conviene bajar el retiro o renovar el plazo fijo.</div>
              :enAlerta?<div className="banner" style={{borderColor:"#B45309",color:"#92400E"}}>⚠️ En {enAlerta.mes} el saldo proyectado ({fmtM(enAlerta.saldo)}) baja de tu límite de alerta ({fmtM(caja.alerta)}). Ese mes conviene reducir la parte variable del retiro.</div>
