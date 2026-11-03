@@ -564,6 +564,7 @@ const CIERRES_CLAUDE = [
 ].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
+  "2026-11-03": {cajero:"Valentina Preza", ventasErp:15954, gastosEf:2231, saldoErp:27216}, // la lectura tomó a una clienta (Mayra Silva) como cajera, sumó el depósito de 25.000 a los gastos y por eso inventó ventas ERP de 27.956
   "2026-10-16": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS
   "2026-10-23": {ventasErp:8015}, // el crédito $747 lo cargó la cajera a mano (no sale en los papeles de caja) // la lectura tomó solo La Pollería; E-Tickets/E-Facturas contado = 3.695+1.014+1.296+1.082+928 (la caja ERP cierra con 8.015)
   "2026-10-20": {tarjetaErp:null, gastosEf:6456, gastosDetalle:"Encomiendas del Litoral 400 y 470; Impacto Carrera 5.000 (correcaminata); Estela Elgues 319; Laurenza Dupont 267"}, // tarjetaErp tomó el saldo de caja ERP; total real del día $108.737 (Macrosoft)
@@ -571,7 +572,13 @@ const CIERRES_CORREC = {
 // el cierre es de hoy o de hace pocos días: una fecha fuera de eso es mala lectura (ej. 23/10/26 leído como 26/10/2023)
 const fechaCierreOk = f => { const hace7=isoDe(new Date(Date.now()-7*864e5)); return (f<=hoyISO()&&f>=hace7)?f:hoyISO(); };
 // si la caja del ERP no cierra, las ventas contado del ERP salen de la cuenta: saldo − apertura − ingreso POS + gastos + depósito
-const arreglarErp = n => { const g=k=>nC(n[k]); if(["aperturaErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>g(k)!=null)){ const calc=g("saldoErp")-g("aperturaErp")-g("salidaPos")+g("gastosEf")+g("deposito");
+// la lectura a veces toma como cajera a un cliente del ERP: solo se aceptan nombres del personal del local
+const CAJERAS = ["Valentina Preza","Natalia Pereira","Karen Marin","Lucas Hernandez"];
+const cajeraConocida = (x) => { const t=String(x||"").replace(/^\d+-/,"").trim(), low=t.toLowerCase();
+  const hit=CAJERAS.find(c=>low.includes(c.split(" ")[0].toLowerCase())); return hit||""; };
+const arreglarErp = n => { const g=k=>nC(n[k]);
+  // si el depósito quedó sumado como gasto, se descuenta
+  if(g("gastosEf")!=null&&g("deposito")&&g("gastosEf")>=g("deposito")&&String(n.gastosDetalle||"").replace(/[.,]/g,"").includes(String(Math.round(g("deposito"))))) n.gastosEf=String(g("gastosEf")-g("deposito")); if(["aperturaErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>g(k)!=null)){ const calc=g("saldoErp")-g("aperturaErp")-g("salidaPos")+g("gastosEf")+g("deposito");
   if(calc>0&&Math.abs(calc-(g("ventasErp")||0))>1) n.ventasErp=String(Math.round(calc)); } };
 const textoGastos = g => Array.isArray(g) ? g.map(x=> x&&typeof x==="object" ? [x.concepto||x.detalle||x.descripcion||x.nombre||"", x.monto??x.importe??""].join(" ").trim() : String(x)).join("; ") : (g&&typeof g==="object" ? Object.values(g).join(" ") : String(g||""));
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
@@ -604,7 +611,7 @@ Papeles posibles:
 2) "Z de Caja" (ticket térmico): líneas Efectivo, VISA, MASTERCARD, OCA, MAESTRO u otras tarjetas.
 3) "Desglose de Valores en Caja por Forma de Pago" (hoja A4 del ERP). Sección "1-Efectivo $": entradas "E-Ticket Contado"/"E-Factura Contado" (ventas en efectivo del ERP), "7 Apertura De Caja", "11 Ingreso De Pos"; salidas: gastos y retiros (Movimiento De Caja con conceptos como Arreglo, Adelanto, Retiro, Gasto Recibo, Regalo), "0 Deposito:DE" (depósito al banco); "Saldo" final. Sección "21-Pos Alambrico Manual": ventas con tarjeta en el ERP (restar devoluciones), usar su Saldo. Si esa sección NO aparece en la hoja, tarjetaErp es 0 (no uses el Saldo de la sección Efectivo ni las tarjetas del POS).
 4) Boleta de depósito del banco (MONTO).
-Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj, aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp, ventasErp (suma de E-Ticket/E-Factura Contado en efectivo), tarjetaErp (saldo de Pos Alambrico Manual), gastosEf (suma de TODAS las salidas de efectivo del ERP que NO son el depósito: Gasto Recibo, Movimiento De Caja, etc.; comprobá que apertura + ventas + ingreso de POS − gastosEf − depósito = saldo), deposito, saldoErp; y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre) y "gastosDetalle" (UN SOLO TEXTO, no lista: concepto y monto de cada gasto separados por punto y coma). No agregues explicaciones.`;
+Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj, aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp, ventasErp (suma de E-Ticket/E-Factura Contado en efectivo), tarjetaErp (saldo de Pos Alambrico Manual), gastosEf (suma de TODAS las salidas de efectivo del ERP que NO son el depósito —el "0 Deposito:DE" o el Movimiento De Caja por el mismo monto del depósito NO es gasto—: Gasto Recibo, Movimiento De Caja, etc.; comprobá que apertura + ventas + ingreso de POS − gastosEf − depósito = saldo), deposito, saldoErp; y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre, tomado de la línea "Cajero: N-Nombre" del ticket Y de Caja o Z de Caja; NUNCA el nombre de un cliente del desglose del ERP) y "gastosDetalle" (UN SOLO TEXTO, no lista: concepto y monto de cada gasto separados por punto y coma). No agregues explicaciones.`;
 // Junta las fotos del cierre en una sola imagen liviana para el mail (se guarda en la planilla de cierres, columnas AA en adelante)
 const fotoParaMail = async (urls) => {
   if(!urls||!urls.length) return null;
@@ -1445,7 +1452,7 @@ export default function App(){
     const d=r.datos; const n={...cjF};
     CIERRE_CAMPOS.forEach(([k])=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Math.abs(Number(d[k]))*(k==="diferencia"&&Number(d[k])<0?-1:1)); });
     if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=fechaCierreOk(d.fecha); arreglarErp(n);
-    if(d.cajero) n.cajero=String(d.cajero).replace(/^\d+-/,"").trim();
+    if(d.cajero) n.cajero=cajeraConocida(d.cajero);
     if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
     setCjF(n); setLeido({modelo:r.modelo}); showToast("✓ Foto leída: revisá los números");
   };
