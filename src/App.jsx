@@ -466,7 +466,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1623312, 11:881527}; // Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1580312, 11:881527}; // Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
@@ -518,7 +518,7 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Sueldos de octubre",monto:125000,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"Luz",monto:11544,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:95000,dia:20},{nombre:"IVA (DGI)",monto:120000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 26/10: Empleados 220.000 = sueldos ~125.000 (los paga el 6) + BPS ~95.000 (cerca del 20); IVA 120.000
+  "2026-11":[{nombre:"Sueldos de octubre",monto:125000,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"Luz",monto:11544,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:72000,dia:20},{nombre:"IVA (DGI)",monto:100000,dia:20},{nombre:"Otros gastos",monto:45000}], // sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
@@ -780,7 +780,7 @@ const TASA_SOBREGIRO = 0.025;
 // efectivo 37,5% (buzonera; se deposita ~83%, el resto se va en gastos pagados con la caja), crédito 11,4% (se cobra por BROU ~17 días después),
 // transferencias 3,8% (entran el mismo día).
 const MIX_COBRO = { tarjeta:0.473, efectivo:0.375, credito:0.114, transf:0.038 };
-const NETO_COBRO = { tarjeta:0.955, efectivo:0.83, credito:1, transf:1 };
+const NETO_COBRO = { tarjeta:0.955, efectivo:0.95, credito:1, transf:1 }; // los gastos pagados con la caja ya están en "Otros gastos": acá solo devoluciones y diferencias
 const DIAS_CREDITO = 17;
 const CRED_LAG = MIX_COBRO.credito*DIAS_CREDITO/30; // parte de las ventas del mes que se cobra el mes siguiente
 const proyectarCaja = (cfg, crecIn) => {
