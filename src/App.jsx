@@ -160,6 +160,7 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-11-03",monto:1728,tipo:"Personal",cuenta:"BROU",ts:"2026-11-03T13:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-11-02",monto:1938,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-11-02",monto:139,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:01:00.000Z",obs:"24 hs El Obelisco"},
   {fecha:"2026-11-02",monto:1500,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:02:00.000Z",obs:"Retiro Redbrou"},
@@ -474,9 +475,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:31217, pagadoYa:63600, retiradoYa:3669, candelaPagada:false, santanderPagada:false }; // noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
+const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:131740, pagadoYa:68200, retiradoYa:5397, candelaPagada:false, santanderPagada:false }; // 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-11-02", ts:"2026-11-03T02:42:00.000Z", brou:28391, santUyu:-552343, santUsd:-3.23, tc:41.42 }; // 02/11 23:42 reales (capturas). Santander: −511.743 − Estuario Platino 63.600 + buzonera 23.000. BROU: 23.843 + 8.217 − retiros 3.669
+const SALDO_REF = { fecha:"2026-11-03", ts:"2026-11-03T14:10:00.000Z", brou:22063, santUyu:-451820, santUsd:-3.23, tc:41.42 }; // 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
