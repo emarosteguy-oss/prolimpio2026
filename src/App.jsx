@@ -727,7 +727,10 @@ const proyMesCurva = (y, m, lista) => {
   wTot=wH+wF;
   const total=fechas.reduce((s,f)=>s+vend[f],0), dias=fechas.length, base=wH?total/wH:0;
   const diasFalta=Object.keys(pesos).filter(f=>f>ult&&pesos[f]>0).length;
-  const proy=Math.round(total*(wTot/wH));
+  // con pocos días vendidos la curva sola es muy inestable (ej. el 2/11, feriado, proyectaba $1,35M con un solo día):
+  // se mezcla con el mismo mes del año anterior + inflación (~6%), y la curva va pesando más a medida que avanza el mes
+  const prev=VM[m]?.[String(y-1)], prior=prev?prev*1.06:null, frac=wTot?wH/wTot:1, alfa=prior?Math.min(1,frac*2.5):1;
+  const proyCurva=total*(wTot/wH), proy=Math.round(Math.max(total, alfa*proyCurva+(1-alfa)*(prior||proyCurva)));
   const simple=Math.round(total+(total/dias)*diasFalta);
   const esperado=f=>base*(pesos[f]||0);
   // mismos días del año anterior
