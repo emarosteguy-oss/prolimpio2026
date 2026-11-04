@@ -145,7 +145,7 @@ const VM=[
   {mes:"Jul","2022":800704,"2023":860901,"2024":1101916,"2025":1545618,"2026":1713093},
   {mes:"Ago","2022":920678,"2023":920732,"2024":1222144,"2025":1519419,"2026":1597281},
   {mes:"Set","2022":906547,"2023":865228,"2024":1190463,"2025":1590065,"2026":1910798},
-  {mes:"Oct","2022":888901,"2023":954613,"2024":1318492,"2025":1830397,"2026":null},
+  {mes:"Oct","2022":888901,"2023":954613,"2024":1318492,"2025":1830397,"2026":1788519},
   {mes:"Nov","2022":962003,"2023":973259,"2024":1530793,"2025":1632615,"2026":null},
   {mes:"Dic","2022":1486388,"2023":1303555,"2024":1635557,"2025":2726949,"2026":null},
 ];
@@ -156,6 +156,9 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-09",monto:66603},{fecha:"2026-10-10",monto:52006},{fecha:"2026-10-12",monto:72210,obs:"Feriado (el local abre)"},{fecha:"2026-10-13",monto:72377},
   {fecha:"2026-10-14",monto:84240},{fecha:"2026-10-15",monto:77447},{fecha:"2026-10-16",monto:44850},{fecha:"2026-10-17",monto:58498},
   {fecha:"2026-10-19",monto:71497},{fecha:"2026-10-20",monto:108737},{fecha:"2026-10-21",monto:53241,obs:"Viento y pelusa"},{fecha:"2026-10-22",monto:61685},{fecha:"2026-10-23",monto:56107},
+  {fecha:"2026-10-24",monto:48143},{fecha:"2026-10-26",monto:47327},{fecha:"2026-10-27",monto:37099},{fecha:"2026-10-28",monto:52377},
+  {fecha:"2026-10-29",monto:56291,obs:"cierre de caja"},{fecha:"2026-10-30",monto:68291,obs:"cierre de caja"},{fecha:"2026-10-31",monto:62352,obs:"cierre de caja"},
+  {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
@@ -262,42 +265,42 @@ const GASTOS = {
     "2023": [24525,24525,24525,24525,24525,24525,24525,24525,24525,24525,26635,28845],
     "2024": [26635,26635,26635,26635,26635,26635,26635,26635,26635,26635,59931,59931],
     "2025": [59931,59931,59931,59931,59931,59931,59931,59931,59931,59931,62448,62448],
-    "2026": [62448,62448,62448,62448,62448,62448,62448,62448,62448,null,null,null],
+    "2026": [62448,62448,62448,62448,62448,62448,62448,62448,62448,62448,null,null],
   },
   luz: {
     "2022": [11106,11096,11106,11106,11106,11106,11106,11106,11274,10562,10218,10218],
     "2023": [10218,12198,11418,10218,9079,10218,10218,12593,12593,12593,12593,10218],
     "2024": [9658,10218,10218,10218,10218,10218,10218,10218,10218,10218,10218,10218],
     "2025": [11544,11544,11544,11544,11544,11544,11544,11544,11544,11544,11544,11544],
-    "2026": [11544,11544,11544,11544,11544,11544,11544,11544,11544,null,null,null],
+    "2026": [11544,11544,11544,11544,11544,11544,11544,11544,11544,11544,null,null],
   },
   empleados: {
     "2022": [121000,121000,121000,121000,121000,147204,134436,126849,126695,131905,147611,158000],
     "2023": [173000,113531,137425,134500,134500,137508,137941,146231,139487,143366,209347,197361],
     "2024": [185871,240134,145000,145000,150924,192424,155000,159639,265000,176900,179409,232849],
     "2025": [234500,180248,182632,223410,166084,220242,173481,223537,164223,164395,185792,229111],
-    "2026": [208694,215225,188616,208520,201203,245906,230036,210474,193074,null,null,null],
+    "2026": [208694,215225,188616,208520,201203,245906,230036,210474,193074,216511,null,null],
   },
   publicidad: {
     "2022": [3828,9979,5732,0,0,0,5000,5000,5000,5000,5000,45000],
     "2023": [25000,25000,2018,58000,5000,27861,17835,0,5000,8839,29000,11500],
     "2024": [12000,18400,13300,16000,31250,31500,31500,31500,31500,31500,31500,31500],
     "2025": [31500,31500,31500,25000,25000,25000,25000,25000,25000,25000,25000,25000],
-    "2026": [25000,25000,25000,25000,25000,25000,25000,25000,25000,null,null,null],
+    "2026": [25000,25000,25000,25000,25000,25000,25000,25000,25000,25000,null,null],
   },
   iva: {
     "2022": [0,0,0,0,0,0,0,0,0,0,0,0],
     "2023": [0,0,0,0,0,0,0,0,0,0,0,0],
     "2024": [0,0,0,22260,30000,39500,36000,33500,35000,13500,0,65000],
     "2025": [90000,172000,79851,115000,52000,90200,85333,42500,114000,24000,85500,91000],
-    "2026": [252829,134500,47995,23060,59970,86939,96964,129267,71699,null,null,null],
+    "2026": [252829,134500,47995,23060,59970,86939,96964,129267,71699,117075,null,null],
   },
   otros: {
     "2022": [16223,55971,20000,20000,45000,30000,30000,53000,52309,38264,19956,62515],
     "2023": [52718,47258,35817,54781,64641,30000,50000,50000,40000,52000,50000,57000],
     "2024": [50000,50000,50000,50000,75000,75000,75000,75000,75000,75000,95000,55000],
     "2025": [55000,55000,55000,55000,55000,54755,55000,55000,55000,55000,55000,147400],
-    "2026": [55000,55000,82777,55000,45000,45000,45000,45000,45000,null,null,null],
+    "2026": [55000,55000,82777,55000,45000,45000,45000,45000,45000,60000,null,null],
   },
 };
 
@@ -335,7 +338,7 @@ const COMPRAS_SUBATIR = {
   "2023": [948760,560058,441516,367233,346636,388515,324461,411120,298430,309035,302344,488377],
   "2024": [406758,402779,428820,558450,427751,544331,384197,427456,401611,496743,549099,776782],
   "2025": [577448,721520,1072517,596520,479212,569920,449773,691744,493523,556379,730783,787248],
-  "2026": [755308,1157578,731833,640830,441623,793483,634961,508406,578526,null,null,null],
+  "2026": [755308,1157578,731833,640830,441623,793483,634961,508406,578526,784474,null,null],
 };
 
 const COMPRAS_ESTUARIO = {
@@ -343,7 +346,7 @@ const COMPRAS_ESTUARIO = {
   "2023": [34170,57471,0,43915,39790,80358,49635,0,54434,57555,0,52110],
   "2024": [55514,59495,53182,26615,46402,59678,50733,60810,56226,30306,66185,54915],
   "2025": [54579,0,79219,63695,52261,52263,57568,67593,101014,54361,57148,100170],
-  "2026": [64737,0,173369,0,82290,69675,61337,65323,120724,null,null,null],
+  "2026": [64737,0,173369,0,82290,69675,61337,65323,120724,63600,null,null],
 };
 
 const COMPRAS_JASPE = {
@@ -351,7 +354,7 @@ const COMPRAS_JASPE = {
   "2023": [22788,5767,0,17817,0,18641,9205,0,21906,10018,5067,12304],
   "2024": [9759,0,14112,19275,0,19237,18660,11649,32288,0,30395,28168],
   "2025": [0,39635,17574,16517,0,29337,22536,22394,26792,0,23091,35878],
-  "2026": [0,28324,41868,28657,0,23941,25432,23617,24672,null,null,null],
+  "2026": [0,28324,41868,28657,0,23941,25432,23617,24672,28812,null,null],
 };
 
 // Condiciones de pago proveedores
@@ -377,7 +380,7 @@ const TG_REAL = {
   "2023": [1535712,1044481,832805,860646,785777,869277,832723,787241,742361,780125,850909,1086800],
   "2024": [973448,1023619,1003266,1187839,970046,1275942,1035468,1133196,1106098,1128463,1281170,1605037],
   "2025": [1399515,1618069,1812994,1404700,1153468,1345373,1236390,1613350,1476837,1383370,1618342,1968336],
-  "2026": [1912797,2069130,1928542,1464980,1361222,1897317,1618555,1546198,1653958,null,null,null],
+  "2026": [1912797,2069130,1928542,1464980,1361222,1897317,1618555,1546198,1653958,1805402,null,null],
 };
 
 // ── Comisión de bancos por ventas con tarjeta (débito y crédito, Getnet) ─────
@@ -417,7 +420,7 @@ const DEUDA_PAGOS = {
   "2023": [0,20000,0,20000,0,20000,0,19300,35300,28350,28350,68000],
   "2024": [28000,28400,8100,44635,0,0,0,10000,0,0,8700,8700],
   "2025": [51034,0,0,0,0,0,90615,90144,89981,89981,89990,89700],
-  "2026": [78828,82188,82188,82188,82188,73694,72963,72963,72609,null,null,null],
+  "2026": [78828,82188,82188,82188,82188,73694,72963,72963,72609,72965,null,null],
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
@@ -459,7 +462,11 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,dia:25,tipo:"credito"},
   {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:3,tipo:"prov"},
   {mes:"2026-11",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
-  {mes:"2026-12",prov:"SUBATIR (1/12)",monto:159301,dia:1,tipo:"cheque"},
+  {mes:"2026-12",prov:"SUBATIR",monto:163694,dia:8,tipo:"cheque"},
+  {mes:"2026-12",prov:"Jaspe",monto:18621,dia:12,tipo:"prov"},
+  {mes:"2026-12",prov:"Unimed",monto:14076,dia:14,tipo:"prov"},
+  {mes:"2026-12",prov:"SUBATIR",monto:174486,dia:15,tipo:"cheque"},
+  {mes:"2026-12",prov:"Pontyn",monto:68417,dia:29,tipo:"prov"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
   {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
   {mes:"2026-12",prov:"Bettasul",monto:3726,dia:19,tipo:"prov"},
@@ -473,7 +480,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1607912, 11:853927}; // Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1624293, 11:1403222}; // planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
@@ -526,8 +533,8 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Sueldos de octubre",monto:125000,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:72000,dia:20},{nombre:"IVA (DGI)",monto:100000,dia:20},{nombre:"Otros gastos",monto:45000}], // sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
-  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
+  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:75000,dia:20},{nombre:"IVA (DGI)",monto:110000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
+  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:110000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
 const claveFijo = (mes,n) => `fijo|${mes}|${n}`;
