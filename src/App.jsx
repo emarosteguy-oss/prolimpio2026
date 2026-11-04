@@ -517,7 +517,8 @@ const DIAS_SEM = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const fCorta = iso => { const d=new Date(iso+"T12:00:00"); return `${DIAS_SEM[d.getDay()]} ${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`; };
 const COSTOS_FIJOS = [
   {nombre:"Alquiler", monto:62448},
-  {nombre:"Luz", monto:11544},
+  {nombre:"UTE", monto:6753, dia:4},       // débito automático en Santander
+  {nombre:"OSE y Antel", monto:4791, dia:15},
   {nombre:"Sueldos y BPS", monto:215000},
   {nombre:"Publicidad", monto:25000},
   {nombre:"IVA", monto:100000},
@@ -526,7 +527,7 @@ const COSTOS_FIJOS = [
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
   "2026-11":[{nombre:"Sueldos de octubre",monto:125000,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:72000,dia:20},{nombre:"IVA (DGI)",monto:100000,dia:20},{nombre:"Otros gastos",monto:45000}], // sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
-  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"Luz",monto:11544},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
+  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:70000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
 const claveFijo = (mes,n) => `fijo|${mes}|${n}`;
