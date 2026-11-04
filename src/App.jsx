@@ -570,6 +570,7 @@ const CIERRES_CLAUDE = [
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
   "2026-11-03": {cajero:"Valentina Preza", ventasErp:15954, gastosEf:2231, saldoErp:27216}, // la lectura tomó a una clienta (Mayra Silva) como cajera, sumó el depósito de 25.000 a los gastos y por eso inventó ventas ERP de 27.956
+  "2026-10-21": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS (19.334); el banco acreditó 18.434
   "2026-10-16": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS
   "2026-10-23": {ventasErp:8015}, // el crédito $747 lo cargó la cajera a mano (no sale en los papeles de caja) // la lectura tomó solo La Pollería; E-Tickets/E-Facturas contado = 3.695+1.014+1.296+1.082+928 (la caja ERP cierra con 8.015)
   "2026-10-20": {tarjetaErp:null, gastosEf:6456, gastosDetalle:"Encomiendas del Litoral 400 y 470; Impacto Carrera 5.000 (correcaminata); Estela Elgues 319; Laurenza Dupont 267"}, // tarjetaErp tomó el saldo de caja ERP; total real del día $108.737 (Macrosoft)
@@ -794,7 +795,7 @@ const PLAZO_FIJO_IDX = 14; // marzo 2027 (antes diciembre 2026: idx 11)
 // efectivo 37,5% (buzonera; se deposita ~83%, el resto se va en gastos pagados con la caja), crédito 11,4% (se cobra por BROU ~17 días después),
 // transferencias 3,8% (entran el mismo día).
 const MIX_COBRO = { tarjeta:0.473, efectivo:0.375, credito:0.114, transf:0.038 };
-const NETO_COBRO = { tarjeta:0.955, efectivo:0.95, credito:1, transf:1 }; // los gastos pagados con la caja ya están en "Otros gastos": acá solo devoluciones y diferencias
+const NETO_COBRO = { tarjeta:0.97, /* 13/10–02/11: ventas POS con tarjeta 513.314 → acreditado en Santander 500.364 (97,5%); con las tarjetas manuales del ERP 94,3%, o 96,9% si los "pago a proveedores" de BROU 2.632 y 5.530 y el abono de 5.939 son tarjetas */ efectivo:0.95, credito:1, transf:1 }; // los gastos pagados con la caja ya están en "Otros gastos": acá solo devoluciones y diferencias
 const DIAS_CREDITO = 17;
 const CRED_LAG = MIX_COBRO.credito*DIAS_CREDITO/30; // parte de las ventas del mes que se cobra el mes siguiente
 const proyectarCaja = (cfg, crecIn) => {
