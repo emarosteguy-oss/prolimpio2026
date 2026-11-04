@@ -207,7 +207,7 @@ const RETIROS_CLAUDE = [
 const PAGOS_CLAUDE = [
   {fecha:"2026-11-04",clave:"pend|2026-11|SUBATIR (llegó 16/09)|164237",concepto:"SUBATIR (llegó 16/09)",monto:164237,mes:"2026-11",ts:"2026-11-04T09:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-03",clave:"pend|2026-11|Parque Trébol|16560",concepto:"Parque Trébol",monto:16560,mes:"2026-11",ts:"2026-11-03T20:00:00.000Z",cuenta:"Santander"},
-  {fecha:"2026-11-03",clave:"pend|2026-11|Alido Valiero (1/2)|27600",concepto:"Alido Valiero (1/2)",monto:27600,mes:"2026-11",ts:"2026-11-03T20:05:00.000Z",cuenta:"Santander",obs:"Débito a TMAGNAFIL SAS por 27.600 (a confirmar que es Alido Valiero)"},
+  {fecha:"2026-11-03",clave:"pend|2026-11|Alido Valiero (1/2)|27600",concepto:"Alido Valiero (1/2)",monto:27600,mes:"2026-11",ts:"2026-11-03T20:05:00.000Z",cuenta:"Santander",obs:"Débito a TMAGNAFIL SAS (Alido Valiero), vencía 3/11"},
   {fecha:"2026-11-02",clave:"pend|2026-11|Estuario Platino (de octubre, se paga el lunes 2/11)|63600",concepto:"Estuario Platino (de octubre)",monto:63600,mes:"2026-11",ts:"2026-11-02T15:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-30",clave:"pend|2026-10|SUBATIR (llegó 09/09)|135000",concepto:"SUBATIR (llegó 09/09)",monto:135000,mes:"2026-10",ts:"2026-10-30T12:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-10-28",clave:"pend|2026-10|Cameril|55821",concepto:"Cameril",monto:55821,mes:"2026-10",ts:"2026-10-28T13:00:00.000Z",cuenta:"Santander"},
@@ -456,13 +456,13 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg)",monto:171694,dia:24,tipo:"cheque"},
   {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,dia:20,tipo:"prov"},
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,dia:25,tipo:"credito"},
-  {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:29,tipo:"prov"},
+  {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:3,tipo:"prov"},
+  {mes:"2026-11",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
   {mes:"2026-12",prov:"SUBATIR (1/12)",monto:159301,dia:1,tipo:"cheque"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
   {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
   {mes:"2026-12",prov:"Bettasul",monto:3726,dia:19,tipo:"prov"},
   {mes:"2026-12",prov:"Crédito Santander",monto:53350,dia:25,tipo:"credito"},
-  {mes:"2026-12",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
   {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
@@ -472,7 +472,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1580312, 11:881527}; // Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1607912, 11:853927}; // Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
