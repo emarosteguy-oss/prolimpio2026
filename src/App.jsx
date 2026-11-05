@@ -163,6 +163,7 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-11-04",monto:13627,tipo:"Personal",cuenta:"BROU",ts:"2026-11-04T20:00:00.000Z",obs:"Transferencia E-BROU 13.627,20 (a confirmar)"},
   {fecha:"2026-11-03",monto:1728,tipo:"Personal",cuenta:"BROU",ts:"2026-11-03T13:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-11-02",monto:1938,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-11-02",monto:139,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:01:00.000Z",obs:"24 hs El Obelisco"},
@@ -208,6 +209,8 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-11-04",clave:"pend|2026-11|Pedro Merla|25108",concepto:"Pedro Merla",monto:25108,mes:"2026-11",ts:"2026-11-04T18:00:00.000Z",cuenta:"Santander",obs:"Débito vía TMAGNAFIL SAS"},
+  {fecha:"2026-11-05",clave:"fijo|2026-11|Sueldos de octubre",concepto:"Sueldos de octubre",monto:128382,mes:"2026-11",ts:"2026-11-05T11:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-04",clave:"fijo|2026-11|UTE",concepto:"UTE (débito automático)",monto:6753,mes:"2026-11",ts:"2026-11-04T12:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-04",clave:"pend|2026-11|SUBATIR (llegó 16/09)|164237",concepto:"SUBATIR (llegó 16/09)",monto:164237,mes:"2026-11",ts:"2026-11-04T09:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-03",clave:"pend|2026-11|Parque Trébol|16560",concepto:"Parque Trébol",monto:16560,mes:"2026-11",ts:"2026-11-03T20:00:00.000Z",cuenta:"Santander"},
@@ -488,9 +491,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:202627, pagadoYa:283350, retiradoYa:10667, candelaPagada:false, santanderPagada:false }; // 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
+const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:285304, pagadoYa:436840, retiradoYa:24294, candelaPagada:false, santanderPagada:false }; // 05/11 10:04: + buzonera 34.000, tarjetas del 04/11 39.596, transferencias BROU 4.685 + 1.896 + 2.500; pagos Pedro Merla 25.108 y sueldos 128.382; retiro BROU 13.627 (a confirmar). 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-11-04", ts:"2026-11-04T13:10:00.000Z", brou:31340, santUyu:-610708, santUsd:-3.23, tc:41.42 }; // 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
+const SALDO_REF = { fecha:"2026-11-05", ts:"2026-11-05T13:04:00.000Z", brou:26793, santUyu:-690601, santUsd:-3.23, tc:41.42 }; // 05/11 10:04 reales: Santander −610.708 + 34.000 − 25.108 + 39.596 − 128.382; BROU 31.340 + 4.685 + 1.896 − 13.627 + 2.500. 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
