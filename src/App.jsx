@@ -807,7 +807,7 @@ const PLAZO_FIJO_IDX = 14; // marzo 2027 (antes diciembre 2026: idx 11)
 // efectivo 37,5% (buzonera; se deposita ~83%, el resto se va en gastos pagados con la caja), crédito 11,4% (se cobra por BROU ~17 días después),
 // transferencias 3,8% (entran el mismo día).
 const MIX_COBRO = { tarjeta:0.473, efectivo:0.375, credito:0.114, transf:0.038 };
-const NETO_COBRO = { tarjeta:0.97, /* 13/10–02/11: ventas POS con tarjeta 513.314 → acreditado en Santander 500.364 (97,5%); con las tarjetas manuales del ERP 94,3%, o 96,9% si los "pago a proveedores" de BROU 2.632 y 5.530 y el abono de 5.939 son tarjetas */ efectivo:0.95, credito:1, transf:1 }; // los gastos pagados con la caja ya están en "Otros gastos": acá solo devoluciones y diferencias
+const NETO_COBRO = { tarjeta:0.95, /* 05/11: las tarjetas manuales del ERP también se acreditan por Getnet (3 y 4/11: POS 65.531 + ERP 9.419 = 74.950 → acreditado 70.936 = 94,6%), así que la base correcta es POS+ERP ≈ 94–95%. Antes: 13/10–02/11: ventas POS con tarjeta 513.314 → acreditado en Santander 500.364 (97,5%); con las tarjetas manuales del ERP 94,3%, o 96,9% si los "pago a proveedores" de BROU 2.632 y 5.530 y el abono de 5.939 son tarjetas */ efectivo:0.95, credito:1, transf:1 }; // los gastos pagados con la caja ya están en "Otros gastos": acá solo devoluciones y diferencias
 const DIAS_CREDITO = 17;
 const CRED_LAG = MIX_COBRO.credito*DIAS_CREDITO/30; // parte de las ventas del mes que se cobra el mes siguiente
 const proyectarCaja = (cfg, crecIn) => {
