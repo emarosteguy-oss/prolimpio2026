@@ -163,6 +163,10 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-11-05",monto:4566,tipo:"Personal",cuenta:"BROU",ts:"2026-11-05T14:00:00.000Z",obs:"Lider Gas"},
+  {fecha:"2026-11-05",monto:4100,tipo:"Personal",cuenta:"BROU",ts:"2026-11-05T16:00:00.000Z",obs:"Transferencia E-BROU"},
+  {fecha:"2026-11-05",monto:274,tipo:"Personal",cuenta:"BROU",ts:"2026-11-05T17:00:00.000Z",obs:"Super Ocho 24"},
+  {fecha:"2026-11-06",monto:816,tipo:"Personal",cuenta:"BROU",ts:"2026-11-06T14:00:00.000Z",obs:"Farmacia"},
   {fecha:"2026-11-04",monto:13627,tipo:"Personal",cuenta:"BROU",ts:"2026-11-04T20:00:00.000Z",obs:"Transferencia E-BROU 13.627,20 (personal)"},
   {fecha:"2026-11-03",monto:1728,tipo:"Personal",cuenta:"BROU",ts:"2026-11-03T13:00:00.000Z",obs:"Supermercado Italia"},
   {fecha:"2026-11-02",monto:1938,tipo:"Personal",cuenta:"BROU",ts:"2026-11-02T20:00:00.000Z",obs:"Supermercado Italia"},
@@ -209,6 +213,7 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-11-06",clave:"fijo|2026-11|OSE",concepto:"OSE",monto:2222,mes:"2026-11",ts:"2026-11-06T15:00:00.000Z",cuenta:"BROU"},
   {fecha:"2026-11-04",clave:"pend|2026-11|Pedro Merla|25108",concepto:"Pedro Merla",monto:25108,mes:"2026-11",ts:"2026-11-04T18:00:00.000Z",cuenta:"Santander",obs:"Débito vía TMAGNAFIL SAS"},
   {fecha:"2026-11-05",clave:"fijo|2026-11|Sueldos de octubre",concepto:"Sueldos de octubre",monto:128382,mes:"2026-11",ts:"2026-11-05T11:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-04",clave:"fijo|2026-11|UTE",concepto:"UTE (débito automático)",monto:6753,mes:"2026-11",ts:"2026-11-04T12:00:00.000Z",cuenta:"Santander"},
@@ -491,9 +496,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:285304, pagadoYa:436840, retiradoYa:24294, candelaPagada:false, santanderPagada:false }; // 05/11 10:04: + buzonera 34.000, tarjetas del 04/11 39.596, transferencias BROU 4.685 + 1.896 + 2.500; pagos Pedro Merla 25.108 y sueldos 128.382; retiro personal BROU 13.627. 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
+const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:367262, pagadoYa:439062, retiradoYa:34050, candelaPagada:false, santanderPagada:false }; // 06/11 17:33: + buzonera 25.000, tarjetas del 05/11 38.396, BROU pago a proveedores 6.843 + 1.350 (¿OCA?), transferencias 6.621 + 3.253 + 495; OSE 2.222; retiros Lider Gas, Super Ocho, farmacia y transferencia 4.100. 05/11 10:04: + buzonera 34.000, tarjetas del 04/11 39.596, transferencias BROU 4.685 + 1.896 + 2.500; pagos Pedro Merla 25.108 y sueldos 128.382; retiro personal BROU 13.627. 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-11-05", ts:"2026-11-05T13:04:00.000Z", brou:26793, santUyu:-690601, santUsd:-3.23, tc:41.42 }; // 05/11 10:04 reales: Santander −610.708 + 34.000 − 25.108 + 39.596 − 128.382; BROU 31.340 + 4.685 + 1.896 − 13.627 + 2.500. 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
+const SALDO_REF = { fecha:"2026-11-06", ts:"2026-11-06T20:33:00.000Z", brou:33377, santUyu:-627205, santUsd:-3.23, tc:41.42 }; // 06/11 17:33 reales: Santander −690.601 + 25.000 + 38.396; BROU 26.793 + 6.584 neto. 05/11 10:04 reales: Santander −610.708 + 34.000 − 25.108 + 39.596 − 128.382; BROU 31.340 + 4.685 + 1.896 − 13.627 + 2.500. 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -528,7 +533,8 @@ const fCorta = iso => { const d=new Date(iso+"T12:00:00"); return `${DIAS_SEM[d.
 const COSTOS_FIJOS = [
   {nombre:"Alquiler", monto:62448},
   {nombre:"UTE", monto:6753, dia:4},       // débito automático en Santander
-  {nombre:"OSE y Antel", monto:4791, dia:15},
+  {nombre:"OSE", monto:2222, dia:6},          // BROU
+  {nombre:"Antel", monto:2569, dia:15},
   {nombre:"Sueldos y BPS", monto:215000},
   {nombre:"Publicidad", monto:25000},
   {nombre:"IVA", monto:100000},
@@ -536,8 +542,8 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:75000,dia:20},{nombre:"IVA (DGI)",monto:110000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
-  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:110000},{nombre:"Otros gastos",monto:45000}],
+  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE",monto:2222,dia:6},{nombre:"Antel",monto:2569,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:75000,dia:20},{nombre:"IVA (DGI)",monto:110000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
+  "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE",monto:2222,dia:6},{nombre:"Antel",monto:2569,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:110000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
 const claveFijo = (mes,n) => `fijo|${mes}|${n}`;
