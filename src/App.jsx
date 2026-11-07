@@ -158,7 +158,7 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-19",monto:71497},{fecha:"2026-10-20",monto:108737},{fecha:"2026-10-21",monto:53241,obs:"Viento y pelusa"},{fecha:"2026-10-22",monto:61685},{fecha:"2026-10-23",monto:56107},
   {fecha:"2026-10-24",monto:48143},{fecha:"2026-10-26",monto:47327},{fecha:"2026-10-27",monto:37099},{fecha:"2026-10-28",monto:52377},
   {fecha:"2026-10-29",monto:56291,obs:"cierre de caja"},{fecha:"2026-10-30",monto:68291,obs:"cierre de caja"},{fecha:"2026-10-31",monto:62352,obs:"cierre de caja"},
-  {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},
+  {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},{fecha:"2026-11-04",monto:94565},{fecha:"2026-11-05",monto:98209},{fecha:"2026-11-06",monto:68475},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
@@ -470,10 +470,13 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Crédito Santander",monto:53349,dia:25,tipo:"credito"},
   {mes:"2026-11",prov:"Alido Valiero (1/2)",monto:27600,dia:3,tipo:"prov"},
   {mes:"2026-11",prov:"Alido Valiero (2/2)",monto:27600,dia:29,tipo:"prov"},
-  {mes:"2026-12",prov:"SUBATIR",monto:163694,dia:8,tipo:"cheque"},
+  {mes:"2026-12",prov:"Alido Valiero",monto:30332,dia:4,tipo:"prov"},
+  {mes:"2026-12",prov:"Pedro Merla",monto:36139,dia:5,tipo:"prov"},
+  {mes:"2026-12",prov:"Cloren",monto:17456,dia:6,tipo:"prov"},
+  {mes:"2026-12",prov:"SUBATIR",monto:160592,dia:8,tipo:"cheque"},
   {mes:"2026-12",prov:"Jaspe",monto:18621,dia:12,tipo:"prov"},
   {mes:"2026-12",prov:"Unimed",monto:14076,dia:14,tipo:"prov"},
-  {mes:"2026-12",prov:"SUBATIR",monto:174486,dia:15,tipo:"cheque"},
+  {mes:"2026-12",prov:"SUBATIR",monto:172508,dia:15,tipo:"cheque"},
   {mes:"2026-12",prov:"Pontyn",monto:68417,dia:29,tipo:"prov"},
   {mes:"2026-12",prov:"Estuario Platino",monto:63310,dia:10,tipo:"prov"},
   {mes:"2026-12",prov:"Cuota Candela (468 USD)",monto:19619,dia:16,tipo:"credito"},
@@ -481,6 +484,7 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Crédito Santander",monto:53350,dia:25,tipo:"credito"},
   {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
+  {mes:"2027-01",prov:"Alido Valiero",monto:30332,dia:4,tipo:"prov"},
   {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-03",prov:"Plazo fijo (corrido de diciembre)",monto:313000,dia:20,tipo:"plazo"},
@@ -488,7 +492,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1624293, 11:1403222}; // planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1624293, 11:1482068}; // planilla 07/11: dic 1.868.037 − cuotas (19.619 + 53.350) − plazo fijo 313.000; entran Alido Valiero 30.332 (4/12 y 4/01), Pedro Merla 36.139, Cloren 17.456; SUBATIR 160.592 (8/12) y 172.508 (15/12); hay SUBATIR del 22 y 28/12 sin monto todavía. planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
