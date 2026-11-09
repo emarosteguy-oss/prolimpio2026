@@ -391,7 +391,7 @@ const TG_REAL = {
   "2023": [1535712,1044481,832805,860646,785777,869277,832723,787241,742361,780125,850909,1086800],
   "2024": [973448,1023619,1003266,1187839,970046,1275942,1035468,1133196,1106098,1128463,1281170,1605037],
   "2025": [1399515,1618069,1812994,1404700,1153468,1345373,1236390,1613350,1476837,1383370,1618342,1968336],
-  "2026": [1912797,2069130,1928542,1464980,1361222,1897317,1618555,1546198,1653958,1805402,null,null],
+  "2026": [1912797,2069130,1928542,1464980,1361222,1897317,1618555,1546198,1653958,1801441,null,null],
 };
 
 // ── Comisión de bancos por ventas con tarjeta (débito y crédito, Getnet) ─────
@@ -456,17 +456,19 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Solsire",monto:18516,dia:6,tipo:"prov"},
   {mes:"2026-11",prov:"Aymi",monto:9934,dia:8,tipo:"prov"},
   {mes:"2026-11",prov:"Palmisol",monto:17116,dia:12,tipo:"prov"},
-  {mes:"2026-11",prov:"Norte Sur",monto:7058,dia:13,tipo:"prov"},
+  {mes:"2026-11",prov:"Bakedplus",monto:7351,dia:9,tipo:"prov"},
+  {mes:"2026-11",prov:"Santiago Badán",monto:8880,dia:13,tipo:"prov"},
+  {mes:"2026-11",prov:"Norte Sur",monto:7058,dia:18,tipo:"prov"},
   {mes:"2026-11",prov:"Cameril",monto:6656,dia:21,tipo:"prov"},
   {mes:"2026-11",prov:"Emilio Benzo",monto:17030,dia:26,tipo:"prov"},
   {mes:"2026-11",prov:"Calusil",monto:14976,dia:14,tipo:"prov"},
-  {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,dia:22,tipo:"prov"},
-  {mes:"2026-11",prov:"Irmari",monto:11624,dia:23,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari (289,87 USD)",monto:11885,dia:27,tipo:"prov"},
+  {mes:"2026-11",prov:"Maxi Metal",monto:9565,dia:23,tipo:"prov"},
+  {mes:"2026-11",prov:"Irmari",monto:11624,dia:28,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (llegó 23/09)",monto:149691,dia:10,tipo:"cheque"}, // planilla: "Mirar wasap, falta un cheque $19.303"
   {mes:"2026-11",prov:"Estuario Platino",monto:72156,dia:15,tipo:"prov"},
   {mes:"2026-11",prov:"Cuota Candela (468 USD)",monto:19618,dia:16,tipo:"credito"},
   {mes:"2026-11",prov:"SUBATIR",monto:193210,dia:17,tipo:"cheque"},
-  {mes:"2026-11",prov:"Estuario Platino",monto:72116,dia:18,tipo:"prov"},
   {mes:"2026-11",prov:"Jaspe",monto:19768,dia:19,tipo:"prov"},
   {mes:"2026-11",prov:"SUBATIR (pedido 12/10, 2.650 kg)",monto:171694,dia:24,tipo:"cheque"},
   {mes:"2026-11",prov:"Andrés Bauer (527 USD)",monto:21344,dia:20,tipo:"prov"},
@@ -476,6 +478,8 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Alido Valiero",monto:30332,dia:4,tipo:"prov"},
   {mes:"2026-12",prov:"Pedro Merla",monto:36139,dia:5,tipo:"prov"},
   {mes:"2026-12",prov:"Cloren",monto:17456,dia:6,tipo:"prov"},
+  {mes:"2026-12",prov:"Cloren (60 USD)",monto:2430,dia:7,tipo:"prov"},
+  {mes:"2026-12",prov:"Uruquim",monto:42535,dia:13,tipo:"prov"},
   {mes:"2026-12",prov:"SUBATIR",monto:160592,dia:8,tipo:"cheque"},
   {mes:"2026-12",prov:"Jaspe",monto:18621,dia:12,tipo:"prov"},
   {mes:"2026-12",prov:"Unimed",monto:14076,dia:14,tipo:"prov"},
@@ -495,7 +499,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1638324, 11:1482068}; // planilla 07/11: dic 1.868.037 − cuotas (19.619 + 53.350) − plazo fijo 313.000; entran Alido Valiero 30.332 (4/12 y 4/01), Pedro Merla 36.139, Cloren 17.456; SUBATIR 160.592 (8/12) y 172.508 (15/12); hay SUBATIR del 22 y 28/12 sin monto todavía. planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1592004, 11:1527033}; // planilla 09/11: nov 1.601.293 − cuotas 72.967 + Estuario de octubre 63.600 + comisión 78 (ya incluye GAIA 13.953; entran Bakedplus, Santiago Badán, Maxi Metal; sale Estuario 72.116 del 18/11); dic 1.913.002 − cuotas 72.969 − plazo fijo 313.000 (entran Cloren 60 USD y Uruquim 42.535). Antes: planilla 07/11: dic 1.868.037 − cuotas (19.619 + 53.350) − plazo fijo 313.000; entran Alido Valiero 30.332 (4/12 y 4/01), Pedro Merla 36.139, Cloren 17.456; SUBATIR 160.592 (8/12) y 172.508 (15/12); hay SUBATIR del 22 y 28/12 sin monto todavía. planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
