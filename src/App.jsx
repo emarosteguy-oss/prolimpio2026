@@ -1091,14 +1091,17 @@ const gapi_append = async (token, sheet, values, sid=SHEET_ID) => {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ values: [values] }),
-  });
-  return res.ok;
+  }).catch(()=>null);
+  GAPI_ULTIMO = res ? res.status : 0;
+  return !!(res && res.ok);
 };
+let GAPI_ULTIMO = 200;
 
 
 const gapi_ensure_sheet = async (token, title, headers, sid=SHEET_ID) => {
-  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties`, { headers: { Authorization: `Bearer ${token}` } });
-  if(!metaRes.ok) return false;
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties`, { headers: { Authorization: `Bearer ${token}` } }).catch(()=>null);
+  GAPI_ULTIMO = metaRes ? metaRes.status : 0;
+  if(!metaRes || !metaRes.ok) return false;
   const meta = await metaRes.json();
   if((meta.sheets||[]).some(s=>s.properties.title===title)) return true;
   const add = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, {
@@ -1249,6 +1252,16 @@ export default function App(){
   const handleLogin = () => conectar("manual");
   // Permiso vencido mientras se usa la app (Google responde 401)
   const tokenVencido = () => { borrarTok(); setToken(null); setSyncStatus("disconnected"); setPideToque(true); };
+  // Pide un permiso nuevo a Google sin mostrar nada (el celu ya dio permiso antes); devuelve el token o null
+  const renovarToken = () => new Promise(res => {
+    if(!window.google?.accounts?.oauth2){ res(null); return; }
+    let hint=""; try{ hint=localStorage.getItem("prolimpio_gmail")||""; }catch(e){}
+    let listo=false; const fin=t=>{ if(!listo){ listo=true; res(t); } }; setTimeout(()=>fin(null),25000);
+    try{ window.google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, ...(hint?{hint}:{}),
+      callback: r => { if(r.access_token){ guardarTok(r.access_token, r.expires_in); setToken(r.access_token); setPideToque(false); fin(r.access_token); } else fin(null); },
+      error_callback: () => fin(null) }).requestAccessToken({prompt:""}); }catch(e){ fin(null); }
+  });
+  const tokenParaGuardar = async () => { const o=leerTok(); if(o) return o.t; return await renovarToken(); };
 
   const cargarHistorico = async () => {
     if(!token){showToast("Conectate a Sheets primero","er");return;}
@@ -1509,7 +1522,7 @@ export default function App(){
   const [codLector,setCodLector]=useState("");
   const guardarCierre2 = async () => {
     if(GUARDANDO_CIERRE){showToast("Ya se está guardando, esperá un momento");return;}
-    if(!token){showToast("Conectate a Google primero","er");return;}
+    if(!token&&!yaConecto()){showToast("Conectate a Google primero","er");return;}
     { const prev=sheetCierres2.find(c=>c.fecha===cjF.fecha); if(prev){ const h=prev.ts?new Date(prev.ts).toLocaleTimeString("es-UY",{hour:"2-digit",minute:"2-digit"}):"";
       if(!window.confirm(`Ya hay un cierre guardado del ${cjF.fecha.split("-").reverse().join("/")}${h?` (a las ${h})`:""}. ¿Guardarlo de nuevo? Queda el último.`)) return; } }
     if(!cjF.fecha||nC(cjF.ventaPos)==null){showToast("Falta la fecha o la venta total","er");return;}
@@ -1518,17 +1531,21 @@ export default function App(){
     const sid=sidCierres||SHEET_ID;
     GUARDANDO_CIERRE=true; setTimeout(()=>{GUARDANDO_CIERRE=false;},20000);
     setSyncStatus("syncing");
-    const okS=await gapi_ensure_sheet(token,"CierresCaja",HEAD_CIERRES,sid);
+    // el permiso de Google dura 1 hora: si venció (celu del local abierto todo el día), se renueva solo antes de guardar
+    let tk=await tokenParaGuardar();
+    if(!tk){ GUARDANDO_CIERRE=false; setSyncStatus("disconnected"); setPideToque(true); showToast("Se venció el permiso de Google: tocá «Conectar» arriba y después Guardar de nuevo (los números no se pierden)","er"); return; }
+    let okS=await gapi_ensure_sheet(tk,"CierresCaja",HEAD_CIERRES,sid);
+    if(!okS&&GAPI_ULTIMO===401){ borrarTok(); tk=await renovarToken(); if(tk) okS=await gapi_ensure_sheet(tk,"CierresCaja",HEAD_CIERRES,sid); }
     const fila=[cjF.fecha,cjF.cajero||"",...CIERRE_CAMPOS.map(([k])=>nC(cjF[k])==null?"":String(nC(cjF[k]))),String(nC(cjF.credito)||0),String(nC(cjF.transferencia)||0),textoGastos(cjF.gastosDetalle),cjF.obs||"",new Date().toISOString()];
     // foto liviana para el mail, partida en pedazos de 45.000 caracteres (límite de una celda)
     try{ const b64=await fotoParaMail(fotos); if(b64 && okS){ const partes=b64.match(/.{1,45000}/g)||[];
-        const meta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties(sheetId,title,gridProperties.columnCount)`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json());
+        const meta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties(sheetId,title,gridProperties.columnCount)`,{headers:{Authorization:`Bearer ${tk}`}}).then(r=>r.json());
         const hj=(meta.sheets||[]).find(x=>x.properties.title==="CierresCaja"); const fal=26+partes.length-(hj?.properties?.gridProperties?.columnCount||26);
-        if(hj&&fal>0) await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({requests:[{appendDimension:{sheetId:hj.properties.sheetId,dimension:"COLUMNS",length:fal+2}}]})});
+        if(hj&&fal>0) await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{method:"POST",headers:{Authorization:`Bearer ${tk}`,"Content-Type":"application/json"},body:JSON.stringify({requests:[{appendDimension:{sheetId:hj.properties.sheetId,dimension:"COLUMNS",length:fal+2}}]})});
         fila.push(...partes.map(x=>"img:"+x)); } }catch(e){}
-    const ok=okS&&await gapi_append(token,"CierresCaja",fila,sid); GUARDANDO_CIERRE=false;
-    if(ok){ setSyncStatus("ok"); setUltimoCierre({...cjF}); setCjF(CIERRE_VACIO()); setFotos([]); setLeido(null); await loadCierres2(token); window.scrollTo({top:0,behavior:"smooth"}); }
-    else { setSyncStatus("error"); showToast("No se pudo guardar: revisá la conexión","er"); }
+    const ok=okS&&await gapi_append(tk,"CierresCaja",fila,sid); GUARDANDO_CIERRE=false;
+    if(ok){ setSyncStatus("ok"); setUltimoCierre({...cjF}); setCjF(CIERRE_VACIO()); setFotos([]); setLeido(null); await loadCierres2(tk); window.scrollTo({top:0,behavior:"smooth"}); }
+    else { setSyncStatus("error"); showToast(GAPI_ULTIMO===0?"No se pudo guardar: el celular no tiene internet. Los números quedan cargados: probá de nuevo en un rato":GAPI_ULTIMO===401||GAPI_ULTIMO===403?"Se venció el permiso de Google: tocá «Conectar» arriba y después Guardar de nuevo (los números no se pierden)":`No se pudo guardar (error ${GAPI_ULTIMO} de Google). Los números quedan cargados: probá de nuevo`,"er"); }
   };
   const activarModoCaja = async () => {
     if(!/^\d{4}$/.test(pinIn)){showToast("El PIN tiene que ser de 4 números","er");return;}
