@@ -218,9 +218,9 @@ const RETIROS_CLAUDE = [
 const PAGOS_CLAUDE = [
   {fecha:"2026-11-09",clave:"pend|2026-11|Solsire|18516",concepto:"Solsire",monto:18516,mes:"2026-11",ts:"2026-11-09T18:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-09",clave:"pend|2026-11|Aymi|9934",concepto:"Aymi",monto:9934,mes:"2026-11",ts:"2026-11-09T18:05:00.000Z",cuenta:"Santander"},
-  {fecha:"2026-11-09",clave:"pend|2026-11|Bakedplus|7351",concepto:"Bakedplus",monto:7351,mes:"2026-11",ts:"2026-11-09T18:10:00.000Z",cuenta:"BROU",obs:"deducido del saldo del BROU (no se ve en la captura)"},
+  {fecha:"2026-11-09",clave:"pend|2026-11|Bakedplus|7351",concepto:"Bakedplus",monto:7351,mes:"2026-11",ts:"2026-11-09T18:10:00.000Z",cuenta:"BROU",obs:"confirmado por Esteban"},
   {fecha:"2026-11-11",clave:"pend|2026-11|SUBATIR (llegó 23/09)|149691",concepto:"SUBATIR cheque 10/11 (130.387 + 19.303)",monto:149691,mes:"2026-11",ts:"2026-11-11T12:00:00.000Z",cuenta:"Santander"},
-  {fecha:"2026-11-10",clave:"extra|2026-11|Zitan SA|19486",concepto:"Zitan SA",monto:19486,mes:"2026-11",ts:"2026-11-10T15:00:00.000Z",cuenta:"Santander"},
+  {fecha:"2026-11-10",clave:"extra|2026-11|Zitan SA|19486",concepto:"Zitan SA (proveedor, fuera de planilla)",monto:19486,mes:"2026-11",ts:"2026-11-10T15:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-11",clave:"fijo|2026-11|Alquiler",concepto:"Alquiler (Ana Merlo: 40.000 Santander + 25.370 BROU)",monto:65370,mes:"2026-11",ts:"2026-11-11T13:00:00.000Z",cuenta:"Santander/BROU"},
   {fecha:"2026-11-11",clave:"extra|2026-11|Comisiones transferencias|313",concepto:"Comisiones transferencias Santander",monto:313,mes:"2026-11",ts:"2026-11-11T13:05:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-09",clave:"pend|2026-11|Atersa|24520",concepto:"Atersa",monto:24520,mes:"2026-11",ts:"2026-11-09T13:00:00.000Z",cuenta:"Santander"},
