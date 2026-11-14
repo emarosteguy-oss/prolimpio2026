@@ -626,6 +626,9 @@ const arreglarErp = n => { const g=k=>nC(n[k]);
   if(g("gastosEf")!=null&&g("deposito")&&g("gastosEf")>=g("deposito")&&String(n.gastosDetalle||"").replace(/[.,]/g,"").includes(String(Math.round(g("deposito"))))) n.gastosEf=String(g("gastosEf")-g("deposito")); if(["aperturaErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>g(k)!=null)){ const calc=g("saldoErp")-g("aperturaErp")-g("salidaPos")+g("gastosEf")+g("deposito");
   if(calc>0&&Math.abs(calc-(g("ventasErp")||0))>1) n.ventasErp=String(Math.round(calc)); } };
 const textoGastos = g => Array.isArray(g) ? g.map(x=> x&&typeof x==="object" ? [x.concepto||x.detalle||x.descripcion||x.nombre||"", x.monto??x.importe??""].join(" ").trim() : String(x)).join("; ") : (g&&typeof g==="object" ? Object.values(g).join(" ") : String(g||""));
+// "Crédito de la casa" cobrado en el POS ya está dentro de la venta total del POS: no se suma dos veces
+const creditoFueraPos = c => { const cr=+c.credito||0; if(c.ventaPos==null||c.efectivoPos==null||c.tarjetasPos==null) return cr;
+  const gap=Math.round(c.ventaPos-c.efectivoPos-c.tarjetasPos); return gap>1&&gap<=cr+1 ? Math.max(0,cr-gap) : cr; };
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
@@ -633,7 +636,7 @@ const chequearCierre = (c) => {
   if(c.fecha&&c.fecha<isoDe(new Date(Date.now()-7*864e5))) R.push({ok:false,txt:"La fecha del cierre es de hace más de una semana: revisá la fecha",campos:["fecha"]});
   if(c.fecha&&c.fecha>hoyISO()) R.push({ok:false,txt:"La fecha del cierre es posterior a hoy: revisá la fecha",campos:["fecha"]});
   if(v("ventaPos")!=null&&v("efectivoPos")!=null&&v("tarjetasPos")!=null)
-    R.push({ok:ok(v("efectivoPos")+v("tarjetasPos"),v("ventaPos")),txt:"Efectivo + tarjetas = venta total POS",campos:["ventaPos","efectivoPos","tarjetasPos"]});
+    { const gap=v("ventaPos")-v("efectivoPos")-v("tarjetasPos"), cr=v("credito")||0; R.push({ok:ok(gap,0)||(gap>1&&cr>=gap-1),txt:"Efectivo + tarjetas (+ crédito de la casa del POS) = venta total POS",campos:["ventaPos","efectivoPos","tarjetasPos"]}); }
   const marcas=["visa","mastercard","oca","maestro","otrasTj"].map(v).filter(x=>x!=null);
   if(marcas.length&&v("tarjetasPos")!=null) R.push({ok:ok(marcas.reduce((s,x)=>s+x,0),v("tarjetasPos")),txt:"Suma de tarjetas por marca = tarjetas POS",campos:["visa","mastercard","oca","maestro","otrasTj","tarjetasPos"]});
   if(v("aperturaPos")!=null&&v("efectivoPos")!=null&&v("salidaPos")!=null&&v("saldoSistema")!=null)
@@ -656,7 +659,7 @@ Papeles posibles:
 2) "Z de Caja" (ticket térmico): líneas Efectivo, VISA, MASTERCARD, OCA, MAESTRO u otras tarjetas.
 3) "Desglose de Valores en Caja por Forma de Pago" (hoja A4 del ERP). Sección "1-Efectivo $": entradas "E-Ticket Contado"/"E-Factura Contado" (ventas en efectivo del ERP), "7 Apertura De Caja", "11 Ingreso De Pos"; salidas: gastos y retiros (Movimiento De Caja con conceptos como Arreglo, Adelanto, Retiro, Gasto Recibo, Regalo), "0 Deposito:DE" (depósito al banco); "Saldo" final. Sección "21-Pos Alambrico Manual": ventas con tarjeta en el ERP (restar devoluciones), usar su Saldo. Si esa sección NO aparece en la hoja, tarjetaErp es 0 (no uses el Saldo de la sección Efectivo ni las tarjetas del POS).
 4) Boleta de depósito del banco (MONTO).
-Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj (para cada marca tomá el importe que está en la MISMA línea que su nombre en el Z de Caja; CABAL, TARJETA D y otras van sumadas en otrasTj), aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp (la línea "Apertura De Caja" del desglose del ERP; NO es el "Ingreso De Pos"), ventasErp (suma SOLO de E-Ticket/E-Factura Contado en efectivo; un "Recibo" es cobro de un crédito y NO es venta), tarjetaErp (el Saldo de la sección "Pos Alambrico Manual"; si no hay esa sección va 0; NUNCA el subtotal de salidas), gastosEf (si un "Recibo" y un "Gasto Recibo" del mismo cliente tienen el mismo monto se compensan y no se cuentan; suma de TODAS las otras salidas de efectivo del ERP que NO son el depósito —el "0 Deposito:DE" o el Movimiento De Caja por el mismo monto del depósito NO es gasto—: Gasto Recibo, Movimiento De Caja, etc.; comprobá que apertura + ventas + ingreso de POS − gastosEf − depósito = saldo), deposito, saldoErp; y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre, tomado de la línea "Cajero: N-Nombre" del ticket Y de Caja o Z de Caja; NUNCA el nombre de un cliente del desglose del ERP) y "gastosDetalle" (UN SOLO TEXTO, no lista: concepto y monto de cada gasto separados por punto y coma). No agregues explicaciones.`;
+Devolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj (para cada marca tomá el importe que está en la MISMA línea que su nombre en el Z de Caja; CABAL, TARJETA D y otras van sumadas en otrasTj), aperturaPos, salidaPos (positivo), saldoSistema, efectivoContado, diferencia, aperturaErp (la línea "Apertura De Caja" del desglose del ERP; NO es el "Ingreso De Pos"), ventasErp (suma SOLO de E-Ticket/E-Factura Contado en efectivo; un "Recibo" es cobro de un crédito y NO es venta), tarjetaErp (el Saldo de la sección "Pos Alambrico Manual"; si no hay esa sección va 0; NUNCA el subtotal de salidas), gastosEf (si un "Recibo" y un "Gasto Recibo" del mismo cliente tienen el mismo monto se compensan y no se cuentan; suma de TODAS las otras salidas de efectivo del ERP que NO son el depósito —el "0 Deposito:DE" o el Movimiento De Caja por el mismo monto del depósito NO es gasto—: Gasto Recibo, Movimiento De Caja, etc.; comprobá que apertura + ventas + ingreso de POS − gastosEf − depósito = saldo), deposito, saldoErp, credito (el "Credito de la casa" de la Forma Pago del Y de Caja o del Z de Caja; null si no aparece); y además "fecha" (AAAA-MM-DD), "cajero" (solo el nombre, tomado de la línea "Cajero: N-Nombre" del ticket Y de Caja o Z de Caja; NUNCA el nombre de un cliente del desglose del ERP) y "gastosDetalle" (UN SOLO TEXTO, no lista: concepto y monto de cada gasto separados por punto y coma). No agregues explicaciones.`;
 // Junta las fotos del cierre en una sola imagen liviana para el mail (se guarda en la planilla de cierres, columnas AA en adelante)
 const fotoParaMail = async (urls) => {
   if(!urls||!urls.length) return null;
@@ -1203,7 +1206,7 @@ export default function App(){
   const [syncStatus,setSyncStatus]=useState("disconnected"); // disconnected | syncing | ok | error
   const [sheetVentas,setSheetVentas]=useState([]);
   // total del día según el cierre de caja: POS + ERP contado + ERP tarjeta + crédito + transferencias
-  const ventasCierres=useMemo(()=>sheetCierres2.map(c=>({fecha:c.fecha,monto:(c.ventaPos||0)+(c.ventasErp||0)+(c.tarjetaErp||0)+(c.credito||0)+(c.transferencia||0),obs:"",origen:"Cierre"})).filter(v=>v.monto>0),[sheetCierres2]);
+  const ventasCierres=useMemo(()=>sheetCierres2.map(c=>({fecha:c.fecha,monto:(c.ventaPos||0)+(c.ventasErp||0)+(c.tarjetaErp||0)+creditoFueraPos(c)+(c.transferencia||0),obs:"",origen:"Cierre"})).filter(v=>v.monto>0),[sheetCierres2]);
   const ventasExtra=useMemo(()=>{const fa=new Set(sheetVentas.map(v=>v.fecha)); return [...sheetVentas.map(v=>({...v,origen:"App"})),...ventasCierres.filter(v=>!fa.has(v.fecha))];},[sheetVentas,ventasCierres]);
   EXTRA_VENTAS=ventasExtra;
   const [sheetCompras,setSheetCompras]=useState([]);
@@ -1510,6 +1513,7 @@ export default function App(){
     const d=r.datos; const n={...cjF};
     CIERRE_CAMPOS.forEach(([k])=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) n[k]=String(Math.abs(Number(d[k]))*(k==="diferencia"&&Number(d[k])<0?-1:1)); });
     if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) n.fecha=fechaCierreOk(d.fecha); arreglarErp(n);
+    if(d.credito!=null&&!isNaN(Number(d.credito))&&Number(d.credito)>0&&!nC(n.credito)) n.credito=String(Math.abs(Number(d.credito)));
     if(d.cajero) n.cajero=cajeraConocida(d.cajero);
     if(d.gastosDetalle) n.gastosDetalle=textoGastos(d.gastosDetalle);
     setCjF(n); setLeido({modelo:r.modelo}); showToast("✓ Foto leída: revisá los números");
