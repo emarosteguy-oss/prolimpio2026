@@ -456,7 +456,6 @@ const PENDIENTES = [
   {mes:"2026-10",prov:"Unión Disprofarma",monto:55046,dia:19,tipo:"prov"},
   {mes:"2026-10",prov:"Jaspe",monto:28812,dia:20,tipo:"prov"},
   {mes:"2026-10",prov:"SUBATIR (llegó 02/09)",monto:130066,dia:22,tipo:"cheque"},
-  {mes:"2026-10",prov:"Jupiter",monto:3961,dia:23,tipo:"prov"},
   {mes:"2026-10",prov:"Crédito Santander",monto:53348,dia:25,tipo:"credito"},
   {mes:"2026-10",prov:"San Francisco",monto:59546,dia:26,tipo:"prov"},
   {mes:"2026-10",prov:"Cameril",monto:55821,dia:27,tipo:"prov"},
