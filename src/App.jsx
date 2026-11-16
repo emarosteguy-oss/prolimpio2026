@@ -159,6 +159,7 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-24",monto:48143},{fecha:"2026-10-26",monto:47327},{fecha:"2026-10-27",monto:37099},{fecha:"2026-10-28",monto:52377},
   {fecha:"2026-10-29",monto:61747},{fecha:"2026-10-30",monto:68291,obs:"cierre de caja"},{fecha:"2026-10-31",monto:62352,obs:"cierre de caja"},
   {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},{fecha:"2026-11-04",monto:94565},{fecha:"2026-11-05",monto:98209},{fecha:"2026-11-06",monto:68475},
+  {fecha:"2026-11-09",monto:89453},{fecha:"2026-11-10",monto:72171},{fecha:"2026-11-11",monto:87060},{fecha:"2026-11-12",monto:76935},{fecha:"2026-11-13",monto:182698,obs:"incluye venta al Municipio de El Carmen"},{fecha:"2026-11-14",monto:45526},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
@@ -467,7 +468,6 @@ const PENDIENTES = [
   {mes:"2026-11",prov:"Atersa",monto:24520,dia:5,tipo:"prov"},
   {mes:"2026-11",prov:"Solsire",monto:18516,dia:6,tipo:"prov"},
   {mes:"2026-11",prov:"Aymi",monto:9934,dia:8,tipo:"prov"},
-  {mes:"2026-11",prov:"Palmisol",monto:17116,dia:12,tipo:"prov"},
   {mes:"2026-11",prov:"Bakedplus",monto:7351,dia:9,tipo:"prov"},
   {mes:"2026-11",prov:"Santiago Badán",monto:8880,dia:13,tipo:"prov"},
   {mes:"2026-11",prov:"Norte Sur",monto:7058,dia:18,tipo:"prov"},
@@ -492,6 +492,10 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Cloren",monto:17456,dia:6,tipo:"prov"},
   {mes:"2026-12",prov:"Cloren (60 USD)",monto:2430,dia:7,tipo:"prov"},
   {mes:"2026-12",prov:"Uruquim",monto:42535,dia:13,tipo:"prov"},
+  {mes:"2026-12",prov:"Würth",monto:16115,dia:9,tipo:"prov"},
+  {mes:"2026-12",prov:"San Francisco",monto:53372,dia:11,tipo:"prov"},
+  {mes:"2026-12",prov:"Atersa",monto:28729,dia:17,tipo:"prov"},
+  {mes:"2026-12",prov:"SUBATIR",monto:149163,dia:22,tipo:"cheque"},
   {mes:"2026-12",prov:"SUBATIR",monto:160592,dia:8,tipo:"cheque"},
   {mes:"2026-12",prov:"Jaspe",monto:18621,dia:12,tipo:"prov"},
   {mes:"2026-12",prov:"Unimed",monto:14076,dia:14,tipo:"prov"},
@@ -504,6 +508,8 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-01",prov:"Alido Valiero",monto:30332,dia:4,tipo:"prov"},
+  {mes:"2027-01",prov:"SUBATIR — pedido semanal + extra verano",monto:329157,dia:10,tipo:"cheque"},
+  {mes:"2027-01",prov:"Estuario Platino",monto:85084,dia:13,tipo:"prov"},
   {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-03",prov:"Plazo fijo (corrido de diciembre)",monto:313000,dia:20,tipo:"plazo"},
@@ -511,7 +517,7 @@ const PENDIENTES = [
   {mes:"2027-02",prov:"Intex vía SUBATIR — cheque 28/02 (3/3)",monto:127780,dia:28,tipo:"cheque"}
 ];
 // Gastos operativos ya programados en la planilla (TOTAL GASTOS sin cuotas de créditos). idx 9 = Oct-26
-const COSTOS_PROGRAMADOS = {9:1773877, 10:1627614, 11:1567033}; // dic +40.000 de compras al contado (Zitan, GAIA, Bakedplus: ~40.000/mes, en noviembre ya 40.790); planilla 09/11: nov 1.601.293 − cuotas 72.967 + Estuario de octubre 63.600 + comisión 78 (ya incluye GAIA 13.953; entran Bakedplus, Santiago Badán, Maxi Metal; sale Estuario 72.116 del 18/11); dic 1.913.002 − cuotas 72.969 − plazo fijo 313.000 (entran Cloren 60 USD y Uruquim 42.535). Antes: planilla 07/11: dic 1.868.037 − cuotas (19.619 + 53.350) − plazo fijo 313.000; entran Alido Valiero 30.332 (4/12 y 4/01), Pedro Merla 36.139, Cloren 17.456; SUBATIR 160.592 (8/12) y 172.508 (15/12); hay SUBATIR del 22 y 28/12 sin monto todavía. planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
+const COSTOS_PROGRAMADOS = {9:1773877, 10:1624498, 11:1814412}; // planilla 16/11: nov 1.618.420 − cuotas 72.967 + Estuario oct 63.600 + comisiones 469 + Calusil 14.976 (en la planilla quedó sin monto: se mantiene hasta confirmar); sale Palmisol 17.116, entran Zitan y Jupiter (ya pagados) y Bomberos 16.000. dic 2.160.381 − cuotas 72.969 − plazo fijo 313.000 + contado 40.000 (entran Würth, San Francisco, Atersa, SUBATIR 149.163 del 22/12). Antes: dic +40.000 de compras al contado (Zitan, GAIA, Bakedplus: ~40.000/mes, en noviembre ya 40.790); planilla 09/11: nov 1.601.293 − cuotas 72.967 + Estuario de octubre 63.600 + comisión 78 (ya incluye GAIA 13.953; entran Bakedplus, Santiago Badán, Maxi Metal; sale Estuario 72.116 del 18/11); dic 1.913.002 − cuotas 72.969 − plazo fijo 313.000 (entran Cloren 60 USD y Uruquim 42.535). Antes: planilla 07/11: dic 1.868.037 − cuotas (19.619 + 53.350) − plazo fijo 313.000; entran Alido Valiero 30.332 (4/12 y 4/01), Pedro Merla 36.139, Cloren 17.456; SUBATIR 160.592 (8/12) y 172.508 (15/12); hay SUBATIR del 22 y 28/12 sin monto todavía. planilla 04/11: nov TOTAL GASTOS 1.633.660 − cuotas (Candela 19.618, Santander 53.349) + Estuario de octubre 63.600 pagado 2/11; dic 1.789.191 − cuotas (19.619 + 53.350) − plazo fijo 313.000 (pasa a marzo): entran SUBATIR 163.694 (8/12) y 174.486 (15/12), Jaspe, Unimed, Pontyn; sale el SUBATIR 159.301 del 1/12. Antes: Alido Valiero: cuotas 3/11 y 29/11 (la de diciembre pasa a noviembre, +27.600 nov / −27.600 dic); Estuario Platino de octubre (63.600) pasa al lunes 2/11; // planilla 26/10 sin cuotas de créditos (oct IVA 117.075; nov IVA 120.000 y sin el SUBATIR de 165.541; dic + SUBATIR 159.301 el 1/12 + Bettasul) BPS 72.000 e IVA 100.000 en noviembre (−43.000)
 // Compras de temporada (Intex y Enjoy, vía SUBATIR) que no están en la planilla o caen fuera de los meses programados: se suman a los costos del mes
 // Los cheques de temporada (Enjoy + Intex, $670.796, dic a feb) pagan mercadería que ya está en el local y se vende en la zafra:
 // son parte del costo de mercadería de esas ventas (el 68%), no un gasto aparte. Por eso no se suman encima (Esteban, 20/10).
@@ -564,7 +570,7 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:75000,dia:20},{nombre:"IVA (DGI)",monto:110000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
+  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:73000,dia:20},{nombre:"IVA (DGI)",monto:110000,dia:20},{nombre:"Bomberos",monto:16000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 16/11: BPS 73.000 (empleados 201.382), Bomberos 16.000. Planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:110000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
