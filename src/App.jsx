@@ -1219,7 +1219,7 @@ export default function App(){
   COM.pct=Number(caja.comisionPct); if(isNaN(COM.pct)) COM.pct=3;
   COM.real=comisionPorMes(ctlK.filas);
   const [aiText,setAiText]=useState("");
-  const [aiLoading,setAiLoading]=useState(false);
+  const [aiLoading,setAiLoading]=useState(false); const [aiProgreso,setAiProgreso]=useState("");
   const [token,setToken]=useState(null);
   const [pideToque,setPideToque]=useState(false); // reconexión automática bloqueada por el navegador: un toque para reconectar
   const [syncStatus,setSyncStatus]=useState("disconnected"); // disconnected | syncing | ok | error
@@ -1683,6 +1683,9 @@ export default function App(){
 
   const runAI=async(q)=>{
     setAiLoading(true);setAiText("");
+    // los modelos gratuitos a veces no responden nunca: cada intento tiene tope de tiempo y todo el análisis también
+    const fetchT=(url,opt,ms)=>{const ac=new AbortController();const t=setTimeout(()=>ac.abort(),ms);return fetch(url,{...opt,signal:ac.signal}).finally(()=>clearTimeout(t));};
+    const limite=Date.now()+150000;
     try{
       const M=metricasMes(aMes,aAnio); const anio=M.anio;
       const f0=x=>x==null?"sin dato":"$"+fmt(Math.round(x)); const pc=x=>x==null?"sin dato":(x>=0?"+":"")+fmt(x,1)+"%";
@@ -1712,7 +1715,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
       const FALLBACK = ["deepseek/deepseek-chat-v3-0324:free","meta-llama/llama-3.3-70b-instruct:free","google/gemma-3-27b-it:free","qwen/qwen3-235b-a22b:free"];
       let MODELS = FALLBACK;
       try{
-        const lr = await fetch("https://openrouter.ai/api/v1/models");
+        const lr = await fetchT("https://openrouter.ai/api/v1/models",{},8000);
         if(lr.ok){
           const lj = await lr.json();
           const pref = ["llama-3.3","llama-4","mistral","gemma-3","deepseek-chat","qwen-2.5","glm","deepseek"];
@@ -1727,9 +1730,13 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
       }catch(e){}
       let txt = null; let respaldo = null;
       let lastErr = "";
+      let nModelo=0;
       for(const model of MODELS){
+        nModelo++;
+        if(Date.now()>limite){ lastErr=lastErr||"se agotó el tiempo"; break; }
+        setAiProgreso(`Probando ${model.replace(":free","")} (${nModelo} de ${MODELS.length})…`);
         try{
-          const res = await fetch("https://openrouter.ai/api/v1/chat/completions",{
+          const res = await fetchT("https://openrouter.ai/api/v1/chat/completions",{
             method:"POST",
             headers:{
               "Content-Type":"application/json",
@@ -1737,20 +1744,20 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
               "HTTP-Referer":"https://emarosteguy-oss.github.io",
               "X-Title":"PROlimpio Durazno"
             },
-            body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:prompt}],max_tokens:3000,temperature:0.4,reasoning:{exclude:true}})
-          });
+            body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:prompt}],max_tokens:1200,temperature:0.4,reasoning:{exclude:true}})
+          }, Math.max(5000,Math.min(40000,limite-Date.now())));
           if(!res.ok){ const e=await res.json(); lastErr=`${model}: ${e?.error?.message||res.status}`; continue; }
           const data = await res.json();
           const raw = data?.choices?.[0]?.message?.content;
           const ok = extraer(raw);
           if(ok){ txt = ok+"\n\n— "+model.replace(":free",""); break; }
           lastErr = `${model}: respuesta incompleta o sin formato`;
-        }catch(e){ lastErr=`${model}: ${e.message}`; }
+        }catch(e){ lastErr=`${model}: ${e.name==="AbortError"?"no respondió a tiempo":e.message}`; }
       }
       if(txt){ setAiText(txt); }
       else { setAiText("Los modelos gratuitos no devolvieron una respuesta válida ("+MODELS.length+" probados). El resumen automático de arriba tiene las cifras exactas; podés reintentar la IA en unos minutos.\nÚltimo error: "+lastErr); }
     }catch(e){ setAiText("Error de red: "+e.message); }
-    setAiLoading(false);
+    setAiProgreso(""); setAiLoading(false);
   };
 
 
@@ -2607,7 +2614,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
           </div>;})()}
           {(aiText||aiLoading)&&<div className="ai-panel">
             <div className="ai-hdr"><div className="ai-ico">✦</div><span className="ai-ttl">Análisis — {MESES[aMes]} {aAnio}</span></div>
-            <div className={`ai-body${aiLoading?" ld":""}`}>{aiLoading?"Generando análisis...":aiText}</div>
+            <div className={`ai-body${aiLoading?" ld":""}`}>{aiLoading?(aiProgreso||"Generando análisis..."):aiText}</div>
           </div>}
           <div className="grid2">
             <div className="card"><div className="ctitle">Análisis rápidos</div>
