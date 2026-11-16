@@ -967,27 +967,32 @@ const migrarCfg = (c) => {
 const INF_ANUAL = {"2022":9.95,"2023":8.26,"2024":5.11,"2025":6.36,"2026":6.0,"2027":6.0};
 const metricasMes = (mIdx, anioIn) => {
   const anio=String(anioIn), prev=String(Number(anio)-1), mc=MES3[mIdx];
-  const v=VM[mIdx]?.[anio]??null, vPrev=VM[mIdx]?.[prev]??null;
+  const vCerr=VM[mIdx]?.[anio]??null, vPrev=VM[mIdx]?.[prev]??null;
+  // mes en curso: todavía no está cerrado en el historial → se usa lo vendido hasta hoy y la proyección del mes
+  let cur=null; if(vCerr==null){ try{ const c=curvaCurso(); if(c&&c.y===Number(anio)&&c.m===mIdx) cur=c; }catch(e){} }
+  const v=vCerr??(cur?cur.proy:null);
   const pct=(a,b)=>(a!=null&&b)?(a/b-1)*100:null;
   const inf=INF_ANUAL[anio]??6;
   const nom=pct(v,vPrev); const real=nom==null?null:((1+nom/100)/(1+inf/100)-1)*100;
   const t=TK[mIdx]||{}; const k=anio.slice(2), kp=prev.slice(2);
   const tk=t["c"+k]??null, tkPrev=t["c"+kp]??null, tp=t["p"+k]??null, tpPrev=t["p"+kp]??null;
   const dias=DIAS_HABILES[anio]?.[mc], diasPrev=DIAS_HABILES[prev]?.[mc];
-  const pd=v&&dias?v/dias:null, pdPrev=vPrev&&diasPrev?vPrev/diasPrev:null;
+  const pd=cur?cur.pd:(v&&dias?v/dias:null), pdPrev=cur&&cur.pdPrevMismos?cur.pdPrevMismos:(vPrev&&diasPrev?vPrev/diasPrev:null);
   const g=gastoTotal(anio,mIdx), dp=DEUDA_PAGOS[anio]?.[mIdx]||0;
   const res=(v!=null&&g!=null)?v-g:null, op=res!=null?res+dp:null;
-  const ytd=VM.slice(0,mIdx+1).reduce((s,r)=>s+(r[anio]||0),0), ytdPrev=VM.slice(0,mIdx+1).reduce((s,r)=>s+(r[prev]||0),0);
+  const ytd=VM.slice(0,mIdx+1).reduce((s,r)=>s+(r[anio]||0),0)+(vCerr==null&&v!=null?v:0), ytdPrev=VM.slice(0,mIdx+1).reduce((s,r)=>s+(r[prev]||0),0);
   return {anio,prev,mc,v,vPrev,nom,real,inf,tk,tkPrev,tkVar:pct(tk,tkPrev),tp,tpPrev,tpVar:pct(tp,tpPrev),dias,diasPrev,pd,pdPrev,pdVar:pct(pd,pdPrev),
-    gastos:g,deuda:dp,res,op,opPct:(op!=null&&v)?op/v*100:null,ytd,ytdPrev,ytdVar:(v!=null&&ytdPrev)?pct(ytd,ytdPrev):null};
+    gastos:g,deuda:dp,res,op,opPct:(op!=null&&v)?op/v*100:null,ytd,ytdPrev,ytdVar:(v!=null&&ytdPrev)?pct(ytd,ytdPrev):null,
+    enCurso: cur?{vendido:cur.total,dias:cur.dias,ult:cur.ult,prevMismos:cur.prevMismos,varMismos:cur.varMismos,varMismosTot:cur.varMismosTot,proy:cur.proy}:null};
 };
 const analisisLocal = (m) => {
   const $=x=>"$"+Math.round(x).toLocaleString("es-UY"); const p=x=>(x>=0?"+":"")+x.toFixed(1).replace(".",",")+"%";
   if(m.v==null) return ["Todavía no hay ventas cargadas para este mes."];
   const out=[];
-  if(m.vPrev!=null) out.push(`Vendiste ${$(m.v)} contra ${$(m.vPrev)} en ${m.mc} ${m.prev}: ${p(m.nom)} nominal y ${p(m.real)} real, descontando ${String(m.inf).replace(".",",")}% de inflación.`);
+  if(m.enCurso){ const e=m.enCurso; out.push(`Mes en curso: al ${e.ult.slice(8,10)}/${e.ult.slice(5,7)} vendiste ${$(e.vendido)} en ${e.dias} días${e.varMismosTot!=null?`, ${p(e.varMismosTot)} contra los mismos días de ${m.prev} (${p(e.varMismos)} por día)`:""}. Proyección del mes: ${$(e.proy)}; las cifras de abajo usan esa proyección.`); }
+  if(m.vPrev!=null) out.push(`${m.enCurso?"Proyectás":"Vendiste"} ${$(m.v)} contra ${$(m.vPrev)} en ${m.mc} ${m.prev}: ${p(m.nom)} nominal y ${p(m.real)} real, descontando ${String(m.inf).replace(".",",")}% de inflación.`);
   else out.push(`Vendiste ${$(m.v)}.`);
-  if(m.pd!=null&&m.pdPrev!=null) out.push(`Por día hábil fueron ${$(m.pd)} (${m.dias} días) contra ${$(m.pdPrev)} (${m.diasPrev} días): ${p(m.pdVar)}.`);
+  if(m.pd!=null&&m.pdPrev!=null) out.push(`Por día hábil ${m.enCurso?"van":"fueron"} ${$(m.pd)} (${m.dias} días) contra ${$(m.pdPrev)} (${m.diasPrev} días): ${p(m.pdVar)}.`);
   if(m.tk!=null&&m.tkPrev!=null) out.push(`Tickets: ${m.tk.toLocaleString("es-UY")} (${p(m.tkVar)}), ticket promedio $${String(m.tp).replace(".",",")} (${p(m.tpVar)}).`);
   if(m.op!=null) out.push(`Resultado: gastos ${$(m.gastos)}, ganancia operativa ${$(m.op)} (${m.opPct.toFixed(1).replace(".",",")}% de las ventas)${m.deuda?`; después de pagos de deuda (${$(m.deuda)}) quedan ${$(m.res)}`:""}.`);
   if(m.ytdVar!=null) out.push(`Acumulado enero–${m.mc}: ${$(m.ytd)} (${p(m.ytdVar)} contra ${m.prev}).`);
@@ -1694,7 +1699,8 @@ export default function App(){
       const anual=yrs.map(y=>{const n=TG_REAL[y].filter(x=>x!=null).length;const v=VM.slice(0,n).reduce((s,r)=>s+(r[y]||0),0);const gg=TG_REAL[y].slice(0,n).reduce((s,x,j)=>s+(gastoTotal(y,j)||0),0);const d2=DEUDA_PAGOS[y].slice(0,n).reduce((s,x)=>s+(x||0),0);return `${y}${n<12?" (Ene–"+MES3[n-1]+")":""}: ventas ${f0(v)}, ganancia operativa ${f0(v-gg+d2)} (${fmt((v-gg+d2)/v*100,1)}%)`;}).join("\n");
       const sys=`Sos un analista de negocios uruguayo que asesora al dueño de un local franquiciado de PROlimpio (productos de limpieza) en Durazno, Uruguay. Abre de lunes a sábado; su principal proveedor es SUBATIR (paga a 45 días). Escribís en español rioplatense, directo y práctico. Todas las cifras ya están calculadas: NO hagas cuentas ni las verifiques, usalas tal cual. Escribí únicamente el texto final para el dueño, entre las etiquetas <respuesta> y </respuesta>.`;
       const prompt=`CIFRAS YA CALCULADAS — ${MESES[aMes]} ${anio} comparado con ${MESES[aMes]} ${M.prev}:
-- Ventas: ${f0(M.v)} vs ${f0(M.vPrev)} → ${pc(M.nom)} nominal, ${pc(M.real)} real (inflación ${fmt(M.inf,2)}%)
+${M.enCurso?`- MES EN CURSO (datos al ${M.enCurso.ult}): vendido ${f0(M.enCurso.vendido)} en ${M.enCurso.dias} días hábiles; contra los mismos días de ${M.prev}: ${pc(M.enCurso.varMismosTot)} en total y ${pc(M.enCurso.varMismos)} por día. Proyección del mes completo: ${f0(M.enCurso.proy)}. Las ventas, el promedio y el acumulado de abajo usan esa proyección; los gastos y la ganancia del mes todavía no están cerrados (no digas que faltan datos de ventas).
+`:""}- Ventas: ${f0(M.v)} vs ${f0(M.vPrev)} → ${pc(M.nom)} nominal, ${pc(M.real)} real (inflación ${fmt(M.inf,2)}%)
 - Promedio por día hábil: ${f0(M.pd)} (${M.dias??"?"} días) vs ${f0(M.pdPrev)} (${M.diasPrev??"?"} días) → ${pc(M.pdVar)}
 - Tickets emitidos: ${M.tk??"sin dato"} vs ${M.tkPrev??"sin dato"} → ${pc(M.tkVar)}
 - Ticket promedio: ${M.tp!=null?"$"+M.tp:"sin dato"} vs ${M.tpPrev!=null?"$"+M.tpPrev:"sin dato"} → ${pc(M.tpVar)}
