@@ -164,6 +164,7 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-11-16",monto:280,tipo:"Personal",cuenta:"BROU",ts:"2026-11-16T18:30:00.000Z",obs:"Transferencia SPI enviada"},
   {fecha:"2026-11-13",monto:12000,tipo:"Personal",cuenta:"BROU",ts:"2026-11-13T15:00:00.000Z",obs:"Transferencia E-BROU (personal)"},
   {fecha:"2026-11-16",monto:3128,tipo:"Personal",cuenta:"BROU",ts:"2026-11-15T16:10:00.000Z",obs:"Compras con tarjeta BROU (La Granjita 287, veterinaria 350 + 200, supermercado 2.290)"},
   {fecha:"2026-11-11",monto:2437,tipo:"Personal",cuenta:"BROU",ts:"2026-11-11T20:00:00.000Z",obs:"Compras con tarjeta BROU (supermercado 925, Mercado Pago 443, America Latin 869) y transferencia 200"},
@@ -219,6 +220,7 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  {fecha:"2026-11-16",clave:"pend|2026-11|Estuario Platino|72156",concepto:"Estuario Platino",monto:72156,mes:"2026-11",ts:"2026-11-16T18:00:00.000Z",cuenta:"Santander",obs:"deducido del saldo (no se ve en la captura)"},
   {fecha:"2026-11-16",clave:"pend|2026-11|Santiago Badán|8880",concepto:"Santiago Badán",monto:8880,mes:"2026-11",ts:"2026-11-15T16:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-13",clave:"extra|2026-11|TMAGNAFIL 13/11|15733",concepto:"Jupiter (débito TMAGNAFIL SAS 13/11)",monto:15733,mes:"2026-11",ts:"2026-11-13T15:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-16",clave:"extra|2026-11|Comisión transferencia 16/11|78",concepto:"Comisión transferencia",monto:78,mes:"2026-11",ts:"2026-11-15T16:05:00.000Z",cuenta:"Santander"},
@@ -525,9 +527,9 @@ const COMPRAS_TEMPORADA = {};
 const TEMPORADA = { costo:670796, meses:[[2026,10],[2026,11],[2027,0],[2027,1]] }; // se vende de noviembre a febrero
 // Mes en curso al último saldo cargado: lo ya vendido y lo ya pagado del mes están dentro del saldo bancario,
 // así que la proyección del primer mes solo suma lo que falta vender y lo que falta pagar.
-const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:814583, pagadoYa:770742, retiradoYa:59825, candelaPagada:false, santanderPagada:false }; // 15/11 13:58: + buzoneras 25.000 (13/11) y 14.000 (sáb), Getnet y depósitos 12–13/11 (~95.272, deducido del saldo), BROU 1.528; pagos Santiago Badán 8.880, Jupiter 15.733, comisión 78; retiro personal 12.000 y compras 3.128. 12/11 07:00: + buzoneras 33.000 + 25.000 + 30.000, Getnet 51.977 + 30.502 + ~953, BROU 12.705 + 2.271 + 4.282 + 6.126 + 4.000, nota de crédito SUBATIR 3.127; pagos Solsire, Aymi, Bakedplus (deducido), cheque SUBATIR 10/11 (130.387 + 19.303), Zitan 19.486, alquiler 65.370, comisiones 313; retiros 2.437. 09/11 11:52: + buzoneras 20.000 + 19.000, tarjetas vie+sáb 38.991 + 20.849 + 940, BROU 5.705 + 2.094; pagos Atersa 24.520 (+78 comisión) y GAIA 13.953 al contado; compras personales 5.988. 06/11 17:33: + buzonera 25.000, tarjetas del 05/11 38.396, BROU pago a proveedores 6.843 + 1.350 (ventas a crédito / transferencias), transferencias 6.621 + 3.253 + 495; retiros Lider Gas, Super Ocho, farmacia, OSE de casa y transferencia 4.100. Regla: compras en comercios con la tarjeta BROU = siempre personales. 05/11 10:04: + buzonera 34.000, tarjetas del 04/11 39.596, transferencias BROU 4.685 + 1.896 + 2.500; pagos Pedro Merla 25.108 y sueldos 128.382; retiro personal BROU 13.627. 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
+const MES_EN_CURSO = { idx:10, desde:"2026-11-01", diasYa:1, ventasMes:0, ventasYa:883468, pagadoYa:842898, retiradoYa:60105, candelaPagada:false, santanderPagada:false }; // 16/11 15:54: + tarjetas vie+sáb (Getnet 25.779 + 4.782 + 28.043, otras 2.856 + 3.852), BROU 3.573; pago Estuario 72.156 (deducido); retiro 280. 15/11 13:58: + buzoneras 25.000 (13/11) y 14.000 (sáb), Getnet y depósitos 12–13/11 (~95.272, deducido del saldo), BROU 1.528; pagos Santiago Badán 8.880, Jupiter 15.733, comisión 78; retiro personal 12.000 y compras 3.128. 12/11 07:00: + buzoneras 33.000 + 25.000 + 30.000, Getnet 51.977 + 30.502 + ~953, BROU 12.705 + 2.271 + 4.282 + 6.126 + 4.000, nota de crédito SUBATIR 3.127; pagos Solsire, Aymi, Bakedplus (deducido), cheque SUBATIR 10/11 (130.387 + 19.303), Zitan 19.486, alquiler 65.370, comisiones 313; retiros 2.437. 09/11 11:52: + buzoneras 20.000 + 19.000, tarjetas vie+sáb 38.991 + 20.849 + 940, BROU 5.705 + 2.094; pagos Atersa 24.520 (+78 comisión) y GAIA 13.953 al contado; compras personales 5.988. 06/11 17:33: + buzonera 25.000, tarjetas del 05/11 38.396, BROU pago a proveedores 6.843 + 1.350 (ventas a crédito / transferencias), transferencias 6.621 + 3.253 + 495; retiros Lider Gas, Super Ocho, farmacia, OSE de casa y transferencia 4.100. Regla: compras en comercios con la tarjeta BROU = siempre personales. 05/11 10:04: + buzonera 34.000, tarjetas del 04/11 39.596, transferencias BROU 4.685 + 1.896 + 2.500; pagos Pedro Merla 25.108 y sueldos 128.382; retiro personal BROU 13.627. 04/11 10:10: + tarjetas del 03/11 29.598 (Getnet) + 1.742 (otro emisor); UTE 6.753 (débito automático; de los 11.544 de UTE+OSE+Antel quedan 4.791). 04/11 07:07: + buzonera 25.000, transferencia 1.598 y cobro de venta a crédito 12.949 (BROU); pagos cheque SUBATIR 164.237, Parque Trébol 16.560, TMAGNAFIL 27.600 (Alido Valiero 1/2); retiros personales 3.000 y 2.270. 03/11 11:10: tarjetas vie+sáb+lun 100.523 (93,6% de 107.416); pago del local 4.600 (BROU); retiro Super Italia 1.728. noviembre 2026 (al 02/11 23:42): ventasYa = buzonera 23.000 (cierre 02/11) + transferencia 8.217; pagadoYa = Estuario Platino 63.600 (de octubre, sumado a los costos de noviembre); retiros Super Italia 1.938, 24 hs 139, Redbrou 1.500, El Mueco 92. Octubre cerró con retiros $102.290 (+22.290 sobre el tope).
 // Saldos bancarios reales informados (se usan si son más nuevos que el último guardado)
-const SALDO_REF = { fecha:"2026-11-15", ts:"2026-11-15T16:58:00.000Z", brou:1861, santUyu:-505824, santUsd:-3.23, tc:41.42 }; // 15/11 13:58 reales (Santander −505.824, BROU 1.861). 12/11 07:00 reales (Santander −615.405, BROU 15.461). 09/11 11:52 reales: Santander −627.205 + 39.000 + 60.779 − 24.598; BROU 33.377 + 7.799 − 13.953 − 5.988. 06/11 17:33 reales: Santander −690.601 + 25.000 + 38.396; BROU 26.793 + 6.584 neto. 05/11 10:04 reales: Santander −610.708 + 34.000 − 25.108 + 39.596 − 128.382; BROU 31.340 + 4.685 + 1.896 − 13.627 + 2.500. 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
+const SALDO_REF = { fecha:"2026-11-16", ts:"2026-11-16T18:54:00.000Z", brou:5154, santUyu:-512668, santUsd:-3.23, tc:41.42 }; // 16/11 15:54 reales (Santander −512.668, BROU 5.154). 15/11 13:58 reales (Santander −505.824, BROU 1.861). 12/11 07:00 reales (Santander −615.405, BROU 15.461). 09/11 11:52 reales: Santander −627.205 + 39.000 + 60.779 − 24.598; BROU 33.377 + 7.799 − 13.953 − 5.988. 06/11 17:33 reales: Santander −690.601 + 25.000 + 38.396; BROU 26.793 + 6.584 neto. 05/11 10:04 reales: Santander −610.708 + 34.000 − 25.108 + 39.596 − 128.382; BROU 31.340 + 4.685 + 1.896 − 13.627 + 2.500. 04/11 10:10 reales: Santander −635.295 + tarjetas 29.598 + 1.742 − UTE 6.753; BROU sin cambios. 04/11 07:07 reales (capturas): Santander −451.820 + 25.000 − 16.560 − 78 − 27.600 − 164.237; BROU 22.063 + 12.949 − 2.270 + 1.598 − 3.000. Antes: 03/11 11:10 reales (capturas). Santander: −552.343 + tarjetas 40.865 + 26.011 + 33.647. BROU: 28.391 − pago del local 4.600 − Super Italia 1.728
 
 // ── Stock valorizado a costo ─────────────────────────────────────────────────
 const STOCK_HIST = [
@@ -615,6 +617,7 @@ const CIERRES_CLAUDE = [
 ].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
+  "2026-11-14": {ventasErp:0, credito:1965}, // no hubo ventas contado en el ERP (solo un Gasto Recibo); el crédito de la casa del POS no se había cargado
   "2026-11-09": {aperturaErp:34150, ventasErp:4443, tarjetaErp:1683, gastosEf:0, visa:24078, mastercard:29856, oca:1301, maestro:null, otrasTj:1440}, // la lectura tomó el ingreso de POS (21.000) como apertura, sumó el Recibo de Radio Durazno (6.000, cobro) como venta, puso el total de salidas (39.000) como tarjeta del ERP y corrió las marcas; Recibo y Gasto Recibo de Radio Durazno se compensan
   "2026-11-03": {cajero:"Valentina Preza", ventasErp:15954, gastosEf:2231, saldoErp:27216}, // la lectura tomó a una clienta (Mayra Silva) como cajera, sumó el depósito de 25.000 a los gastos y por eso inventó ventas ERP de 27.956
   "2026-10-21": {tarjetaErp:null},   // la lectura repitió las tarjetas del POS (19.334); el banco acreditó 18.434
@@ -639,6 +642,11 @@ const textoGastos = g => Array.isArray(g) ? g.map(x=> x&&typeof x==="object" ? [
 // "Crédito de la casa" cobrado en el POS ya está dentro de la venta total del POS: no se suma dos veces
 const creditoFueraPos = c => { const cr=+c.credito||0; if(c.ventaPos==null||c.efectivoPos==null||c.tarjetasPos==null) return cr;
   const gap=Math.round(c.ventaPos-c.efectivoPos-c.tarjetasPos); return gap>1&&gap<=cr+1 ? Math.max(0,cr-gap) : cr; };
+// Ventas a crédito que se cobran mucho más tarde que lo normal (17 días): se sacan del mes de la venta y entran el día del cobro
+const COBROS_DIFERIDOS = [
+  { venta:"2026-11-13", cobro:"2026-12-16", monto:107000, concepto:"Municipio de El Carmen (cobra ~1 mes después)" },
+];
+const idxMes = iso => (Number(iso.slice(0,4))-2026)*12 + Number(iso.slice(5,7)) - 1;
 const CIERRE_VACIO = () => ({fecha:hoyISO(),cajero:"",credito:"",transferencia:"",gastosDetalle:"",obs:"",...Object.fromEntries(CIERRE_CAMPOS.map(([k])=>[k,""]))});
 const nC = v => (v===""||v==null||isNaN(Number(v))) ? null : Number(v);
 const chequearCierre = (c) => {
@@ -881,7 +889,8 @@ const proyectarCaja = (cfg, crecIn) => {
     const retiro = (y<2027 || (y===2027 && m===0)) ? cfg.retiroFijo : Math.round(cfg.retiroFijo2 + ventas*cfg.retiroPct/100);
     const retiroMes = enCurso ? Math.max(0, retiro-(MES_EN_CURSO.retiradoYa||0)-(cfg.retExtra||0)) : retiro;
     const corrimiento = Math.round(CRED_LAG*(ventasAnt-ventas)); // el crédito de fin de mes se cobra el mes siguiente
-    saldo = saldo + ventasMes + corrimiento - costos - deuda + cobros - retiroMes;
+    const diferido = COBROS_DIFERIDOS.reduce((t,d)=>t+(idxMes(d.cobro)===idx?d.monto:0)-(idxMes(d.venta)===idx?d.monto:0),0);
+    saldo = saldo + ventasMes + corrimiento - costos - deuda + cobros - retiroMes + diferido;
     out.push({ mes:`${MES3[m]} ${String(y).slice(2)}`, ventas, costos, fijos:fijoMes, deuda, retiro, saldo:Math.round(saldo) });
     m++; if(m>11){m=0;y++;}
   }
@@ -1802,7 +1811,7 @@ Máximo 180 palabras, párrafos cortos. Respondé solo entre <respuesta> y </res
     Object.values(cierres).forEach(c=>{ if(!c.fecha||c.fecha<masDias(hoyIso,-40)) return;
       const tj=(+c.tarjetasPos||0)+(c.tarjetaErp&&c.tarjetaErp!==c.tarjetasPos?(+c.tarjetaErp||0):0);
       const dTj=diaHabilBancoSig(c.fecha); if(dTj>desde) suma(dTj,tj*NETO_COBRO.tarjeta,"tarjetas");
-      const dCr=hab0(masDias(c.fecha,DIAS_CREDITO)); if(dCr>desde) suma(dCr,+c.credito||0,"crédito"); });
+      const dif=COBROS_DIFERIDOS.filter(d=>d.venta===c.fecha).reduce((t,d)=>t+d.monto,0); const dCr=hab0(masDias(c.fecha,DIAS_CREDITO)); if(dCr>desde) suma(dCr,Math.max(0,(+c.credito||0)-dif),"crédito"); COBROS_DIFERIDOS.filter(d=>d.venta===c.fecha&&d.cobro>desde).forEach(d=>suma(d.cobro,d.monto,"crédito diferido")); });
     // 2) días que faltan vender (sin cierre guardado), con la venta esperada de la curva del mes
     const dias=[]; for(let k=hoyN;k<=nd;k++){const d=new Date(yAct,mIdx,k,12); const iso=isoDe(d); dias.push({k,iso,w:cierres[iso]?0:pesoDia(d)});}
     const sw=dias.reduce((s,x)=>s+x.w,0)||1, ventaMesEsp=(RMC.dias>=5&&RMC.proyeccion)?RMC.proyeccion:Math.max(RMC.proyeccion||0,proy[0]?.ventas||0), falta=Math.max(0,ventaMesEsp-(RMC.total||0));
