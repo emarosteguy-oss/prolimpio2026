@@ -1695,7 +1695,7 @@ export default function App(){
       const M=metricasMes(aMes,aAnio); const anio=M.anio;
       const f0=x=>x==null?"sin dato":"$"+fmt(Math.round(x)); const pc=x=>x==null?"sin dato":(x>=0?"+":"")+fmt(x,1)+"%";
       const yrs=["2022","2023","2024","2025","2026"];
-      const hist=yrs.map(y=>`${MES3[aMes]} ${y}: ${f0(VM[aMes][y])}`).join(" | ");
+      const hist=yrs.map(y=>`${MES3[aMes]} ${y}: ${VM[aMes][y]==null&&y===anio&&M.enCurso?f0(M.v)+" (proyección; vendido "+f0(M.enCurso.vendido)+" al "+M.enCurso.ult.slice(8,10)+"/"+M.enCurso.ult.slice(5,7)+")":f0(VM[aMes][y])}`).filter(x=>!/sin dato$/.test(x)).join(" | ");
       const anual=yrs.map(y=>{const n=TG_REAL[y].filter(x=>x!=null).length;const v=VM.slice(0,n).reduce((s,r)=>s+(r[y]||0),0);const gg=TG_REAL[y].slice(0,n).reduce((s,x,j)=>s+(gastoTotal(y,j)||0),0);const d2=DEUDA_PAGOS[y].slice(0,n).reduce((s,x)=>s+(x||0),0);return `${y}${n<12?" (Ene–"+MES3[n-1]+")":""}: ventas ${f0(v)}, ganancia operativa ${f0(v-gg+d2)} (${fmt((v-gg+d2)/v*100,1)}%)`;}).join("\n");
       const sys=`Sos un analista de negocios uruguayo que asesora al dueño de un local franquiciado de PROlimpio (productos de limpieza) en Durazno, Uruguay. Abre de lunes a sábado; su principal proveedor es SUBATIR (paga a 45 días). Escribís en español rioplatense, directo y práctico. Todas las cifras ya están calculadas: NO hagas cuentas ni las verifiques, usalas tal cual. Escribí únicamente el texto final para el dueño, entre las etiquetas <respuesta> y </respuesta>.`;
       const prompt=`CIFRAS YA CALCULADAS — ${MESES[aMes]} ${anio} comparado con ${MESES[aMes]} ${M.prev}:
