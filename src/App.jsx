@@ -221,6 +221,19 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  // Planilla 23/11: todo lo pintado de verde oscuro está pagado totalmente
+  {fecha:"2026-11-20",clave:"pend|2026-11|Alido Valiero (1/2)|27600",concepto:"Alido Valiero (1/2)",monto:27600,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Parque Trébol|16560",concepto:"Parque Trébol",monto:16560,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Regional Sur|9373",concepto:"Regional Sur (contado)",monto:9373,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11; se paga al contado"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Calusil|14976",concepto:"Calusil",monto:14976,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Cuota Candela (468 USD)|19618",concepto:"Cuota Candela (468 USD)",monto:19618,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|SUBATIR|193210",concepto:"SUBATIR cheque 18/11",monto:193210,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Norte Sur|7058",concepto:"Norte Sur",monto:7058,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Jaspe|19768",concepto:"Jaspe",monto:19768,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Andrés Bauer (527 USD)|21344",concepto:"Andrés Bauer (527 USD)",monto:21344,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"pend|2026-11|Cameril|6656",concepto:"Cameril",monto:6656,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"fijo|2026-11|BPS",concepto:"BPS (noviembre)",monto:72368,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11 (empleados 200.750 − sueldos 128.382)"},
+  {fecha:"2026-11-20",clave:"fijo|2026-11|Otros gastos",concepto:"Otros gastos",monto:45000,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
   {fecha:"2026-11-16",clave:"pend|2026-11|Estuario Platino|72156",concepto:"Estuario Platino",monto:72156,mes:"2026-11",ts:"2026-11-16T18:00:00.000Z",cuenta:"Santander",obs:"confirmado por Esteban"},
   {fecha:"2026-11-16",clave:"pend|2026-11|Santiago Badán|8880",concepto:"Santiago Badán",monto:8880,mes:"2026-11",ts:"2026-11-15T16:00:00.000Z",cuenta:"Santander"},
   {fecha:"2026-11-13",clave:"extra|2026-11|TMAGNAFIL 13/11|15733",concepto:"Jupiter (débito TMAGNAFIL SAS 13/11)",monto:15733,mes:"2026-11",ts:"2026-11-13T15:00:00.000Z",cuenta:"Santander"},
@@ -512,7 +525,7 @@ const PENDIENTES = [
   {mes:"2026-12",prov:"Enjoy vía SUBATIR — cheque 20/12 (1/3 de $287.456)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2026-12",prov:"Intex vía SUBATIR — cheque 30/12 (1/3 de $383.340)",monto:127780,dia:30,tipo:"cheque"},
   {mes:"2027-01",prov:"Alido Valiero",monto:30332,dia:4,tipo:"prov"},
-  {mes:"2027-01",prov:"SUBATIR — pedido semanal + extra verano",monto:324081,dia:10,tipo:"cheque"}, // planilla 23/11 (antes 329.157)
+  {mes:"2027-01",prov:"SUBATIR — pedido semanal + extra verano",monto:324081,dia:10,tipo:"cheque"}, // planilla 23/11 (antes 329.157; baja de 5.076 por nota de crédito)
   {mes:"2027-01",prov:"Estuario Platino",monto:85084,dia:13,tipo:"prov"},
   {mes:"2027-01",prov:"Enjoy vía SUBATIR — cheque 20/01 (2/3)",monto:95819,dia:20,tipo:"cheque"},
   {mes:"2027-01",prov:"Intex vía SUBATIR — cheque 30/01 (2/3)",monto:127780,dia:30,tipo:"cheque"},
@@ -574,7 +587,7 @@ const COSTOS_FIJOS = [
 ];
 const COSTOS_FIJOS_MES = {
   "2026-10":[{nombre:"Alquiler",monto:62448,planilla:true},{nombre:"Luz",monto:11544},{nombre:"Sueldos",monto:140460,planilla:true},{nombre:"BPS (pagado 13/10, BROU)",monto:76051,planilla:true},{nombre:"Publicidad",monto:25000},{nombre:"IVA (DGI)",monto:117075},{nombre:"Contador (pagado 13/10, BROU)",monto:9000,planilla:true},{nombre:"Otros gastos (sin contador)",monto:36000},{nombre:"Correcaminata (pagada 02/10)",monto:10000,planilla:true},{nombre:"Correcaminata (pagada 20/10, efectivo de caja)",monto:5000,planilla:true}],
-  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:73000,dia:20},{nombre:"IVA (DGI)",monto:23500,dia:20},{nombre:"Bomberos",monto:16000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 16/11: BPS 73.000 (empleados 201.382), Bomberos 16.000. Planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
+  "2026-11":[{nombre:"Sueldos de octubre",monto:128382,dia:6},{nombre:"Alquiler",monto:65370,dia:10},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Publicidad",monto:25000,dia:15},{nombre:"BPS",monto:72368,dia:20},{nombre:"IVA (DGI)",monto:23500,dia:20},{nombre:"Bomberos",monto:16000,dia:20},{nombre:"Otros gastos",monto:45000}], // planilla 16/11: BPS 73.000 (empleados 201.382), Bomberos 16.000. Planilla 04/11: sueldos 128.382 (Karen 41.599, Natalia 31.063, Valentina 27.532, Lucas 28.188), BPS 75.000 (empleados 203.382), IVA 110.000. Antes: sueldos ~125.000 (los paga el 6); BPS ~70–75.000 y IVA ~100.000 cerca del 20 (dato de Esteban; la planilla decía 95.000 y 120.000); los gastos de caja van en "Otros"
   "2026-12":[{nombre:"Alquiler",monto:62448},{nombre:"UTE",monto:6753,dia:4},{nombre:"OSE y Antel",monto:4791,dia:15},{nombre:"Sueldos y BPS (con aguinaldo)",monto:260000},{nombre:"Publicidad",monto:25000},{nombre:"IVA",monto:110000},{nombre:"Otros gastos",monto:45000}],
 };
 const clavePend = p => `pend|${p.mes}|${p.prov}|${p.monto}`;
