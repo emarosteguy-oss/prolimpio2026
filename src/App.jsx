@@ -160,6 +160,7 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-29",monto:61747},{fecha:"2026-10-30",monto:68291,obs:"cierre de caja"},{fecha:"2026-10-31",monto:62352,obs:"cierre de caja"},
   {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},{fecha:"2026-11-04",monto:94565},{fecha:"2026-11-05",monto:98209},{fecha:"2026-11-06",monto:68475},
   {fecha:"2026-11-09",monto:89453},{fecha:"2026-11-10",monto:72171},{fecha:"2026-11-11",monto:87060},{fecha:"2026-11-12",monto:76935},{fecha:"2026-11-13",monto:182698,obs:"incluye venta al Municipio de El Carmen"},{fecha:"2026-11-14",monto:45526},
+  {fecha:"2026-11-16",monto:93199},{fecha:"2026-11-17",monto:59776},{fecha:"2026-11-18",monto:86526},{fecha:"2026-11-19",monto:52157},{fecha:"2026-11-20",monto:86302},{fecha:"2026-11-21",monto:54374},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
