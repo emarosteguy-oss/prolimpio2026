@@ -234,6 +234,7 @@ const PAGOS_CLAUDE = [
   {fecha:"2026-11-20",clave:"pend|2026-11|Cameril|6656",concepto:"Cameril",monto:6656,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
   {fecha:"2026-11-20",clave:"fijo|2026-11|BPS",concepto:"BPS (noviembre)",monto:72368,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11 (empleados 200.750 − sueldos 128.382)"},
   {fecha:"2026-11-20",clave:"fijo|2026-11|Otros gastos",concepto:"Otros gastos",monto:45000,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
+  {fecha:"2026-11-20",clave:"fijo|2026-11|Bomberos",concepto:"Bomberos",monto:16000,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"pagado según Esteban 23/11"},
   {fecha:"2026-11-20",clave:"extra|2026-11|Susana Candela|16000",concepto:"Susana Candela (distinto de Bomberos)",monto:16000,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
   {fecha:"2026-11-20",clave:"extra|2026-11|Luz|11544",concepto:"Luz (verde en planilla 23/11)",monto:11544,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
   {fecha:"2026-11-16",clave:"pend|2026-11|Estuario Platino|72156",concepto:"Estuario Platino",monto:72156,mes:"2026-11",ts:"2026-11-16T18:00:00.000Z",cuenta:"Santander",obs:"confirmado por Esteban"},
