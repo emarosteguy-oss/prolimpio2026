@@ -473,7 +473,7 @@ const DEUDA_PAGOS = {
 };
 
 // ── Deudas pendientes según colores de la planilla (amarillo/rosado = proveedor sin pagar, violeta = cheque SUBATIR) ──
-const PENDIENTES_FECHA = "26/10/2026";
+const PENDIENTES_FECHA = "24/11/2026";
 const PENDIENTES = [
   {mes:"2026-10",prov:"SUBATIR (llegó 26/08)",monto:143420,dia:15,tipo:"cheque"}, // la planilla decía 149.960; el cheque real fue 143.420 (cobrado 16/10)
   {mes:"2026-10",prov:"Cuota Candela (468 USD)",monto:19617,dia:16,tipo:"credito"},
