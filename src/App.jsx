@@ -221,6 +221,10 @@ const RETIROS_CLAUDE = [
   {fecha:"2026-10-13",monto:20953,tipo:"Pagos personales",cuenta:"BROU",ts:"2026-10-13T18:00:00.000Z",obs:"Desde BROU: UTE casa $7.479, VISA BBVA $10.715, Antel $1.648 y celulares $1.111"},
 ].map(r=>({...r,_claude:true}));
 const PAGOS_CLAUDE = [
+  // Pagados según Esteban 24/11 (pintados de verde)
+  {fecha:"2026-11-24",clave:"pend|2026-11|Emilio Benzo|17030",concepto:"Emilio Benzo",monto:17030,mes:"2026-11",ts:"2026-11-24T17:05:00.000Z",cuenta:"Santander",obs:"pintado de verde 24/11 (cuenta a confirmar)"},
+  {fecha:"2026-11-24",clave:"pend|2026-11|Irmari (289,87 USD)|11885",concepto:"Irmari (289,87 USD)",monto:11885,mes:"2026-11",ts:"2026-11-24T17:05:00.000Z",cuenta:"Santander",obs:"pintado de verde 24/11 (cuenta a confirmar)"},
+  {fecha:"2026-11-24",clave:"pend|2026-11|Irmari|11624",concepto:"Irmari",monto:11624,mes:"2026-11",ts:"2026-11-24T17:05:00.000Z",cuenta:"Santander",obs:"pintado de verde 24/11 (cuenta a confirmar)"},
   // Planilla 23/11: todo lo pintado de verde oscuro está pagado totalmente
   {fecha:"2026-11-20",clave:"pend|2026-11|Alido Valiero (1/2)|27600",concepto:"Alido Valiero (1/2)",monto:27600,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
   {fecha:"2026-11-20",clave:"pend|2026-11|Parque Trébol|16560",concepto:"Parque Trébol",monto:16560,mes:"2026-11",ts:"2026-11-23T17:00:00.000Z",cuenta:"Santander",obs:"verde en planilla 23/11"},
