@@ -166,6 +166,9 @@ const VENTAS_DIA_PLANILLA = [
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
 const RETIROS_CLAUDE = [
+  {fecha:"2026-11-24",monto:11977,tipo:"Personal",cuenta:"BROU",ts:"2026-11-25T21:10:00.000Z",obs:"TRF E-BROU OTROS 24/11 (confirmado por Esteban como retiro)"},
+  {fecha:"2026-11-24",monto:1600,tipo:"Personal",cuenta:"BROU",ts:"2026-11-25T21:10:00.000Z",obs:"Retiro Red SCANTECH 24/11 (confirmado por Esteban como retiro)"},
+  {fecha:"2026-11-24",monto:9588,tipo:"Personal",cuenta:"BROU",ts:"2026-11-25T21:10:00.000Z",obs:"PAGO SERVICIOS 24/11 (confirmado por Esteban como retiro)"},
   {fecha:"2026-11-16",monto:280,tipo:"Personal",cuenta:"BROU",ts:"2026-11-16T18:30:00.000Z",obs:"Transferencia SPI enviada"},
   {fecha:"2026-11-13",monto:12000,tipo:"Personal",cuenta:"BROU",ts:"2026-11-13T15:00:00.000Z",obs:"Transferencia E-BROU (personal)"},
   {fecha:"2026-11-16",monto:3128,tipo:"Personal",cuenta:"BROU",ts:"2026-11-15T16:10:00.000Z",obs:"Compras con tarjeta BROU (La Granjita 287, veterinaria 350 + 200, supermercado 2.290)"},
