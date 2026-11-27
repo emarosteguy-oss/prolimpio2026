@@ -158,10 +158,10 @@ const VENTAS_DIA_PLANILLA = [
   {fecha:"2026-10-19",monto:71497},{fecha:"2026-10-20",monto:108737},{fecha:"2026-10-21",monto:53241,obs:"Viento y pelusa"},{fecha:"2026-10-22",monto:61685},{fecha:"2026-10-23",monto:56107},
   {fecha:"2026-10-24",monto:48143},{fecha:"2026-10-26",monto:47327},{fecha:"2026-10-27",monto:37099},{fecha:"2026-10-28",monto:52377},
   {fecha:"2026-10-29",monto:61747},{fecha:"2026-10-30",monto:68291,obs:"cierre de caja"},{fecha:"2026-10-31",monto:62352,obs:"cierre de caja"},
-  {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},{fecha:"2026-11-04",monto:94565},{fecha:"2026-11-05",monto:98209},{fecha:"2026-11-06",monto:68475},
+  {fecha:"2026-11-02",monto:82178},{fecha:"2026-11-03",monto:88956},{fecha:"2026-11-04",monto:94565},{fecha:"2026-11-05",monto:98209},{fecha:"2026-11-06",monto:68475},{fecha:"2026-11-07",monto:48204},
   {fecha:"2026-11-09",monto:89453},{fecha:"2026-11-10",monto:72171},{fecha:"2026-11-11",monto:87060},{fecha:"2026-11-12",monto:76935},{fecha:"2026-11-13",monto:182698,obs:"incluye venta al Municipio de El Carmen"},{fecha:"2026-11-14",monto:45526},
   {fecha:"2026-11-16",monto:93199},{fecha:"2026-11-17",monto:59776},{fecha:"2026-11-18",monto:86526},{fecha:"2026-11-19",monto:52157},{fecha:"2026-11-20",monto:86302},{fecha:"2026-11-21",monto:54374},
-  {fecha:"2026-11-23",monto:78080},{fecha:"2026-11-24",monto:73516},
+  {fecha:"2026-11-23",monto:78080},{fecha:"2026-11-24",monto:73516},{fecha:"2026-11-25",monto:86794},{fecha:"2026-11-26",monto:105426},
 ];
 const CUENTAS=["Santander","BROU","Efectivo de la caja","Otro (no sale del negocio)"];
 // Retiros que Esteban contó por el chat (se suman a los de la hoja Retiros)
