@@ -649,6 +649,7 @@ const CIERRES_CLAUDE = [
 ].map((c,i)=>({...c,_i:"c"+i,_claude:true}));
 // Correcciones a cierres guardados con algún número mal leído (se aplican al leer la planilla de cierres)
 const CIERRES_CORREC = {
+  "2026-11-28": {ventasErp:0}, // la lectura tomó 14.734 como ventas contado del ERP; en los papeles no hay ventas en efectivo del ERP (solo el ingreso de POS 14.000 y los e-tickets 3567/3568 cobrados con tarjeta = tarjetaErp 3.485). Efectivo contado: pendiente de confirmar con Valentina (la lectura dio 18.913, la foto dice 16.913)
   "2026-11-25": {cajero:"Valentina Preza", ventaPos:63399, efectivoPos:23733, tarjetasPos:39666, visa:10548, mastercard:28695, oca:423, tarjetaErp:0, ventasErp:17938, aperturaErp:14911, salidaPos:21000, gastosEf:0, deposito:40000, saldoErp:13849}, // la lectura sumó el subtotal de efectivo del ERP (53.849) como tarjeta ERP, sumó ventas ERP repetidas (33.358) y tomó un gasto de 2.000 que no está en la foto; el POS (63.399) ya incluye efectivo y tarjetas; sin cajera
   "2026-11-14": {ventasErp:0, credito:1965}, // no hubo ventas contado en el ERP (solo un Gasto Recibo); el crédito de la casa del POS no se había cargado
   "2026-11-09": {aperturaErp:34150, ventasErp:4443, tarjetaErp:1683, gastosEf:0, visa:24078, mastercard:29856, oca:1301, maestro:null, otrasTj:1440}, // la lectura tomó el ingreso de POS (21.000) como apertura, sumó el Recibo de Radio Durazno (6.000, cobro) como venta, puso el total de salidas (39.000) como tarjeta del ERP y corrió las marcas; Recibo y Gasto Recibo de Radio Durazno se compensan
